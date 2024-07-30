@@ -22,6 +22,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
 		return APLRes_SilentFailure;
 	}
+	CreateNative("Bridge_SpawnSupplyBox", Native_SpawnRandomSupplyDropBox);
+	RegPluginLibrary("SupplyDropBox_Bridge");
 	return APLRes_Success;
 }
 
@@ -435,8 +437,7 @@ void OnGamemode(const char[] output, int caller, int activator, float delay)
 
 Action CmdSpawnBox(int iClient, int iArgs)
 {
-	if(g_bCvarAllow == false)
-	return Plugin_Continue;
+	if (g_bCvarAllow == false) return Plugin_Continue;
 	
 	if (iClient < 1)
 	{
@@ -643,10 +644,18 @@ Action Timer_SupplyBoxDrop(Handle hTimer)
 	return Plugin_Continue;
 }
 
-void SpawnBoxInRandomLocation(int spawnMax=-1)
+any Native_SpawnRandomSupplyDropBox(Handle plugin, int numParams)
 {
-	int anyclient = my_GetRandomClient();
-	if(anyclient > 0)
+	if( g_bCvarAllow == false ) return false;
+
+	int numberOfBoxes = GetNativeCell(1);
+	return SpawnBoxInRandomLocation(numberOfBoxes);
+}
+
+bool SpawnBoxInRandomLocation(int spawnMax=-1)
+{
+	int anyclient = GetRandomSurvivor(1);
+	if (anyclient > 0)
 	{
 		int DropNum = spawnMax;
 		if (spawnMax == -1)
@@ -724,8 +733,10 @@ void SpawnBoxInRandomLocation(int spawnMax=-1)
 					}
 				}
 			}
+			return true;
 		}
 	}
+	return false;
 }
 
 bool SpawnBox(float vPos[3], float vAng[3] = NULL_VECTOR)
@@ -1041,19 +1052,6 @@ void ResetTimer()
 	{
 		delete g_ItemDeleteTimer[entity];
 	}
-}
-
-int my_GetRandomClient()
-{
-	int iClientCount, iClients[MAXPLAYERS+1];
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
-		{
-			iClients[iClientCount++] = i;
-		}
-	}
-	return (iClientCount == 0) ? 0 : iClients[GetRandomInt(0, iClientCount - 1)];
 }
 
 bool CheckIfEntitySafe(int entity)
