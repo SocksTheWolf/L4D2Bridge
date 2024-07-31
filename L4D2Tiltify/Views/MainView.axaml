@@ -12,5 +12,22 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <StackPanel>
+    <ScrollViewer Height="380" BorderThickness="50" BorderBrush="White">
+      <DataGrid x:Name="ConsoleLog" Margin="5" ItemsSource="{Binding Console.ConsoleMessages, Mode=OneWay}"
+                IsReadOnly="True" GridLinesVisibility="Horizontal"
+                BorderThickness="1" CanUserSortColumns="False" AutoGenerateColumns="True">
+      </DataGrid>
+    </ScrollViewer>
+    <DockPanel>
+      <TextBox MaxLines="1" NewLine="False" Width="550" Height="7" AcceptsReturn="False" Margin="40,1" x:Name="ServerCommand" Watermark="Server Command" />
+      <Button IsDefault="True" Content="Send" Command="{Binding PushServerCommand}" HorizontalAlignment="Center" Margin="0 20">
+        <Button.CommandParameter>
+          <MultiBinding>
+            <Binding ElementName="ServerCommand" />
+          </MultiBinding>
+        </Button.CommandParameter>
+      </Button>
+    </DockPanel>
+  </StackPanel>
 </UserControl>
