@@ -873,12 +873,12 @@ int GetClassForString(char[] str)
 	return iClass;
 }
 
-bool SpawnZombieOfAmount(int client, int iClass, int iAmt)
+int SpawnZombieOfAmount(int client, int iClass, int iAmt)
 {
 	if (iClass == -1)
-		return false;
+		return -1;
 	
-	int iZPreSpawnCount, iZPostSPawnCount;
+	int iZPreSpawnCount, iZPostSPawnCount, spawnID;
 	if (iClass == g_iZClassAm + 1)
 		iZPreSpawnCount = GetWitchAm();
 	else
@@ -887,7 +887,8 @@ bool SpawnZombieOfAmount(int client, int iClass, int iAmt)
 	for (int i = 0; i < iAmt; i++)
 	{
 		g_bPluginSpawnRequest = true;
-		SpawnZombie(client, iClass);
+		// TODO: Support more than one client return id.
+		spawnID = SpawnZombie(client, iClass);
 	}
 	
 	if (iClass == g_iZClassAm + 1)
@@ -904,12 +905,12 @@ bool SpawnZombieOfAmount(int client, int iClass, int iAmt)
 		else
 			ReplyToCommand(client, "%s Successfully spawned %i/%i zombies.", CHAT_TAG, (iZPostSPawnCount - iZPreSpawnCount), iAmt);
 
-		return true;
+		return spawnID;
 	}
 	else
 		ReplyToCommand(client, "%s ERROR: Zombie spawn failed.", CHAT_TAG);
 
-	return false;
+	return -1;
 }
 
 void SpawnMobOfAmount(int client, int number)
@@ -937,12 +938,12 @@ void SpawnMobOfAmount(int client, int number)
 any Native_SpawnZombieAutoOfClass(Handle plugin, int NumArgs)
 {
 	if (!g_bPluginOn)
-		return false;
+		return -1;
 
 	int iClass = GetNativeCell(1);
 	if (iClass < 0 || iClass > sizeof(g_sZombieClasses_L4D2))
 	{
-		return false;
+		return -1;
 	}
 	
 	return SpawnZombieOfAmount(L4D_GetHighestFlowSurvivor(), iClass, 1);
@@ -951,20 +952,20 @@ any Native_SpawnZombieAutoOfClass(Handle plugin, int NumArgs)
 any Native_SpawnZombieAuto(Handle plugin, int NumArgs)
 {
 	if (!g_bPluginOn)
-		return false;
+		return -1;
 
 	int len;
 	GetNativeStringLength(1, len);
 	if (len <= 0)
 	{
-		return false;
+		return -1;
 	}
 	char[] infectedType = new char[len + 1];
 	GetNativeString(1, infectedType, len + 1);
 	int iClass = GetClassForString(infectedType);
 	if (iClass == -1)
 	{
-		return false;
+		return -1;
 	}
 	
 	return SpawnZombieOfAmount(L4D_GetHighestFlowSurvivor(), iClass, 1);
@@ -1366,7 +1367,7 @@ public Action Finale_Timer(Handle timer)
 //==========================================================================================
 //										Logic
 //==========================================================================================
-void SpawnZombie(int client, int zombieclass)
+int SpawnZombie(int client, int zombieclass)
 {
 	float vPos[3];
 	g_bPluginSpawnRequest = true;
@@ -1375,31 +1376,33 @@ void SpawnZombie(int client, int zombieclass)
 	{
 		// Instead of using a random player, use the player with highest flow
 		if (L4D_GetRandomPZSpawnPosition(L4D_GetHighestFlowSurvivor(), g_iZClassAm + 2, 5, vPos))	// I use 0 for tank but here is 8
-			L4D2_SpawnTank(vPos, NULL_VECTOR);
+			return L4D2_SpawnTank(vPos, NULL_VECTOR);
 			
 		else
 			PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
 			
-		return;
+		return -1;
 	}
 	if (zombieclass == g_iZClassAm + 1)
 	{
 
 		if (L4D_GetRandomPZSpawnPosition(L4D_GetHighestFlowSurvivor(), g_iZClassAm + 1, 5, vPos))
-			L4D2_SpawnWitch(vPos, NULL_VECTOR);
+			return L4D2_SpawnWitch(vPos, NULL_VECTOR);
 			
 		else
 			PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
 			
-		return;
+		return -1;
 	}
 // First we get a suitable spot for the infected. We use a random alive survivor and we try to get the best spot for the special we want.
 // This should try to spawn the infected at the best available spot to attack survivors.
 	if (L4D_GetRandomPZSpawnPosition(client, zombieclass, 5, vPos))	
-		L4D2_SpawnSpecial(zombieclass, vPos, NULL_VECTOR); // Spawn the infected with the vector we got previously. This native does not trigger players and will only spawn infected bots.
+		return L4D2_SpawnSpecial(zombieclass, vPos, NULL_VECTOR); // Spawn the infected with the vector we got previously. This native does not trigger players and will only spawn infected bots.
 		
 	else
 		PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
+		
+	return -1;
 }
 
 // Set the map progress which will unlock the next tank. If no more tanks will spawn, returns negative value

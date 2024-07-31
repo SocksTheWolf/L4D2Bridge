@@ -3,8 +3,8 @@
 #endif
 #define _ZSpawn_included
 
-native bool Bridge_SpawnZombieOfClass(int index);
-native bool Bridge_SpawnZombie(char[] zombieClass);
+native int Bridge_SpawnZombieOfClass(int iClass);
+native int Bridge_SpawnZombie(char[] zombieClass);
 native void Bridge_SpawnMobs(int NumberOfZombies);
 
 public SharedPlugin __pl_ZSpawnBridge  =
