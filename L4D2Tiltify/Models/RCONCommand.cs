@@ -1,4 +1,5 @@
 ﻿using CoreRCON;
+using System;
 using System.Threading.Tasks;
 
 namespace L4D2Tiltify.Models
@@ -20,6 +21,7 @@ namespace L4D2Tiltify.Models
         private bool HasRan = false;
         private bool Successful = false;
         private int Attempts = 0;
+        private DateTime LastRan = DateTime.MinValue;
 
         // Types
         protected ECommandType Type = ECommandType.None;
@@ -48,8 +50,16 @@ namespace L4D2Tiltify.Models
 
         public async Task<bool> Execute(RCONService owner, RCON connection)
         {
+            // If we've ran this task before and it failed, try again in one minute.
+            // This is a really jank way to do command delays.
+            if (LastRan != DateTime.MinValue && (DateTime.Now - LastRan) <= TimeSpan.FromMinutes(1)) 
+            {
+                return false;
+            }
+
             try
             {
+                LastRan = DateTime.Now;
                 Result = await connection.SendCommandAsync(Command);
                 HasRan = true;
                 if (IsSpawner)
@@ -78,7 +88,7 @@ namespace L4D2Tiltify.Models
         }
         public void Retry(RCONService owner)
         {
-            Attempts++;
+            ++Attempts;
             HasRan = false;
             owner.PushToConsole($"Enqueueing {ToString()} for retry. Attempts {Attempts}");
             owner.AddNewCommand(this);
