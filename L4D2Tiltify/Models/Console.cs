@@ -15,7 +15,7 @@ namespace L4D2Tiltify.Models
 
     public class ConsoleMessage
     {
-        public DateTime Date { get; set; }
+        private DateTime Date { get; set; }
         public EConsoleSource Source { get; set; }
         public string Message { get; set; }
 
