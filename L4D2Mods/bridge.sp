@@ -41,6 +41,8 @@ static char g_zombieNames[9][] =
     "Tank"
 };
 
+bool g_CanHandleCommands = false;
+
 ////////////////////////////////////// INIT //////////////////////////////////////
 public void OnPluginStart()
 {
@@ -92,6 +94,7 @@ public Action Event_OnRoundStart(Event event, const char[] name, bool dontBroadc
         g_specialTrackers = new KeyValues("specialInfectTracker");
         PrintToServer("Craeted new Special Infected Tracker");
     }
+    g_CanHandleCommands = true;
     return Plugin_Continue;
 }
 
@@ -103,6 +106,7 @@ public Action Event_OnRoundEnd(Event event, const char[] name, bool dontBroadcas
         g_specialTrackers = null;
         PrintToServer("Deleted Special Infected Tracker");
     }
+    g_CanHandleCommands = false;
     return Plugin_Continue;
 }
 
@@ -244,6 +248,7 @@ void PrintSpawnMessage(const char[] spawnName, const char[] spawnColor, const ch
 Action BridgeSpawnZombie(int client, int args)
 {
     if (args != 2) return Plugin_Handled;
+    if (!g_CanHandleCommands) return Plugin_Handled;
 
     char spawnerName[DONOR_NAME_LEN];
     char infectedType[10];
@@ -279,6 +284,7 @@ Action BridgeSpawnZombie(int client, int args)
 Action BridgeSpawnMobs(int client, int args)
 {
     if (args != 2) return Plugin_Handled;
+    if (!g_CanHandleCommands) return Plugin_Handled;
 
     char spawnerName[DONOR_NAME_LEN];
     char sArgs[8];
@@ -319,6 +325,7 @@ Action BridgeTogglePause(int client, int args)
 Action BridgeSpawnLootbox(int client, int args)
 {
     if (args <= 0) return Plugin_Handled;
+    if (!g_CanHandleCommands) return Plugin_Handled;
 
     char spawnerName[DONOR_NAME_LEN];
     // Copy donor
@@ -338,6 +345,8 @@ Action BridgeSpawnLootbox(int client, int args)
 
 Action BridgeCleanLootboxes(int client, int args)
 {
+    if (!g_CanHandleCommands) return Plugin_Handled;
+
     Bridge_CleanLootboxes();
     return Plugin_Handled;
 }
@@ -346,6 +355,7 @@ Action BridgeCleanLootboxes(int client, int args)
 Action BridgeSupplyCrate(int client, int args)
 {
     if (args <= 0) return Plugin_Handled;
+    if (!g_CanHandleCommands) return Plugin_Handled;
     
     char spawnerName[DONOR_NAME_LEN];
     // Copy donor
