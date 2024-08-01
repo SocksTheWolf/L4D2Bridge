@@ -8,4 +8,8 @@
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
     </Application.Styles>
+  
+  <Application.Resources>
+    <FontFamily x:Key="FontAwesome">avares://L4D2Tiltify/Assets/Fonts#Font Awesome 6 Free Solid</FontFamily>
+  </Application.Resources>
 </Application>
