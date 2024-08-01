@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace L4D2Tiltify.Models
@@ -31,6 +33,15 @@ namespace L4D2Tiltify.Models
         public string TiltifyOAuthToken { get; set; } = string.Empty;
 
         [JsonProperty]
+        public string TiltifyClientID { get; set; } = string.Empty;
+
+        [JsonProperty]
+        public string TiltifyClientSecret { get; set; } = string.Empty;
+
+        [JsonProperty]
+        public string? TiltifyRefreshToken { get; set; } = string.Empty;
+
+        [JsonProperty]
         public string TiltifyCampaignID { get; set; } = string.Empty;
 
         // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
@@ -38,8 +49,6 @@ namespace L4D2Tiltify.Models
         public int TiltifyPollingInterval { get; set; } = 5;
 
         /*** UI Settings ***/
-        [JsonProperty]
-        public uint ConsoleRefreshInSeconds { get; set; } = 30;
 
         /*** Config Loading/Saving ***/
         public static ConfigData LoadConfigData()
@@ -61,8 +70,14 @@ namespace L4D2Tiltify.Models
                     {
                         configData = outputConfig;
                         configData.IsValid = true;
+                        List<string> checkIfNotNull = [configData.RConServerIP, configData.RConPassword];
 
-                        if (string.IsNullOrEmpty(configData.RConServerIP))
+                        // Add important Tiltify configs if we're using it.
+                        if (configData.UseTiltify)
+                            checkIfNotNull.AddRange([configData.TiltifyClientID, configData.TiltifyClientSecret, configData.TiltifyCampaignID]);
+
+                        // Check if any of the settings are invalid.
+                        if (checkIfNotNull.Any(it => string.IsNullOrEmpty(it)))
                             configData.IsValid = false;
                         
                         Console.WriteLine("Settings loaded");

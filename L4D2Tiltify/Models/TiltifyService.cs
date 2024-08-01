@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tiltify;
+using Tiltify.Exceptions;
 using Tiltify.Models;
 
 namespace L4D2Tiltify.Models
@@ -23,6 +23,18 @@ namespace L4D2Tiltify.Models
         }
     }
 
+    public class OnAuthUpdateArgs
+    {
+        public string OAuthToken;
+        public string RefreshToken;
+
+        public OnAuthUpdateArgs(string oAuthToken, string refreshToken)
+        {
+            OAuthToken = oAuthToken;
+            RefreshToken = refreshToken;
+        }
+    }
+
     public class TiltifyService
     {
         private Tiltify.Tiltify Campaign;
@@ -30,12 +42,16 @@ namespace L4D2Tiltify.Models
         private DateTime LastPolled;
         private Task? Runner;
         private int PollInterval;
+        private bool ShouldRun = true;
 
         // Print something to the console service (All Services have something like this)
         public Action<string>? OnConsolePrint { private get; set; }
 
         // Fires whenever donations are received
         public Action<OnDonationArgs>? OnDonationReceived { private get; set; }
+
+        // Fires whenever the authorization updated for Tiltify
+        public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
 
         public TiltifyService(ConfigData config)
         {
@@ -44,33 +60,64 @@ namespace L4D2Tiltify.Models
 
             LastPolled = DateTime.UtcNow;
             ApiSettings apiSettings = new ApiSettings();
-            apiSettings.OAuthToken = config.TiltifyOAuthToken;
+            apiSettings.ClientID = config.TiltifyClientID;
+            apiSettings.ClientSecret = config.TiltifyClientSecret;
 
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
             CampaignId = config.TiltifyCampaignID;
             PollInterval = config.TiltifyPollingInterval;
         }
-
-        public void Start()
+        ~TiltifyService()
         {
+            ShouldRun = false;
+        }
+
+        public async void Start()
+        {
+            if (Campaign == null)
+                return;
+
+            await Login();
             Runner = Tick(TimeSpan.FromSeconds(PollInterval));
         }
 
-        async Task Tick(TimeSpan interval)
+        private async Task Login()
+        {
+            if (OnAuthUpdate == null)
+                return;
+
+            try
+            {
+                AuthorizationResponse resp = await Campaign.Auth.Authorize();
+                if (resp != null)
+                {
+                    string refreshToken = "";
+                    if (!string.IsNullOrEmpty(resp.RefreshToken))
+                        refreshToken = resp.RefreshToken;
+
+                    OnAuthUpdate.Invoke(new OnAuthUpdateArgs(resp.AccessToken, refreshToken));
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintMessage(ex.ToString());
+            }
+        }
+
+        private async Task Tick(TimeSpan interval)
         {
             PrintMessage("Tiltify Ready!");
             using PeriodicTimer timer = new(interval);
             double temp;
-            while (true)
+            while (ShouldRun)
             {
-                if (OnDonationReceived == null)
+                if (OnDonationReceived == null || OnAuthUpdate == null)
                 {
                     await timer.WaitForNextTickAsync(default);
                     continue;
                 }
 
                 DateTime dateTime = DateTime.UtcNow;
-                
                 try
                 {
                     GetCampaignDonationsResponse resp = await Campaign.Campaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
@@ -90,6 +137,11 @@ namespace L4D2Tiltify.Models
                         }
                     }
                 }
+                catch (TokenExpiredException)
+                {
+                    // If the token expires, get a new one.
+                    await Login();
+                }
                 catch (Exception ex)
                 {
                     PrintMessage(ex.ToString());
@@ -99,7 +151,7 @@ namespace L4D2Tiltify.Models
             }
         }
 
-        void PrintMessage(string message)
+        private void PrintMessage(string message)
         {
             if (OnConsolePrint != null)
                 OnConsolePrint.Invoke(message);

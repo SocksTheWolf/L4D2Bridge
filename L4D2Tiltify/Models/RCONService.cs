@@ -26,17 +26,37 @@ namespace L4D2Tiltify.Models
             if (!config.IsValid)
                 return;
 
-            IPAddress addr = IPAddress.Parse(config.RConServerIP);
+            IPAddress? addr = IPAddress.None;
+            // See if we're an IP Address.
+            if (!IPAddress.TryParse(config.RConServerIP, out addr))
+            {
+                // We are a hostname, so attempt to fetch the IP address from DNS
+                IPAddress[] Output = Dns.GetHostAddresses(config.RConServerIP);
+                if (Output.Length > 0)
+                    addr = Output[0];
+                else
+                    return;
+            }
+
+            // Somehow the address is still invalid, so stop.
+            if (addr == null || addr == IPAddress.None)
+                return;
+
             IPEndPoint endpoint = new IPEndPoint(addr, config.RConServerPort);
             Server = new RCON(endpoint, config.RConPassword, autoConnect: false);
-            RunTask = Tick();
-            CheckPauseTask = CheckPause();
         }
         ~RCONService() 
         {
             ShouldRun = false;
         }
 
+        public void Start()
+        {
+            RunTask = Tick();
+            CheckPauseTask = CheckPause();
+        }
+
+        // This is public so commands can print to the console still.
         public void PushToConsole(string message)
         {
             if (OnConsolePrint != null)
@@ -100,7 +120,7 @@ namespace L4D2Tiltify.Models
         private async Task CheckPause()
         {
             TimeSpan time = TimeSpan.FromMinutes(5);
-            while (true)
+            while (ShouldRun)
             {
                 AddNewCommand(new CheckPauseCommand());
                 await Task.Delay(time, default);

@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Tiltify.Models;
 using System.Collections.ObjectModel;
@@ -24,6 +23,7 @@ public partial class MainViewModel : ViewModelBase
 
         Server.OnConsolePrint = (msg) => Console.AddMessage(msg, EConsoleSource.RCON);
         Server.OnPauseStatus = OnPauseStatus;
+        Server.Start();
 
         if (Config.UseTiltify)
         {
@@ -33,11 +33,18 @@ public partial class MainViewModel : ViewModelBase
             {
                 Console.AddMessage($"{data.Name} donated {data.Amount} {data.Currency}", EConsoleSource.Tiltify);
             };
+            Donation.OnAuthUpdate = (data) =>
+            {
+                Config.TiltifyOAuthToken = data.OAuthToken;
+                Config.TiltifyRefreshToken = data.RefreshToken;
+                Config.SaveConfigData();
+                Console.AddMessage("OAuth Data Updated!", EConsoleSource.Tiltify);
+            };
             Donation.Start();
         }
 
         Config.SaveConfigData();
-        Console.AddMessage("Ready!", EConsoleSource.Main);
+        Console.AddMessage("Operations Running!", EConsoleSource.Main);
     }
 
     // Flags our UI if the status of the server is paused

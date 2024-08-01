@@ -57,15 +57,21 @@ namespace L4D2Tiltify.Models
     {
         public ObservableCollection<ConsoleMessage> ConsoleMessages { get; private set; }
         private Task? Ticker;
+        private bool ShouldRun = true;
 
         public ConsoleService()
         {
             ConsoleMessages = new ObservableCollection<ConsoleMessage>();
         }
+        ~ConsoleService()
+        {
+            ShouldRun = false;
+        }
 
         public void Initialize(ConfigData config)
         {
-            Ticker = Tick(TimeSpan.FromSeconds(config.ConsoleRefreshInSeconds));
+            // Console attempts to cleanup every 30s
+            Ticker = Tick(TimeSpan.FromSeconds(30));
         }
 
         public void AddMessage(string inMessage, EConsoleSource source = EConsoleSource.None)
@@ -76,7 +82,7 @@ namespace L4D2Tiltify.Models
         public async Task Tick(TimeSpan interval)
         {
             using PeriodicTimer timer = new(interval);
-            while (true)
+            while (ShouldRun)
             {
                 ConsoleMessages.RemoveAll(msg => msg.IsExpired());
                 await timer.WaitForNextTickAsync(default);
