@@ -37,8 +37,8 @@ namespace L4D2Tiltify.Models
 
     public class TiltifyService
     {
-        private Tiltify.Tiltify Campaign;
-        private string CampaignId;
+        private Tiltify.Tiltify? Campaign;
+        private string CampaignId = string.Empty;
         private DateTime LastPolled;
         private Task? Runner;
         private int PollInterval;
@@ -83,7 +83,7 @@ namespace L4D2Tiltify.Models
 
         private async Task Login()
         {
-            if (OnAuthUpdate == null)
+            if (OnAuthUpdate == null || Campaign == null)
                 return;
 
             try
@@ -111,7 +111,7 @@ namespace L4D2Tiltify.Models
             double temp;
             while (ShouldRun)
             {
-                if (OnDonationReceived == null || OnAuthUpdate == null)
+                if (Campaign == null || OnDonationReceived == null || OnAuthUpdate == null)
                 {
                     await timer.WaitForNextTickAsync(default);
                     continue;
@@ -140,7 +140,9 @@ namespace L4D2Tiltify.Models
                 catch (TokenExpiredException)
                 {
                     // If the token expires, get a new one.
+                    PrintMessage("Fetching a new token from Tiltify.."); ;
                     await Login();
+                    continue;
                 }
                 catch (Exception ex)
                 {
