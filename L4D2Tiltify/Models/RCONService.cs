@@ -119,7 +119,7 @@ namespace L4D2Tiltify.Models
 
         private async Task CheckPause()
         {
-            TimeSpan time = TimeSpan.FromMinutes(5);
+            TimeSpan time = TimeSpan.FromMinutes(2);
             while (ShouldRun)
             {
                 AddNewCommand(new CheckPauseCommand());
