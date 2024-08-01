@@ -108,8 +108,4 @@ public partial class MainViewModel : ViewModelBase
             Box.Clear();
         }
     }
-
-    // TODO:
-    //
-    // - Rules engine system thing yeah
 }
