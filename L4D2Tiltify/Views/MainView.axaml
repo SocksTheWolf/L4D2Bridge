@@ -14,12 +14,9 @@
 
   <StackPanel>
     <!-- Console Log -->
-    <ScrollViewer Height="380" BorderThickness="50" BorderBrush="White">
-      <DataGrid x:Name="ConsoleLog" Margin="5" ItemsSource="{Binding Console.ConsoleMessages, Mode=OneWay}"
-                IsReadOnly="True" GridLinesVisibility="Horizontal"
-                BorderThickness="1" CanUserSortColumns="False" AutoGenerateColumns="True">
-      </DataGrid>
-    </ScrollViewer>
+    <DataGrid x:Name="ConsoleLog" Margin="5" Height="380" ItemsSource="{Binding Console.ConsoleMessages, Mode=OneWay}"
+      IsReadOnly="True" GridLinesVisibility="Horizontal" BorderThickness="1" CanUserSortColumns="False" AutoGenerateColumns="True" VerticalScrollBarVisibility="Auto" 
+              HorizontalScrollBarVisibility="Hidden" />
     <DockPanel>
       
       <!-- Pause Button -->
