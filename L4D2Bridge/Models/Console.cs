@@ -79,6 +79,11 @@ namespace L4D2Bridge.Models
             ConsoleMessages.Add(new ConsoleMessage(inMessage, source));
         }
 
+        public void ClearAllMessages()
+        {
+            ConsoleMessages.Clear();
+        }
+
         public async Task Tick(TimeSpan interval)
         {
             using PeriodicTimer timer = new(interval);

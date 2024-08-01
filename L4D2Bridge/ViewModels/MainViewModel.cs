@@ -97,9 +97,14 @@ public partial class MainViewModel : ViewModelBase
     {        
         ReadOnlyCollection<object> Payload = (ReadOnlyCollection<object>)msg;
         TextBox Box = ((TextBox)Payload[0]);
-        if (!string.IsNullOrEmpty(Box.Text))
+        string? command = Box.Text;
+        if (!string.IsNullOrEmpty(command))
         {
-            Server.AddNewCommand(new RawCommand(Box.Text));
+            if (command.ToLower() == "clear")
+                Console.ClearAllMessages();
+            else
+                Server.AddNewCommand(new RawCommand(command));
+
             Box.Clear();
         }
     }
