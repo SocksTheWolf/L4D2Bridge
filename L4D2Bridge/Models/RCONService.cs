@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using CoreRCON;
 
-namespace L4D2Tiltify.Models
+namespace L4D2Bridge.Models
 {
     public class RCONService
     {

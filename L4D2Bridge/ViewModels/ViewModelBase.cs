@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace L4D2Tiltify.ViewModels;
+namespace L4D2Bridge.ViewModels;
 
 public class ViewModelBase : ObservableObject
 {

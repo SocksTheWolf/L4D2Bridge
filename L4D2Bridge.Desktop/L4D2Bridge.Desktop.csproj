@@ -14,6 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\L4D2Tiltify\L4D2Tiltify.csproj" />
+    <ProjectReference Include="..\L4D2Bridge\L4D2Bridge.csproj" />
   </ItemGroup>
 </Project>

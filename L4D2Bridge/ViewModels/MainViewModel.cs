@@ -1,11 +1,11 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using L4D2Tiltify.Models;
+using L4D2Bridge.Models;
 using System;
 using System.Collections.ObjectModel;
 
-namespace L4D2Tiltify.ViewModels;
+namespace L4D2Bridge.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {

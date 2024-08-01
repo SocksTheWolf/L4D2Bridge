@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace L4D2Tiltify.Models
+namespace L4D2Bridge.Models
 {
     [JsonObject(MemberSerialization.OptIn)]
     public class ConfigData

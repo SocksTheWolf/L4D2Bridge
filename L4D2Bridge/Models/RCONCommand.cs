@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace L4D2Tiltify.Models
+namespace L4D2Bridge.Models
 {
     public enum ECommandType {
         None,

@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="L4D2Tiltify.App"
+             x:Class="L4D2Bridge.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -10,6 +10,6 @@
     </Application.Styles>
   
   <Application.Resources>
-    <FontFamily x:Key="FontAwesome">avares://L4D2Tiltify/Assets/Fonts#Font Awesome 6 Free Solid</FontFamily>
+    <FontFamily x:Key="FontAwesome">avares://L4D2Bridge/Assets/Fonts#Font Awesome 6 Free Solid</FontFamily>
   </Application.Resources>
 </Application>

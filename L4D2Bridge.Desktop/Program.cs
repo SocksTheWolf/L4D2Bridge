@@ -2,7 +2,7 @@
 
 using Avalonia;
 
-namespace L4D2Tiltify.Desktop;
+namespace L4D2Bridge.Desktop;
 
 class Program
 {

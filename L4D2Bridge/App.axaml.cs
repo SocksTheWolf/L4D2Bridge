@@ -3,10 +3,10 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 
-using L4D2Tiltify.ViewModels;
-using L4D2Tiltify.Views;
+using L4D2Bridge.ViewModels;
+using L4D2Bridge.Views;
 
-namespace L4D2Tiltify;
+namespace L4D2Bridge;
 
 public partial class App : Application
 {

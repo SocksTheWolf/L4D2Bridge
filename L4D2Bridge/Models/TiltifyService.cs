@@ -5,7 +5,7 @@ using Tiltify;
 using Tiltify.Exceptions;
 using Tiltify.Models;
 
-namespace L4D2Tiltify.Models
+namespace L4D2Bridge.Models
 {
     public class OnDonationArgs
     {
