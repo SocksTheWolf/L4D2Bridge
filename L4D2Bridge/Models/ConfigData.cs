@@ -6,6 +6,62 @@ using Newtonsoft.Json;
 
 namespace L4D2Bridge.Models
 {
+    using RequiredFieldContainer = List<string>;
+
+    [JsonObject(MemberSerialization.OptOut)]
+    public class TiltifySettings
+    {
+        [JsonProperty(Required = Required.Always)]
+        public bool Enabled { get; set; } = true;
+
+        [JsonProperty(Required = Required.Always)]
+        public string OAuthToken { get; set; } = string.Empty;
+
+        [JsonProperty(Required = Required.Always)]
+        public string ClientID { get; set; } = string.Empty;
+
+        [JsonProperty(Required = Required.Always)]
+        public string ClientSecret { get; set; } = string.Empty;
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? RefreshToken { get; set; } = null;
+
+        [JsonProperty(Required = Required.Always)]
+        public string CampaignID { get; set; } = string.Empty;
+
+        // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
+        [JsonProperty]
+        public int PollingInterval { get; set; } = 5;
+
+        public void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
+        {
+            if (Enabled)
+                RequiredFieldObj.AddRange([ClientID, ClientSecret, CampaignID]);
+        }
+    }
+
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
+    public class TwitchSettings
+    {
+        [JsonProperty]
+        public bool Enabled { get; set; } = false;
+
+        [JsonProperty]
+        public string ChannelName { get; set; } = string.Empty;
+
+        [JsonProperty]
+        public string BotUserName { get; set; } = string.Empty;
+
+        [JsonProperty]
+        public string OAuthToken { get; set; } = string.Empty;
+
+        public void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
+        {
+            if (Enabled)
+                RequiredFieldObj.AddRange([ChannelName, BotUserName, OAuthToken]);
+        }
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
     public class ConfigData
     {
@@ -15,7 +71,7 @@ namespace L4D2Bridge.Models
         // Statics
         public static string FileName = "config.json";
 
-        /*** Connection Information ***/
+        /*** Server Connection Information ***/
         [JsonProperty]
         public string RConServerIP { get; set; } = string.Empty;
 
@@ -25,28 +81,13 @@ namespace L4D2Bridge.Models
         [JsonProperty]
         public string RConPassword { get; set; } = string.Empty;
 
+        /*** Twitch Connection Information ***/
+        [JsonProperty(PropertyName = "twitch", NullValueHandling = NullValueHandling.Include, Required=Required.AllowNull)]
+        public TwitchSettings? TwitchSettings { get; set; }
+
         /*** Tiltify API Settings ***/
-        [JsonProperty]
-        public bool UseTiltify { get; set; } = true;
-
-        [JsonProperty]
-        public string TiltifyOAuthToken { get; set; } = string.Empty;
-
-        [JsonProperty]
-        public string TiltifyClientID { get; set; } = string.Empty;
-
-        [JsonProperty]
-        public string TiltifyClientSecret { get; set; } = string.Empty;
-
-        [JsonProperty]
-        public string? TiltifyRefreshToken { get; set; } = string.Empty;
-
-        [JsonProperty]
-        public string TiltifyCampaignID { get; set; } = string.Empty;
-
-        // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
-        [JsonProperty]
-        public int TiltifyPollingInterval { get; set; } = 5;
+        [JsonProperty(PropertyName = "tiltify", NullValueHandling = NullValueHandling.Include, Required = Required.AllowNull)]
+        public TiltifySettings? TiltifySettings { get; set; }
 
         /*** UI Settings ***/
 
@@ -70,11 +111,15 @@ namespace L4D2Bridge.Models
                     {
                         configData = outputConfig;
                         configData.IsValid = true;
-                        List<string> checkIfNotNull = [configData.RConServerIP, configData.RConPassword];
+                        RequiredFieldContainer checkIfNotNull = [configData.RConServerIP, configData.RConPassword];
 
                         // Add important Tiltify configs if we're using it.
-                        if (configData.UseTiltify)
-                            checkIfNotNull.AddRange([configData.TiltifyClientID, configData.TiltifyClientSecret, configData.TiltifyCampaignID]);
+                        if (configData.TiltifySettings != null)
+                            configData.TiltifySettings.AddRequiredFields(ref checkIfNotNull);
+
+                        // Add important Twitch configs if we're using it.
+                        if (configData.TwitchSettings != null)
+                            configData.TwitchSettings.AddRequiredFields(ref checkIfNotNull);
 
                         // Check if any of the settings are invalid.
                         if (checkIfNotNull.Any(it => string.IsNullOrEmpty(it)))
@@ -95,7 +140,10 @@ namespace L4D2Bridge.Models
 
         public void SaveConfigData()
         {
-            string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented);
+            string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Include
+            });
             using (StreamWriter FileWriter = File.CreateText(FileName))
             {
                 FileWriter.WriteLine(jsonString);

@@ -53,19 +53,16 @@ namespace L4D2Bridge.Models
         // Fires whenever the authorization updated for Tiltify
         public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
 
-        public TiltifyService(ConfigData config)
+        public TiltifyService(TiltifySettings config)
         {
-            if (!config.IsValid)
-                return;
-
             LastPolled = DateTime.UtcNow;
             ApiSettings apiSettings = new ApiSettings();
-            apiSettings.ClientID = config.TiltifyClientID;
-            apiSettings.ClientSecret = config.TiltifyClientSecret;
+            apiSettings.ClientID = config.ClientID;
+            apiSettings.ClientSecret = config.ClientSecret;
 
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
-            CampaignId = config.TiltifyCampaignID;
-            PollInterval = config.TiltifyPollingInterval;
+            CampaignId = config.CampaignID;
+            PollInterval = config.PollingInterval;
         }
         ~TiltifyService()
         {

@@ -11,7 +11,7 @@ public partial class MainViewModel : ViewModelBase
     public ConfigData Config { get; private set; }
     public ConsoleService Console { get; set; } = new ConsoleService();
     private RCONService Server { get; set; }
-    private TiltifyService? Donation { get; set; }
+    private TiltifyService? CharityTracker { get; set; }
     private Button? PauseButton { get; set; }
 
     [ObservableProperty]
@@ -34,22 +34,22 @@ public partial class MainViewModel : ViewModelBase
         Server.OnPauseStatus = OnPauseStatusUpdate;
         Server.Start();
 
-        if (Config.UseTiltify)
+        if (Config.TiltifySettings != null && Config.TiltifySettings.Enabled)
         {
-            Donation = new TiltifyService(Config);
-            Donation.OnConsolePrint = (msg) => Console.AddMessage(msg, EConsoleSource.Tiltify);
-            Donation.OnDonationReceived = (data) =>
+            CharityTracker = new TiltifyService(Config.TiltifySettings);
+            CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, EConsoleSource.Tiltify);
+            CharityTracker.OnDonationReceived = (data) =>
             {
                 Console.AddMessage($"{data.Name} donated {data.Amount} {data.Currency}", EConsoleSource.Tiltify);
             };
-            Donation.OnAuthUpdate = (data) =>
+            CharityTracker.OnAuthUpdate = (data) =>
             {
-                Config.TiltifyOAuthToken = data.OAuthToken;
-                Config.TiltifyRefreshToken = data.RefreshToken;
+                Config.TiltifySettings.OAuthToken = data.OAuthToken;
+                Config.TiltifySettings.RefreshToken = data.RefreshToken;
                 Config.SaveConfigData();
                 Console.AddMessage("OAuth Data Updated!", EConsoleSource.Tiltify);
             };
-            Donation.Start();
+            CharityTracker.Start();
         }
 
         Config.SaveConfigData();
