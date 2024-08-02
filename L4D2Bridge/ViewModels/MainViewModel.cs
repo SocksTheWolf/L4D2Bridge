@@ -3,7 +3,6 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
 using System;
-using System.Collections.ObjectModel;
 
 namespace L4D2Bridge.ViewModels;
 
@@ -87,16 +86,15 @@ public partial class MainViewModel : ViewModelBase
     // Button to allow for pausing outside of the game
     public void OnPauseButton_Clicked(object msg)
     {
-        ReadOnlyCollection<object> Payload = (ReadOnlyCollection<object>)msg;
-        PauseButton = ((Button)Payload[0]);
+        if (PauseButton == null)
+            PauseButton = ((Button)msg);
 
         Server.AddNewCommand(new TogglePauseCommand());
     }
 
     public void OnServerCommand_Sent(object msg)
-    {        
-        ReadOnlyCollection<object> Payload = (ReadOnlyCollection<object>)msg;
-        TextBox Box = ((TextBox)Payload[0]);
+    {
+        TextBox Box = ((TextBox)msg);
         string? command = Box.Text;
         if (!string.IsNullOrEmpty(command))
         {

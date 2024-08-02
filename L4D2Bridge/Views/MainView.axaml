@@ -17,27 +17,12 @@
     <DataGrid x:Name="ConsoleLog" Margin="5" Height="380" ItemsSource="{Binding Console.ConsoleMessages, Mode=OneWay}"
       IsReadOnly="True" GridLinesVisibility="Horizontal" BorderThickness="1" CanUserSortColumns="False" AutoGenerateColumns="True" VerticalScrollBarVisibility="Auto" 
               HorizontalScrollBarVisibility="Hidden" />
-    <DockPanel>
-      
-      <!-- Pause Button -->
-      <Button x:Name="PauseStatus" Foreground="Green" Background="Transparent" Margin="0" HorizontalAlignment="Stretch" FontFamily="{StaticResource FontAwesome}" Content="{Binding PauseButtonText}" ToolTip.Tip="{Binding PauseTip}" Padding="18,15" Command="{Binding OnPauseButton_Clicked}">
-        <Button.CommandParameter>
-          <MultiBinding>
-            <Binding ElementName="PauseStatus" />
-          </MultiBinding>
-        </Button.CommandParameter>
-      </Button>
-      
-      <!-- Console Commands -->
+
+    <!-- Control Panel -->
+    <DockPanel>      
+      <Button x:Name="PauseStatus" Foreground="Green" Background="Transparent" Margin="0" HorizontalAlignment="Stretch" FontFamily="{StaticResource FontAwesome}" Content="{Binding PauseButtonText}" ToolTip.Tip="{Binding PauseTip}" Padding="18,15" Command="{Binding OnPauseButton_Clicked}" CommandParameter="{Binding $self}" />
       <TextBox x:Name="ServerCommand" MaxLines="1" NewLine="False" Width="640" Height="7" AcceptsReturn="False" Margin="5,1" Watermark="Server Command" />
-      <Button IsDefault="True" Content="Send" Command="{Binding OnServerCommand_Sent}" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0 20" Width="80">
-        <Button.CommandParameter>
-          <MultiBinding>
-            <Binding ElementName="ServerCommand" />
-          </MultiBinding>
-        </Button.CommandParameter>
-      </Button>
-      
+      <Button IsDefault="True" Content="Send" Command="{Binding OnServerCommand_Sent}" CommandParameter="{Binding #ServerCommand}" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0 20" Width="80" />
     </DockPanel>
   </StackPanel>
 </UserControl>
