@@ -1,6 +1,9 @@
 <Project>
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <AvaloniaVersion>11.0.2</AvaloniaVersion>
+    <Authors>SocksTheWolf</Authors>
+    <PackageProjectUrl>https://github.com/SocksTheWolf/L4D2Bridge</PackageProjectUrl>
+    <Copyright>Licensed under the MIT License</Copyright>
+    <AvaloniaVersion>11.1.1</AvaloniaVersion>
   </PropertyGroup>
 </Project>
