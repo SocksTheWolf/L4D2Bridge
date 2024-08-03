@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
 using L4D2Bridge.Types;
@@ -75,7 +76,12 @@ public partial class MainViewModel : ViewModelBase
     }
 
     // Flags our UI if the status of the server is paused
-    private void OnPauseStatusUpdate(bool CurrentPauseStatus)
+    public void OnPauseStatusUpdate(bool CurrentPauseStatus)
+    {
+        // This redirects the event to run on the UI thread.
+        Dispatcher.UIThread.Post(() => PushPauseStatusUpdate(CurrentPauseStatus));
+    }
+    private void PushPauseStatusUpdate(bool CurrentPauseStatus)
     {
         if (PauseButton == null)
             return;

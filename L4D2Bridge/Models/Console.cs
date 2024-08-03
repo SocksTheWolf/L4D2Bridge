@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
@@ -71,17 +72,17 @@ namespace L4D2Bridge.Models
 
         public void AddMessage(string inMessage, ConsoleSources source = ConsoleSources.None)
         {
-            ConsoleMessages.Add(new ConsoleMessage(inMessage, source));
+            Dispatcher.UIThread.Post(() => ConsoleMessages.Add(new ConsoleMessage(inMessage, source)));
         }
 
         public void AddMessage(string inMessage, BaseService service)
         {
-            ConsoleMessages.Add(new ConsoleMessage(inMessage, service.GetSource()));
+            AddMessage(inMessage, service.GetSource());
         }
 
         public void ClearAllMessages()
         {
-            ConsoleMessages.Clear();
+            Dispatcher.UIThread.Post(() => ConsoleMessages.Clear());
         }
 
         public async Task Tick(TimeSpan interval)

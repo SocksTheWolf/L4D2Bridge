@@ -32,7 +32,7 @@ namespace L4D2Bridge.Types
 
         public override string ToString()
         {
-            return $"Type[{Enum.GetName(typeof(EventType), Type)}] from {Name}, amount {Amount} - msg {Message}";
+            return $"SourceEvent[{Enum.GetName(typeof(EventType), Type)}] from {Name}, amount {Amount} - msg {Message}";
         }
     }
 }
