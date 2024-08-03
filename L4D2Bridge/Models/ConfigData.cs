@@ -152,9 +152,9 @@ namespace L4D2Bridge.Models
                         Console.WriteLine("Settings loaded");
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Failed to load settings");
+                    Console.WriteLine($"Failed to load settings {ex}");
                     configData.IsValid = false;
                 }
             }
