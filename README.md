@@ -2,7 +2,7 @@
 
 This is an application and service layer to a L4D2 server, that allows for external events to influence an active server live.
 
-## Influence Services
+## Influence Service Sources
 
 * Tiltify Donations
 * Twitch Events
@@ -63,7 +63,8 @@ Here is an example of some actions that are defined in a config file. Names such
 ```
 
 #### Mob Sizes
-These are the ranges for each type of mob spawn size in the server commands list. Rand is when the size is not provided in the actions array.
+
+These are the ranges for each type of mob spawn size in the server commands list. The Rand value is when the mob size is not provided in the actions array.
 
 ---
 
