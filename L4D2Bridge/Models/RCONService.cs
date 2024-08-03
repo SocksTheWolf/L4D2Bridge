@@ -14,12 +14,16 @@ namespace L4D2Bridge.Models
         public Action<bool>? OnPauseStatus { private get; set; }
 
         // Data
-        private RCON? Server;
-        private Task? RunTask;
-        private Task? CheckPauseTask;
         private bool ShouldRun = true;
         private int MaxTaskAttempts;
         private ConcurrentQueue<L4D2CommandBase> CommandQueue = new ConcurrentQueue<L4D2CommandBase>();
+
+        // Internals
+        private RCON? Server;
+
+        // Tasks
+        private Task? RunTask;
+        private Task? CheckPauseTask;
 
         public RCONService(ConfigData config)
         {
@@ -119,10 +123,13 @@ namespace L4D2Bridge.Models
                     if (CommandQueue.TryDequeue(out command))
                     {
                         bool ranCommand = await command.Execute(this, Server);
-                        if (!ranCommand) {
+                        if (!ranCommand && command.GetCommandType() != ServerCommands.CheckPause) {
+
                             // Do not attempt commands longer than the maximum amount of attempts
-                            if (command.GetAttemptCount() <= MaxTaskAttempts)
+                            if (command.GetAttemptCount() < MaxTaskAttempts)
                                 command.Retry(this);
+                            else
+                                PrintMessage($"{command} timed out after {command.GetAttemptCount()} attempts");
                         }
 
                         if (command.WasSuccessful() && command.GetCommandType() == ServerCommands.CheckPause)

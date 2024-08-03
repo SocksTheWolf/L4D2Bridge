@@ -14,11 +14,12 @@ namespace L4D2Bridge.Models
         private bool HasRan = false;
         private bool Successful = false;
         private int Attempts = 0;
-        private DateTime LastRan = DateTime.MinValue;
 
-        // Types
+        // Types and behavior settings
         protected ServerCommands Type = ServerCommands.None;
         protected bool IsSpawner = false;
+        protected bool RetriesImmediate = false;
+        protected bool CanRetry = true;
 
         // Base Shared Information
         protected string Sender = "";
@@ -43,16 +44,8 @@ namespace L4D2Bridge.Models
 
         public async Task<bool> Execute(RCONService owner, RCON connection)
         {
-            // If we've ran this task before and it failed, try again in one minute.
-            // This is a really jank way to do command delays.
-            if (LastRan != DateTime.MinValue && (DateTime.Now - LastRan) <= TimeSpan.FromMinutes(1)) 
-            {
-                return false;
-            }
-
             try
             {
-                LastRan = DateTime.Now;
                 Result = await connection.SendCommandAsync(Command);
                 HasRan = true;
                 if (IsSpawner)
@@ -75,21 +68,34 @@ namespace L4D2Bridge.Models
             }
             catch
             {
-                owner.PushToConsole($"Failed to execute {ToString()}");
+                owner.PushToConsole($"Failed to execute {this}");
             }
             return false;
         }
         public void Retry(RCONService owner)
         {
+            if (!CanRetry)
+                return;
+
             ++Attempts;
             HasRan = false;
             owner.PushToConsole($"Enqueueing {ToString()} for retry. Attempts {Attempts}");
-            owner.AddNewCommand(this);
+            if (!RetriesImmediate)
+            {
+                // Boot up retrying this task again up to a minute later.
+                Task.Run(async () => {
+                    await Task.Delay(Math.Min(200 * (int)Math.Pow(2, Attempts) / 2, 60000));
+                    owner.AddNewCommand(this);
+                }).ConfigureAwait(false);
+            }
+            else
+                owner.AddNewCommand(this);
+
         }
 
         public override string ToString()
         {
-            return $"Type[{nameof(Type)}], Sender[{Sender}]";
+            return $"Command[{Enum.GetName(typeof(ServerCommands), Type)}], Sender[{Sender}]";
         }
 
         public ServerCommands GetCommandType() => Type;
@@ -175,6 +181,7 @@ namespace L4D2Bridge.Models
         public CheckPauseCommand() : base(ServerCommands.CheckPause)
         {
             Command = "sm_bridge_checkpause";
+            RetriesImmediate = true;
         }
 
         // NOTE: This is not valid to call unless WasSuccessful() is true
@@ -211,7 +218,12 @@ namespace L4D2Bridge.Models
     {
         public RawCommand(string InCommand) : base(ServerCommands.Raw) 
         {
-            Command = InCommand; 
+            Command = InCommand;
+        }
+
+        public override string ToString()
+        {
+            return $"Command[{Enum.GetName(typeof(ServerCommands), Type)}], Args[{Command}]";
         }
     }
 
