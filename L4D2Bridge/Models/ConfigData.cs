@@ -100,7 +100,7 @@ namespace L4D2Bridge.Models
 
         /*** Rules Settings ***/
         [JsonProperty(PropertyName = "actions", Required = Required.Always)]
-        public Dictionary<string, List<L4D2Action>>? Actions;
+        public Dictionary<string, List<L4D2Action>> Actions = new Dictionary<string, List<L4D2Action>>();
 
         // Maximum amount of times to retry a task
         [JsonProperty]

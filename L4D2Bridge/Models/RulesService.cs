@@ -28,27 +28,41 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            if (!File.Exists(rulesFile))
-            {
-                PrintMessage("Missing rules information! Cannot handle rules engine");
-                return;
-            }
-
             // Migrate actions from config
             Actions = InActions;
         }
         public override void Start()
         {
             PrintMessage($"Using {Actions.Count} actions to the executor");
+            if (!File.Exists(rulesFile))
+            {
+                PrintMessage("Missing rules information! Cannot handle rules engine");
+                // Create an empty file
+                File.Create("rules.json").Close();
+                return;
+            }
 
             string rulesJson = File.ReadAllText(rulesFile);
-            var workflowData = JsonConvert.DeserializeObject<Workflow[]>(rulesJson);
-            ReSettings settings = new ReSettings
+            try
             {
-                CustomTypes = new Type[] { typeof(EventType), typeof(SourceEvent) }
-            };
-            engine = new RulesEngine.RulesEngine(workflowData, settings);
-            PrintMessage($"Rules engine started with {workflowData?.Length} workflow");
+                var workflowData = JsonConvert.DeserializeObject<Workflow[]>(rulesJson);
+                if (workflowData == null) 
+                {
+                    PrintMessage("Workflow data for rules engine is invalid! Cannot run rules engine.");
+                    return;
+                }
+                ReSettings settings = new ReSettings
+                {
+                    CustomTypes = new Type[] { typeof(EventType), typeof(SourceEvent) }
+                };
+                engine = new RulesEngine.RulesEngine(workflowData, settings);
+                PrintMessage($"Rules engine started with {workflowData?.Length} workflow");
+            }
+            catch (Exception ex)
+            {
+                PrintMessage(ex.ToString());
+            }
+
         }
 
         public override ConsoleSources GetSource() => ConsoleSources.RulesEngine;
