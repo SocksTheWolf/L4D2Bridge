@@ -81,10 +81,10 @@ namespace L4D2Bridge.Models
         public static string FileName = "config.json";
 
         /*** Server Connection Information ***/
-        [JsonProperty]
+        [JsonProperty(Required = Required.Always)]
         public string RConServerIP { get; set; } = string.Empty;
 
-        [JsonProperty]
+        [JsonProperty(Required = Required.Always)]
         public int RConServerPort { get; set; } = 27015;
 
         [JsonProperty]
