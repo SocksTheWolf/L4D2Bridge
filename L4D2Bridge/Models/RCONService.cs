@@ -18,10 +18,12 @@ namespace L4D2Bridge.Models
         private Task? RunTask;
         private Task? CheckPauseTask;
         private bool ShouldRun = true;
+        private int MaxTaskAttempts;
         private ConcurrentQueue<L4D2CommandBase> CommandQueue = new ConcurrentQueue<L4D2CommandBase>();
 
         public RCONService(ConfigData config)
         {
+            MaxTaskAttempts = config.MaxTaskRetries;
             if (!config.IsValid)
                 return;
 
@@ -118,7 +120,9 @@ namespace L4D2Bridge.Models
                     {
                         bool ranCommand = await command.Execute(this, Server);
                         if (!ranCommand) {
-                            command.Retry(this);
+                            // Do not attempt commands longer than the maximum amount of attempts
+                            if (command.GetAttemptCount() <= MaxTaskAttempts)
+                                command.Retry(this);
                         }
 
                         if (command.WasSuccessful() && command.GetCommandType() == ServerCommands.CheckPause)

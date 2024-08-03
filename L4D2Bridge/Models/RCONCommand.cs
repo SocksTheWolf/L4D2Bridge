@@ -97,6 +97,7 @@ namespace L4D2Bridge.Models
         // Status Flags
         public bool IsFinished() => HasRan;
         public bool WasSuccessful() => Successful;
+        public int GetAttemptCount() => Attempts;
     }
 
     public class SpawnMobCommand : L4D2CommandBase

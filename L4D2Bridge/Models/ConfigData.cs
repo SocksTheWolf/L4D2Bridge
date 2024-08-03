@@ -102,6 +102,10 @@ namespace L4D2Bridge.Models
         [JsonProperty(PropertyName = "actions", Required = Required.Always)]
         public Dictionary<string, List<L4D2Action>>? Actions;
 
+        // Maximum amount of times to retry a task
+        [JsonProperty]
+        public int MaxTaskRetries = 10;
+
         /*** Mob Settings ***/
         [JsonProperty(PropertyName = "mobsizes")]
         public MobSizeSettings MobSizes { get; set; } = new MobSizeSettings();
