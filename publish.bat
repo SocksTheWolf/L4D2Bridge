@@ -8,5 +8,5 @@ rm -f L4D2Bridge.exe
 rem rename binary
 rename L4D2Bridge.Desktop.exe L4D2Bridge.exe
 rem make zip
-7z a ..\..\Release.zip *.*
+7z a ..\..\Release.zip *.* ..\..\README.md ..\..\LICENSE
 @echo on
