@@ -22,15 +22,23 @@ namespace L4D2Bridge.Models
         protected bool CanRetry = true;
 
         // Base Shared Information
-        protected string Sender = "";
+        protected string Sender;
         protected string Command = "";
         protected string Result = "";
         
         protected L4D2CommandBase(ServerCommands InType, string InSender = "")
         {
             Type = InType;
-            // TODO: Consider better sanitization system
-            Sender = InSender.Replace(' ', '_');
+            if (!string.IsNullOrWhiteSpace(InSender))
+            {
+                char[] charArray = InSender.ToCharArray();
+
+                // Sanitize the input of the sender name
+                charArray = Array.FindAll<char>(charArray, (c => (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))));
+                Sender = new string(charArray, 0, charArray.Length > 100 ? 100 : charArray.Length);
+            }
+            else
+                Sender = "";
         }
 
         // For spawn related functions, this checks to see if the command executed successfully
@@ -188,6 +196,8 @@ namespace L4D2Bridge.Models
         public bool IsPaused()
         {
             // TODO: Consider throwing if not successful
+            if (!WasSuccessful())
+                return false;
 
             if (Result == "[Bridge] game paused")
                 return true;
