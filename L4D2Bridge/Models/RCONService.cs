@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using CoreRCON;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class RCONService
+    public class RCONService : BaseService
     {
-        // Print something to the console service (All Services have something like this)
-        public Action<string>? OnConsolePrint { private get; set; }
-
         // Flags whenever the system is currently paused
         public Action<bool>? OnPauseStatus { private get; set; }
 
@@ -21,7 +20,7 @@ namespace L4D2Bridge.Models
         private bool ShouldRun = true;
         private ConcurrentQueue<L4D2CommandBase> CommandQueue = new ConcurrentQueue<L4D2CommandBase>();
 
-        public RCONService(ConfigData config) 
+        public RCONService(ConfigData config)
         {
             if (!config.IsValid)
                 return;
@@ -45,12 +44,13 @@ namespace L4D2Bridge.Models
             IPEndPoint endpoint = new IPEndPoint(addr, config.RConServerPort);
             Server = new RCON(endpoint, config.RConPassword, autoConnect: false);
         }
-        ~RCONService() 
+        ~RCONService()
         {
             ShouldRun = false;
         }
+        public override ConsoleSources GetSource() => ConsoleSources.RCON;
 
-        public void Start()
+        public override void Start()
         {
             RunTask = Tick();
             CheckPauseTask = CheckPause();
@@ -59,8 +59,7 @@ namespace L4D2Bridge.Models
         // This is public so commands can print to the console still.
         public void PushToConsole(string message)
         {
-            if (OnConsolePrint != null)
-                OnConsolePrint.Invoke(message);
+            PrintMessage(message);
         }
 
         public void AddNewCommand(L4D2CommandBase command)
@@ -68,23 +67,45 @@ namespace L4D2Bridge.Models
             CommandQueue.Enqueue(command);
         }
 
+        public void AddNewCommands(List<L4D2CommandBase> commands)
+        {
+            foreach (L4D2CommandBase command in commands)
+                AddNewCommand(command);
+        }
+
+        public void AddNewAction(L4D2Action action, string SenderName)
+        {
+            L4D2CommandBase? OutCommand = L4D2CommandBuilder.BuildCommand(action, SenderName);
+            if (OutCommand != null)
+                AddNewCommand(OutCommand);
+        }
+
+        public void AddNewActions(List<L4D2Action> actions, string SenderName) 
+        { 
+            foreach (L4D2Action action in actions)
+                AddNewAction(action, SenderName);
+        }
+
         private async Task Tick()
         {
             if (Server == null)
                 return;
 
-            bool isConnected = false;
+            bool isConnected = false, hasConnected = false;
             Server.OnDisconnected += () => { 
                 isConnected = false;
-                PushToConsole("RCON Disconnected");
             };
 
             while (ShouldRun)
             {
                 if (!isConnected)
                 {
+                    if (hasConnected)
+                        PushToConsole("RCON Disconnected");
+
                     await Server.ConnectAsync();
                     isConnected = true;
+                    hasConnected = true;
                     PushToConsole("RCON Connected");
                     continue;
                 }
@@ -100,7 +121,7 @@ namespace L4D2Bridge.Models
                             command.Retry(this);
                         }
 
-                        if (command.WasSuccessful() && command.GetCommandType() == ECommandType.CheckPause)
+                        if (command.WasSuccessful() && command.GetCommandType() == ServerCommands.CheckPause)
                         {
                             if (OnPauseStatus != null)
                                 OnPauseStatus.Invoke(((CheckPauseCommand)command).IsPaused());

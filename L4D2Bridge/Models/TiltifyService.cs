@@ -4,25 +4,10 @@ using System.Threading.Tasks;
 using Tiltify;
 using Tiltify.Exceptions;
 using Tiltify.Models;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class OnDonationArgs
-    {
-        public double Amount;
-        public string Currency;
-        public string Name;
-        public string Comment;
-
-        public OnDonationArgs(string InName, double InAmount, string InCurrency, string InComment)
-        {
-            Amount = InAmount;
-            Currency = InCurrency;
-            Name = InName;
-            Comment = InComment;
-        }
-    }
-
     public class OnAuthUpdateArgs
     {
         public string OAuthToken;
@@ -35,7 +20,7 @@ namespace L4D2Bridge.Models
         }
     }
 
-    public class TiltifyService
+    public class TiltifyService : BaseService
     {
         private Tiltify.Tiltify? Campaign;
         private string CampaignId = string.Empty;
@@ -44,11 +29,8 @@ namespace L4D2Bridge.Models
         private int PollInterval;
         private bool ShouldRun = true;
 
-        // Print something to the console service (All Services have something like this)
-        public Action<string>? OnConsolePrint { private get; set; }
-
         // Fires whenever donations are received
-        public Action<OnDonationArgs>? OnDonationReceived { private get; set; }
+        public Action<SourceEvent>? OnDonationReceived { private get; set; }
 
         // Fires whenever the authorization updated for Tiltify
         public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
@@ -69,7 +51,10 @@ namespace L4D2Bridge.Models
             ShouldRun = false;
         }
 
-        public async void Start()
+        public override string GetWorkflow() => "tiltify";
+        public override ConsoleSources GetSource() => ConsoleSources.Tiltify;
+
+        public override async void Start()
         {
             if (Campaign == null)
                 return;
@@ -129,7 +114,7 @@ namespace L4D2Bridge.Models
 
                             if (Double.TryParse(donoInfo.Amount.Value, out temp))
                             {
-                                OnDonationReceived.Invoke(new OnDonationArgs(donoInfo.Name, temp, donoInfo.Amount.Currency, donoInfo.Comment));
+                                OnDonationReceived.Invoke(new SourceEvent(EventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
                             }
                         }
                     }
@@ -148,12 +133,6 @@ namespace L4D2Bridge.Models
 
                 await timer.WaitForNextTickAsync(default);
             }
-        }
-
-        private void PrintMessage(string message)
-        {
-            if (OnConsolePrint != null)
-                OnConsolePrint.Invoke(message);
         }
     }
 }

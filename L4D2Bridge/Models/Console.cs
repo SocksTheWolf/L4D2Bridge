@@ -2,24 +2,17 @@
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public enum EConsoleSource
-    {
-        None,
-        Main,
-        RCON,
-        Tiltify
-    }
-
     public class ConsoleMessage
     {
         private DateTime Date { get; set; }
-        public EConsoleSource Source { get; set; }
+        public ConsoleSources Source { get; set; }
         public string Message { get; set; }
 
-        public ConsoleMessage(string inMessage, EConsoleSource inSource)
+        public ConsoleMessage(string inMessage, ConsoleSources inSource)
         {
             Source = inSource;
             Message = inMessage;
@@ -52,7 +45,9 @@ namespace L4D2Bridge.Models
             }
         }
     }
-
+    
+    // This does not need to inherit from BaseService because it doesn't need a console printer
+    // (as it is the console printer)
     public class ConsoleService
     {
         public ObservableCollection<ConsoleMessage> ConsoleMessages { get; private set; }
@@ -68,15 +63,20 @@ namespace L4D2Bridge.Models
             ShouldRun = false;
         }
 
-        public void Initialize(ConfigData config)
+        public void Start()
         {
             // Console attempts to cleanup every 30s
             Ticker = Tick(TimeSpan.FromSeconds(30));
         }
 
-        public void AddMessage(string inMessage, EConsoleSource source = EConsoleSource.None)
+        public void AddMessage(string inMessage, ConsoleSources source = ConsoleSources.None)
         {
             ConsoleMessages.Add(new ConsoleMessage(inMessage, source));
+        }
+
+        public void AddMessage(string inMessage, BaseService service)
+        {
+            ConsoleMessages.Add(new ConsoleMessage(inMessage, service.GetSource()));
         }
 
         public void ClearAllMessages()

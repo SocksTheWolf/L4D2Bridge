@@ -2,7 +2,9 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
+using L4D2Bridge.Types;
 using System;
+using System.Collections.Generic;
 
 namespace L4D2Bridge.ViewModels;
 
@@ -11,6 +13,7 @@ public partial class MainViewModel : ViewModelBase
     public ConfigData Config { get; private set; }
     public ConsoleService Console { get; set; } = new ConsoleService();
     private RCONService Server { get; set; }
+    private RulesService Rules { get; set; }
     private TiltifyService? CharityTracker { get; set; }
     private Button? PauseButton { get; set; }
 
@@ -25,35 +28,50 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel() 
     {
-        SetPauseGlyph("f04b");
         Config = ConfigData.LoadConfigData();
-        Console.Initialize(Config);
-        Server = new RCONService(Config);
 
-        Server.OnConsolePrint = (msg) => Console.AddMessage(msg, EConsoleSource.RCON);
+        // Push the mob size prefs to the command builder
+        L4D2CommandBuilder.Mobs = Config.MobSizes;
+
+        // Start the console service
+        Console.Start();
+        SetPauseGlyph("f04b");
+
+        /* RCON */
+        Server = new RCONService(Config);
+        Server.OnConsolePrint = (msg) => Console.AddMessage(msg, Server);
         Server.OnPauseStatus = OnPauseStatusUpdate;
         Server.Start();
 
+        /* Rules Engine */
+        Rules = new RulesService(ref Config.Actions);
+        Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
+        Rules.Start();
+
+        /* Tiltify */
         if (Config.TiltifySettings != null && Config.TiltifySettings.Enabled)
         {
             CharityTracker = new TiltifyService(Config.TiltifySettings);
-            CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, EConsoleSource.Tiltify);
-            CharityTracker.OnDonationReceived = (data) =>
+            CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, CharityTracker);
+            CharityTracker.OnDonationReceived = async (data) =>
             {
-                Console.AddMessage($"{data.Name} donated {data.Amount} {data.Currency}", EConsoleSource.Tiltify);
+                Console.AddMessage($"{data.Name} donated {data.Amount}", CharityTracker);
+                List<L4D2Action> Commands = await Rules.ExecuteAsync(CharityTracker.GetWorkflow(), data);
+                Server.AddNewActions(Commands, data.Name);
             };
             CharityTracker.OnAuthUpdate = (data) =>
             {
                 Config.TiltifySettings.OAuthToken = data.OAuthToken;
-                Config.TiltifySettings.RefreshToken = data.RefreshToken;
+                if (!string.IsNullOrEmpty(data.RefreshToken))
+                    Config.TiltifySettings.RefreshToken = data.RefreshToken;
                 Config.SaveConfigData();
-                Console.AddMessage("OAuth Data Updated!", EConsoleSource.Tiltify);
+                Console.AddMessage("OAuth Data Updated!", CharityTracker);
             };
             CharityTracker.Start();
         }
 
         Config.SaveConfigData();
-        Console.AddMessage("Operations Running!", EConsoleSource.Main);
+        Console.AddMessage("Operations Running!", ConsoleSources.Main);
     }
 
     // Flags our UI if the status of the server is paused

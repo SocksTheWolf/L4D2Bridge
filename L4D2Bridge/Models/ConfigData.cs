@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
@@ -19,7 +20,7 @@ namespace L4D2Bridge.Models
     public class TiltifySettings : SettingsVerifier
     {
         [JsonProperty(Required = Required.Always)]
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
 
         [JsonProperty(Required = Required.Always)]
         public string OAuthToken { get; set; } = string.Empty;
@@ -90,12 +91,20 @@ namespace L4D2Bridge.Models
         public string RConPassword { get; set; } = string.Empty;
 
         /*** Twitch Settings ***/
-        [JsonProperty(PropertyName = "twitch", NullValueHandling = NullValueHandling.Include, Required=Required.AllowNull)]
-        public TwitchSettings? TwitchSettings { get; set; }
+        [JsonProperty(PropertyName = "twitch")]
+        public TwitchSettings TwitchSettings { get; set; } = new TwitchSettings();
 
         /*** Tiltify Settings ***/
-        [JsonProperty(PropertyName = "tiltify", NullValueHandling = NullValueHandling.Include, Required = Required.AllowNull)]
-        public TiltifySettings? TiltifySettings { get; set; }
+        [JsonProperty(PropertyName = "tiltify")]
+        public TiltifySettings TiltifySettings { get; set; } = new TiltifySettings();
+
+        /*** Rules Settings ***/
+        [JsonProperty(PropertyName = "actions", Required = Required.Always)]
+        public Dictionary<string, List<L4D2Action>>? Actions;
+
+        /*** Mob Settings ***/
+        [JsonProperty(PropertyName = "mobsizes")]
+        public MobSizeSettings MobSizes { get; set; } = new MobSizeSettings();
 
         /*** UI Settings ***/
 

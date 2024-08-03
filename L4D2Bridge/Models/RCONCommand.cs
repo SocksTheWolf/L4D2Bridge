@@ -1,20 +1,13 @@
 ﻿using CoreRCON;
 using System;
 using System.Threading.Tasks;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public enum ECommandType {
-        None,
-        Raw,
-        CheckPause,
-        TogglePause,
-        SpawnMob,
-        SpawnZombie,
-        SpawnLootbox,
-        SpawnSupplyCrate
-    };
-
+    // To add more commands, simply:
+    // - create a new enum in L4D2Actions
+    // - add its corresponding class construction to L4D2CommandBuilder
     public abstract class L4D2CommandBase
     {
         // Status flags and stats
@@ -24,7 +17,7 @@ namespace L4D2Bridge.Models
         private DateTime LastRan = DateTime.MinValue;
 
         // Types
-        protected ECommandType Type = ECommandType.None;
+        protected ServerCommands Type = ServerCommands.None;
         protected bool IsSpawner = false;
 
         // Base Shared Information
@@ -32,7 +25,7 @@ namespace L4D2Bridge.Models
         protected string Command = "";
         protected string Result = "";
         
-        protected L4D2CommandBase(ECommandType InType, string InSender = "")
+        protected L4D2CommandBase(ServerCommands InType, string InSender = "")
         {
             Type = InType;
             // TODO: Consider better sanitization system
@@ -99,7 +92,7 @@ namespace L4D2Bridge.Models
             return $"Type[{nameof(Type)}], Sender[{Sender}]";
         }
 
-        public ECommandType GetCommandType() => Type;
+        public ServerCommands GetCommandType() => Type;
 
         // Status Flags
         public bool IsFinished() => HasRan;
@@ -109,7 +102,7 @@ namespace L4D2Bridge.Models
     public class SpawnMobCommand : L4D2CommandBase
     {
         private int NumZombies = 0;
-        public SpawnMobCommand(int Amount, string InSender) : base(ECommandType.SpawnMob, InSender)
+        public SpawnMobCommand(int Amount, string InSender) : base(ServerCommands.SpawnMob, InSender)
         {
             IsSpawner = true;
             NumZombies = Amount;
@@ -130,10 +123,10 @@ namespace L4D2Bridge.Models
     public class SpawnZombieCommand : L4D2CommandBase
     {
         string ZombieType;
-        public SpawnZombieCommand(string InType, string InSender) : base(ECommandType.SpawnZombie, InSender)
+        public SpawnZombieCommand(string InZombieType, string InSender) : base(ServerCommands.SpawnZombie, InSender)
         {
             IsSpawner = true;
-            ZombieType = InType.ToLower();
+            ZombieType = InZombieType.ToLower();
             Command = $"sm_bridge_spawnmob {ZombieType} {Sender}";
         }
 
@@ -150,7 +143,7 @@ namespace L4D2Bridge.Models
 
     public class SpawnLootboxCommand : L4D2CommandBase
     {
-        public SpawnLootboxCommand(string InSender) : base(ECommandType.SpawnLootbox, InSender)
+        public SpawnLootboxCommand(string InSender) : base(ServerCommands.SpawnLootbox, InSender)
         {
             IsSpawner = true;
             Command = $"sm_bridge_spawnlootbox {Sender}";
@@ -164,7 +157,7 @@ namespace L4D2Bridge.Models
 
     public class SpawnSupplyCrateCommand : L4D2CommandBase
     {
-        public SpawnSupplyCrateCommand(string InSender) : base(ECommandType.SpawnSupplyCrate, InSender)
+        public SpawnSupplyCrateCommand(string InSender) : base(ServerCommands.SpawnSupplyCrate, InSender)
         {
             IsSpawner = true;
             Command = $"sm_bridge_supplycrate {Sender}";
@@ -178,7 +171,7 @@ namespace L4D2Bridge.Models
 
     public class CheckPauseCommand : L4D2CommandBase
     {
-        public CheckPauseCommand() : base(ECommandType.CheckPause)
+        public CheckPauseCommand() : base(ServerCommands.CheckPause)
         {
             Command = "sm_bridge_checkpause";
         }
@@ -202,7 +195,7 @@ namespace L4D2Bridge.Models
 
     public class TogglePauseCommand : L4D2CommandBase
     {
-        public TogglePauseCommand() : base(ECommandType.TogglePause)
+        public TogglePauseCommand() : base(ServerCommands.TogglePause)
         {
             Command = "sm_bridge_togglepause";
         }
@@ -215,9 +208,57 @@ namespace L4D2Bridge.Models
 
     public class RawCommand : L4D2CommandBase
     {
-        public RawCommand(string InCommand) : base(ECommandType.Raw) 
+        public RawCommand(string InCommand) : base(ServerCommands.Raw) 
         {
             Command = InCommand; 
+        }
+    }
+
+    // Static class to help build console commands based on a given action.
+    static public class L4D2CommandBuilder
+    {
+        private static Random rng = new Random();
+        public static MobSizeSettings Mobs = new MobSizeSettings();
+
+        public static L4D2CommandBase? BuildCommand(L4D2Action Action, string SenderName)
+        {
+            L4D2CommandBase? outCommand = null;
+            switch (Action)
+            {
+                default:
+                case L4D2Action.None:
+                    return null;
+                case L4D2Action.SpawnTank:
+                    outCommand = new SpawnZombieCommand("tank", SenderName); break;
+                case L4D2Action.SpawnSpitter:
+                    outCommand = new SpawnZombieCommand("spitter", SenderName); break;
+                case L4D2Action.SpawnJockey:
+                    outCommand = new SpawnZombieCommand("jockey", SenderName); break;
+                case L4D2Action.SpawnWitch:
+                    outCommand = new SpawnZombieCommand("witch", SenderName); break;
+                case L4D2Action.SpawnBoomer:
+                    outCommand = new SpawnZombieCommand("boomer", SenderName); break;
+                case L4D2Action.SpawnHunter:
+                    outCommand = new SpawnZombieCommand("hunter", SenderName); break;
+                case L4D2Action.SpawnCharger:
+                    outCommand = new SpawnZombieCommand("charger", SenderName); break;
+                case L4D2Action.SpawnSmoker:
+                    outCommand = new SpawnZombieCommand("smoker", SenderName); break;
+                case L4D2Action.Lootbox:
+                    outCommand = new SpawnLootboxCommand(SenderName); break;
+                case L4D2Action.SupplyCrate:
+                    outCommand = new SpawnSupplyCrateCommand(SenderName); break;
+                case L4D2Action.SpawnMobMedium:
+                    outCommand = new SpawnMobCommand(Mobs.Medium.GetSpawnAmount(ref rng), SenderName); break;
+                case L4D2Action.SpawnMobSmall:
+                    outCommand = new SpawnMobCommand(Mobs.Small.GetSpawnAmount(ref rng), SenderName); break;
+                case L4D2Action.SpawnMobLarge:
+                    outCommand = new SpawnMobCommand(Mobs.Large.GetSpawnAmount(ref rng), SenderName); break;
+                case L4D2Action.SpawnMob:
+                    outCommand = new SpawnMobCommand(Mobs.Rand.GetSpawnAmount(ref rng), SenderName); break;
+            }
+
+            return outCommand;
         }
     }
 }
