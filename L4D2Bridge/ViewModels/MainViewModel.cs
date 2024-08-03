@@ -16,6 +16,7 @@ public partial class MainViewModel : ViewModelBase
     private RCONService Server { get; set; }
     private RulesService Rules { get; set; }
     private TiltifyService? CharityTracker { get; set; }
+    private TwitchService? Twitch { get; set; }
     private Button? PauseButton { get; set; }
 
     [ObservableProperty]
@@ -54,7 +55,7 @@ public partial class MainViewModel : ViewModelBase
         {
             CharityTracker = new TiltifyService(Config.TiltifySettings);
             CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, CharityTracker);
-            CharityTracker.OnDonationReceived = async (data) =>
+            CharityTracker.OnSourceEvent = async (data) =>
             {
                 Console.AddMessage($"{data.Name} donated {data.Amount}", CharityTracker);
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(CharityTracker.GetWorkflow(), data);
@@ -69,6 +70,18 @@ public partial class MainViewModel : ViewModelBase
                 Console.AddMessage("OAuth Data Updated!", CharityTracker);
             };
             CharityTracker.Start();
+        }
+
+        /* Twitch */
+        if (Config.TwitchSettings != null && Config.TwitchSettings.Enabled)
+        {
+            Twitch = new TwitchService(Config.TwitchSettings);
+            Twitch.OnConsolePrint = (msg) => Console.AddMessage(msg, Twitch);
+            Twitch.OnSourceEvent = async (data) => {
+                List<L4D2Action> Commands = await Rules.ExecuteAsync(Twitch.GetWorkflow(), data);
+                Server.AddNewActions(Commands, data.Name);
+            };
+            Twitch.Start();
         }
 
         Config.SaveConfigData();

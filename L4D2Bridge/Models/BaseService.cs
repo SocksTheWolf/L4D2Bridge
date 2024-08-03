@@ -9,6 +9,9 @@ namespace L4D2Bridge.Models
         // Print something to the console service (All Services have something like this)
         public Action<string>? OnConsolePrint { private get; set; }
 
+        // Fires whenever donations are received
+        public Action<SourceEvent>? OnSourceEvent { protected get; set; }
+
         // Helper function for printing messages to console (via Actions)
         protected void PrintMessage(string message)
         {

@@ -5,7 +5,7 @@ This is an application and service layer to a L4D2 server, that allows for exter
 ## Influence Services
 
 * Tiltify Donations
-* More to come????
+* Twitch Events
 
 ## Setup
 
@@ -74,21 +74,31 @@ The following important notes are:
 * `WorkflowName` has to be one of the services that this application supports. Currently `tiltify` or `twitch`
 * For each rule, either `RuleName` or `SuccessEvent` should be the name of one of the actions you have defined in the `config.json` file earlier. The system will check for `RuleName` matches first and upon failure to match, will check the `SuccessEvent` for an action match.
 * All rules are evaluated for every event of a given service type. Execution does not stop on the first rule event, so you can have mutliple rules running at once.
+* Rules run every time against a given source event.
 
-#### Rule Types
+#### Source Event Types
 
-These are the types that you can check against upon running your rules:
+Rules can check their input object types against these values to determine actions. These are the types that are supported:
 
 ```
     Donation,
-    Resubscription,
-    Follow,
     Subscription,
+    Resubscription,
+    GiftSubscription,
+    MultiGiftSubscription,
     Raid,
-    Bits,
-    ChatMessage,
     ChatCommand
 ```
+
+#### Source Event Data
+
+All input objects are data objects that contain the following fields that can be checked against:
+
+* Type (of the Source Event Types listed above)
+* Name - The user that caused this event to fire
+* Channel - The twitch channel this occurred on (tiltify does not pass this data)
+* Amount - The numerical amount of whatever was passed.
+* Message - Any messages attached (if supported)
 
 #### Example
 

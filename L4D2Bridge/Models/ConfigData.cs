@@ -16,29 +16,19 @@ namespace L4D2Bridge.Models
     }
 
     /*** Settings for Tiltify ***/
-    [JsonObject(MemberSerialization.OptOut)]
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
     public class TiltifySettings : SettingsVerifier
     {
-        [JsonProperty(Required = Required.Always)]
         public bool Enabled { get; set; } = false;
-
-        [JsonProperty(Required = Required.Always)]
         public string OAuthToken { get; set; } = string.Empty;
-
-        [JsonProperty(Required = Required.Always)]
         public string ClientID { get; set; } = string.Empty;
-
-        [JsonProperty(Required = Required.Always)]
         public string ClientSecret { get; set; } = string.Empty;
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, Required = Required.Default)]
         public string? RefreshToken { get; set; } = null;
 
-        [JsonProperty(Required = Required.Always)]
         public string CampaignID { get; set; } = string.Empty;
-
         // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
-        [JsonProperty]
         public int PollingInterval { get; set; } = 5;
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
@@ -50,24 +40,32 @@ namespace L4D2Bridge.Models
 
     /*** Settings for Twitch ***/
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
+    public class TwitchEvents
+    {
+        public bool OnCommand { get; set; } = false;
+        public bool OnRaid { get; set; } = false;
+        public bool OnSubscription { get; set; } = false;
+        public bool OnResubscription { get; set; } = false;
+        public bool OnGiftSubscription { get; set; } = false;
+        public bool OnMultiGiftSubscription { get; set; } = false;
+    }
+
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
     public class TwitchSettings : SettingsVerifier
     {
-        [JsonProperty]
         public bool Enabled { get; set; } = false;
-
-        [JsonProperty]
-        public string ChannelName { get; set; } = string.Empty;
-
-        [JsonProperty]
+        public List<string> Channels { get; set; } = new List<string>();
         public string BotUserName { get; set; } = string.Empty;
-
-        [JsonProperty]
         public string OAuthToken { get; set; } = string.Empty;
+        public TwitchEvents Events { get; set; } = new TwitchEvents();
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
         {
             if (Enabled)
-                RequiredFieldObj.AddRange([ChannelName, BotUserName, OAuthToken]);
+            {
+                RequiredFieldObj.AddRange(Channels);
+                RequiredFieldObj.AddRange([BotUserName, OAuthToken]);
+            }
         }
     }
 

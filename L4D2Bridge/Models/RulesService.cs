@@ -6,7 +6,6 @@ using RulesEngine.Models;
 using L4D2Bridge.Types;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RulesEngine.Extensions;
 
 namespace L4D2Bridge.Models
 {
@@ -20,7 +19,7 @@ namespace L4D2Bridge.Models
         RulesEngine.RulesEngine? engine;
         ActionDictionary Actions = new ActionDictionary();
 
-        public RulesService(ref ActionDictionary? InActions) 
+        public RulesService(ref ActionDictionary InActions) 
         {
             if (InActions == null)
             {
@@ -53,7 +52,7 @@ namespace L4D2Bridge.Models
                 }
                 ReSettings settings = new ReSettings
                 {
-                    CustomTypes = new Type[] { typeof(EventType), typeof(SourceEvent) }
+                    CustomTypes = new Type[] { typeof(SourceEventType), typeof(SourceEvent) }
                 };
                 engine = new RulesEngine.RulesEngine(workflowData, settings);
                 PrintMessage($"Rules engine started with {workflowData?.Length} workflow");

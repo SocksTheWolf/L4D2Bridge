@@ -29,9 +29,6 @@ namespace L4D2Bridge.Models
         private int PollInterval;
         private bool ShouldRun = true;
 
-        // Fires whenever donations are received
-        public Action<SourceEvent>? OnDonationReceived { private get; set; }
-
         // Fires whenever the authorization updated for Tiltify
         public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
 
@@ -93,7 +90,7 @@ namespace L4D2Bridge.Models
             double temp;
             while (ShouldRun)
             {
-                if (Campaign == null || OnDonationReceived == null || OnAuthUpdate == null)
+                if (Campaign == null || OnSourceEvent == null || OnAuthUpdate == null)
                 {
                     await timer.WaitForNextTickAsync(default);
                     continue;
@@ -114,7 +111,7 @@ namespace L4D2Bridge.Models
 
                             if (Double.TryParse(donoInfo.Amount.Value, out temp))
                             {
-                                OnDonationReceived.Invoke(new SourceEvent(EventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
+                                OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
                             }
                         }
                     }
