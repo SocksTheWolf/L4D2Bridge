@@ -2,6 +2,20 @@
 
 This is an application and service layer to a L4D2 server, that allows for external events to influence an active server live.
 
+## Features
+
+* Live server console
+* Robust action handling
+* Multiple service event ingesting
+* Fairly lightweight
+
+### Console Functionality
+
+Anything typed in the text box will be sent directly to the server via RCON, with the following exceptions:
+
+* reload - reloads the configuration of the application
+* clear - clears the console log entirely
+
 ## Influence Service Sources
 
 * Tiltify Donations
@@ -35,8 +49,13 @@ Acceptable server commands are:
     SpawnCharger,
     SpawnSmoker,
     Lootbox,
-    SupplyCrate
+    SupplyCrate,
+    RandomPositive,
+    RandomNegative,
+    Random
 ```
+
+Random does a coin flip and if heads, will run a `RandomPositive` action, if tails, a `RandomNegative` action will execute instead.
 
 ##### Example
 
@@ -65,6 +84,11 @@ Here is an example of some actions that are defined in a config file. Names such
 #### Mob Sizes
 
 These are the ranges for each type of mob spawn size in the server commands list. The Rand value is when the mob size is not provided in the actions array.
+
+#### Negative Weights
+
+These are the weights for each of the negative-based Actions with their weightings from 1-100 on how often they should appear. These are used to calculate what affect is
+used when a rule with the action `RandomNegative` is executed. If a negative action is not specified, it will not be randomly chosen when `RandomNegative` is executed.
 
 ---
 
@@ -97,7 +121,7 @@ Rules can check their input object types against these values to determine actio
 
 All input objects are data objects that contain the following fields that can be checked against:
 
-* Type (of the Source Event Types listed above)
+* Type - the Source Event Types listed above
 * Name - The user that caused this event to fire
 * Channel - The twitch channel this occurred on (tiltify does not pass this data)
 * Amount - The numerical amount of whatever was passed.

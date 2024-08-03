@@ -14,12 +14,12 @@ namespace L4D2Bridge.Types
 
         public SpawnSizeRange(int min, int max)
         {
-            Min = min; Max = max;
+            Min = Math.Max(0, min); Max = max;
         }
 
         public int GetSpawnAmount(ref Random rng)
         {
-            return rng.Next(Min, Max);
+            return rng.Next(Min, Max+1);
         }
     }
 

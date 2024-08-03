@@ -28,26 +28,29 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public string pauseTip = "Click here to pause the server";
 
-    public MainViewModel() 
+    public MainViewModel()
     {
-        Config = ConfigData.LoadConfigData();
-
-        // Push the mob size prefs to the command builder
-        L4D2CommandBuilder.Mobs = Config.MobSizes;
+        // Load all configuration data
+        LoadConfigs();
 
         // Start the console service
         Console.Start();
+
+        // Set the default pause glyph
         SetPauseGlyph("f04b");
 
         /* RCON */
+#pragma warning disable CS8604 // Possible null reference argument.
         Server = new RCONService(Config);
+#pragma warning restore CS8604 // Possible null reference argument.
         Server.OnConsolePrint = (msg) => Console.AddMessage(msg, Server);
         Server.OnPauseStatus = OnPauseStatusUpdate;
         Server.Start();
 
         /* Rules Engine */
-        Rules = new RulesService(ref Config.Actions);
+        Rules = new RulesService();
         Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
+        Rules.LoadActions(ref Config.Actions);
         Rules.Start();
 
         /* Tiltify */
@@ -64,7 +67,7 @@ public partial class MainViewModel : ViewModelBase
             CharityTracker.OnAuthUpdate = (data) =>
             {
                 Config.TiltifySettings.OAuthToken = data.OAuthToken;
-                if (!string.IsNullOrEmpty(data.RefreshToken))
+                if (!string.IsNullOrWhiteSpace(data.RefreshToken))
                     Config.TiltifySettings.RefreshToken = data.RefreshToken;
                 Config.SaveConfigData();
                 Console.AddMessage("OAuth Data Updated!", CharityTracker);
@@ -85,7 +88,19 @@ public partial class MainViewModel : ViewModelBase
         }
 
         Config.SaveConfigData();
-        Console.AddMessage("Operations Running!", ConsoleSources.Main);
+        if (!Config.IsValid)
+            Console.AddMessage("Invalid configuration, please check configs and restart", ConsoleSources.Main);
+        else
+            Console.AddMessage("Operations Running!", ConsoleSources.Main);
+    }
+
+    // Separated into a different function to allow for reloading of data
+    private void LoadConfigs()
+    {
+        Config = ConfigData.LoadConfigData();
+
+        // Push the command prefs to the command builder
+        L4D2CommandBuilder.Initialize(Config);
     }
 
     // Flags our UI if the status of the server is paused
@@ -135,8 +150,19 @@ public partial class MainViewModel : ViewModelBase
         string? command = Box.Text;
         if (!string.IsNullOrEmpty(command))
         {
-            if (command.ToLower() == "clear")
+            string loweredCommand = command.ToLower();
+            if (loweredCommand == "clear")
                 Console.ClearAllMessages();
+            else if (loweredCommand == "reload")
+            {
+                Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
+                // Load up our configs again
+                LoadConfigs();
+                // Restart the rules engine
+                Rules.LoadActions(ref Config.Actions);
+                Rules.Start();
+                Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
+            }
             else
                 Server.AddNewCommand(new RawCommand(command));
 

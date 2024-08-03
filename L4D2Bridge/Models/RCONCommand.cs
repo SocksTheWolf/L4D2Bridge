@@ -2,12 +2,19 @@
 using System;
 using System.Threading.Tasks;
 using L4D2Bridge.Types;
+using System.Collections.Generic;
+using WeightedRandomLibrary;
+using System.Linq;
 
 namespace L4D2Bridge.Models
 {
     // To add more commands, simply:
-    // - create a new enum in L4D2Actions
-    // - add its corresponding class construction to L4D2CommandBuilder
+    // - create a class below that inherits from L4D2CommandBase
+    // - create a new enum action in L4D2Actions
+    // - add a ServerCommands enum entry
+    // - add its corresponding class construction to L4D2CommandBuilder.InitializeRandoms
+    // - Classify it as either a positive or negative command in the actions arrays
+
     public abstract class L4D2CommandBase
     {
         // Status flags and stats
@@ -243,6 +250,32 @@ namespace L4D2Bridge.Models
         private static Random rng = new Random();
         public static MobSizeSettings Mobs = new MobSizeSettings();
 
+        // Negative Command Weight Randomization
+        private static WeightedRandomizer<L4D2Action>? WeightedNegativeRandom = null;
+
+        // All Command Randomization
+        private readonly static L4D2Action[] PositiveActions = { L4D2Action.Lootbox, L4D2Action.SupplyCrate };
+        private readonly static L4D2Action[] NegativeActions = { L4D2Action.SpawnTank, L4D2Action.SpawnSpitter,
+            L4D2Action.SpawnWitch, L4D2Action.SpawnTank, L4D2Action.SpawnSmoker, L4D2Action.SpawnHunter, L4D2Action.SpawnJockey, L4D2Action.SpawnBoomer,
+            L4D2Action.SpawnCharger, L4D2Action.SpawnMob, L4D2Action.SpawnMobLarge, L4D2Action.SpawnMobMedium, L4D2Action.SpawnMobSmall };
+
+        public static void Initialize(ConfigData config)
+        {
+            Mobs = config.MobSizes;
+            if (config.NegativeActionWeights != null)
+                InitializeWeightedRandoms(config.NegativeActionWeights);
+        }
+
+        public static void InitializeWeightedRandoms(Dictionary<L4D2Action, int> RandomWeighting)
+        {
+            // Create the negative randomization list.
+            List<Option<L4D2Action>> NegativeRandList = RandomWeighting
+                .Where(itm => NegativeActions.Contains(itm.Key))
+                .Select(p => new Option<L4D2Action>(p.Key, p.Value)).ToList();
+
+            WeightedNegativeRandom = new WeightedRandomizer<L4D2Action>(NegativeRandList);
+        }
+
         public static L4D2CommandBase? BuildCommand(L4D2Action Action, string SenderName)
         {
             L4D2CommandBase? outCommand = null;
@@ -279,6 +312,20 @@ namespace L4D2Bridge.Models
                     outCommand = new SpawnMobCommand(Mobs.Large.GetSpawnAmount(ref rng), SenderName); break;
                 case L4D2Action.SpawnMob:
                     outCommand = new SpawnMobCommand(Mobs.Rand.GetSpawnAmount(ref rng), SenderName); break;
+                case L4D2Action.RandomPositive:
+                    outCommand = BuildCommand(PositiveActions[rng.Next(0, PositiveActions.Length)], SenderName); break;
+                case L4D2Action.RandomNegative:
+                    if (WeightedNegativeRandom != null)
+                        outCommand = BuildCommand(WeightedNegativeRandom.Next().Value, SenderName);
+                    else
+                        outCommand = BuildCommand(NegativeActions[rng.Next(0, NegativeActions.Length)], SenderName);
+                break;
+                case L4D2Action.Random:
+                    if (rng.Next(0, 2) == 1)
+                        outCommand = BuildCommand(L4D2Action.RandomPositive, SenderName);
+                    else
+                        outCommand = BuildCommand(L4D2Action.RandomNegative, SenderName);
+                break;
             }
 
             return outCommand;

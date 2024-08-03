@@ -45,7 +45,10 @@ namespace L4D2Bridge.Models
 
             // Somehow the address is still invalid, so stop.
             if (addr == null || addr == IPAddress.None)
+            {
+                PrintMessage("Could not resolve address to connect to!");
                 return;
+            }
 
             IPEndPoint endpoint = new IPEndPoint(addr, config.RConServerPort);
             Server = new RCON(endpoint, config.RConPassword, autoConnect: false);
@@ -58,6 +61,12 @@ namespace L4D2Bridge.Models
 
         public override void Start()
         {
+            if (Server == null)
+            {
+                PrintMessage("RCON server configuration was invalid!");
+                return;
+            }
+
             RunTask = Tick();
             CheckPauseTask = CheckPause();
         }

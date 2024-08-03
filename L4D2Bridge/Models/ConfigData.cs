@@ -108,6 +108,10 @@ namespace L4D2Bridge.Models
         [JsonProperty(PropertyName = "mobsizes")]
         public MobSizeSettings MobSizes { get; set; } = new MobSizeSettings();
 
+        /*** Negative Command Randomization ***/
+        [JsonProperty(PropertyName = "negativeweights")]
+        public Dictionary<L4D2Action, int>? NegativeActionWeights { get; set; }
+
         /*** UI Settings ***/
 
         /*** Config Loading/Saving ***/

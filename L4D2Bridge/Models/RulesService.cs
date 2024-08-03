@@ -19,7 +19,7 @@ namespace L4D2Bridge.Models
         RulesEngine.RulesEngine? engine;
         ActionDictionary Actions = new ActionDictionary();
 
-        public RulesService(ref ActionDictionary InActions) 
+        public void LoadActions(ref ActionDictionary InActions)
         {
             if (InActions == null)
             {
@@ -30,6 +30,7 @@ namespace L4D2Bridge.Models
             // Migrate actions from config
             Actions = InActions;
         }
+
         public override void Start()
         {
             PrintMessage($"Using {Actions.Count} actions to the executor");
@@ -61,7 +62,6 @@ namespace L4D2Bridge.Models
             {
                 PrintMessage(ex.ToString());
             }
-
         }
 
         public override ConsoleSources GetSource() => ConsoleSources.RulesEngine;
@@ -73,6 +73,9 @@ namespace L4D2Bridge.Models
                 return new L4D2Actions();
 
             PrintMessage($"Running ruleset engine against {WorkflowName} with data {data}");
+            // NOTE: it's untested what happens if you change the rulesengine while it's being executed
+            // Technically, it should produce results on the old engine while new executes will run on the newer one
+            // until all older rules are done running.
             RuleResults results = await engine.ExecuteAllRulesAsync(WorkflowName, data);
             return ParseRuleResults(results);
         }
