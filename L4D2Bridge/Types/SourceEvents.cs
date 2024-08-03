@@ -1,4 +1,6 @@
-﻿namespace L4D2Bridge.Types
+﻿using System;
+
+namespace L4D2Bridge.Types
 {
     public enum EventType
     {
@@ -30,7 +32,7 @@
 
         public override string ToString()
         {
-            return $"Type[{nameof(Type)}] from {Name}, amount {Amount} - msg {Message}";
+            return $"Type[{Enum.GetName(typeof(EventType), Type)}] from {Name}, amount {Amount} - msg {Message}";
         }
     }
 }

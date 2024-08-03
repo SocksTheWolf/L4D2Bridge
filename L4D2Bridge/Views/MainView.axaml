@@ -16,7 +16,13 @@
     <!-- Console Log -->
     <DataGrid x:Name="ConsoleLog" Margin="5" Height="380" ItemsSource="{Binding Console.ConsoleMessages, Mode=OneWay}"
       IsReadOnly="True" GridLinesVisibility="Horizontal" BorderThickness="1" CanUserSortColumns="False" AutoGenerateColumns="True" VerticalScrollBarVisibility="Auto" 
-              HorizontalScrollBarVisibility="Hidden" />
+              HorizontalScrollBarVisibility="Hidden">
+        <DataGrid.Styles>
+          <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+          </Style>
+        </DataGrid.Styles>
+      </DataGrid>
 
     <!-- Control Panel -->
     <DockPanel>      

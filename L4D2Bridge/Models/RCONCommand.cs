@@ -127,7 +127,7 @@ namespace L4D2Bridge.Models
         {
             IsSpawner = true;
             ZombieType = InZombieType.ToLower();
-            Command = $"sm_bridge_spawnmob {ZombieType} {Sender}";
+            Command = $"sm_bridge_spawnzombie {ZombieType} {Sender}";
         }
 
         public override string ToString()
