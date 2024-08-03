@@ -65,6 +65,8 @@ Here is an example of some actions that are defined in a config file. Names such
 #### Mob Sizes
 These are the ranges for each type of mob spawn size in the server commands list. Rand is when the size is not provided in the actions array.
 
+---
+
 ### Rules
 
 `rules.json` is an [MS RulesEngine](https://github.com/microsoft/RulesEngine/wiki/Getting-Started#rules-schema) formatted file. 
@@ -129,6 +131,7 @@ All input objects are data objects that contain the following fields that can be
 ]
 ```
 
+---
 
 ### Server Dependencies
 
@@ -138,4 +141,4 @@ In addition to the modifications made in the L4D2Mods directory, the following a
 * [Weapon Handling](https://forums.alliedmods.net/showthread.php?t=319947) by Lux.
 * [Survivor Utilities](https://forums.alliedmods.net/showthread.php?t=335683) by Eärendil.
 * [Explosive Shots](https://forums.alliedmods.net/showthread.php?t=342301) by Eärendil.
-* [multicolors](https://github.com/fbef0102/L4D1_2-Plugins/releases/tag/Multi-Colors)
+* [multicolors](https://github.com/fbef0102/L4D1_2-Plugins/releases/tag/Multi-Colors).
