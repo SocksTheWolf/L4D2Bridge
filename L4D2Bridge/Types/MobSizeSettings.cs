@@ -26,9 +26,9 @@ namespace L4D2Bridge.Types
     [JsonObject(MemberSerialization.OptOut)]
     public class MobSizeSettings
     {
-        public SpawnSizeRange Small = new SpawnSizeRange(3, 5);
-        public SpawnSizeRange Medium = new SpawnSizeRange(6, 12);
-        public SpawnSizeRange Large = new SpawnSizeRange(15, 25);
-        public SpawnSizeRange Rand = new SpawnSizeRange(4, 20);
+        public SpawnSizeRange Small = new(3, 5);
+        public SpawnSizeRange Medium = new(6, 12);
+        public SpawnSizeRange Large = new(15, 25);
+        public SpawnSizeRange Rand = new(4, 20);
     }
 }

@@ -28,6 +28,7 @@ namespace L4D2Bridge.Models
         public string? RefreshToken { get; set; } = null;
 
         public string CampaignID { get; set; } = string.Empty;
+
         // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
         public int PollingInterval { get; set; } = 5;
 
@@ -54,16 +55,23 @@ namespace L4D2Bridge.Models
     public class TwitchSettings : SettingsVerifier
     {
         public bool Enabled { get; set; } = false;
-        public List<string> Channels { get; set; } = new List<string>();
+        public string[]? Channels { get; set; } = null;
         public string BotUserName { get; set; } = string.Empty;
         public string OAuthToken { get; set; } = string.Empty;
+        // If the resulting actions from twitch events should be redirected to chat as well.
+        public bool SendActionsToChat { get; set; } = false;
+        // Whether to message when Tiltify events should message into the chat console
+        public bool MessageOnTiltifyDonations { get; set; } = false;
+        public int ChatCommandPercentChance { get; set; } = 50;
         public TwitchEvents Events { get; set; } = new TwitchEvents();
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
         {
             if (Enabled)
             {
-                RequiredFieldObj.AddRange(Channels);
+                if (Channels != null)
+                    RequiredFieldObj.AddRange(Channels);
+
                 RequiredFieldObj.AddRange([BotUserName, OAuthToken]);
             }
         }
@@ -76,7 +84,7 @@ namespace L4D2Bridge.Models
         public bool IsValid { get; private set; } = false;
 
         // Statics
-        public static string FileName = "config.json";
+        private static readonly string FileName = "config.json";
 
         /*** Server Connection Information ***/
         [JsonProperty(Required = Required.Always)]
@@ -98,7 +106,7 @@ namespace L4D2Bridge.Models
 
         /*** Rules Settings ***/
         [JsonProperty(PropertyName = "actions", Required = Required.Always)]
-        public Dictionary<string, List<L4D2Action>> Actions = new Dictionary<string, List<L4D2Action>>();
+        public Dictionary<string, List<L4D2Action>> Actions = [];
 
         // Maximum amount of times to retry a task
         [JsonProperty]
@@ -113,11 +121,17 @@ namespace L4D2Bridge.Models
         public Dictionary<L4D2Action, int>? NegativeActionWeights { get; set; }
 
         /*** UI Settings ***/
+        [JsonProperty]
+        public int MaxMessageLifetime = 5;
+
+        /*** Utils ***/
+        public bool IsUsingTwitch() => TwitchSettings != null && TwitchSettings.Enabled;
+        public bool IsUsingTiltify() => TiltifySettings != null && TiltifySettings.Enabled;
 
         /*** Config Loading/Saving ***/
         public static ConfigData LoadConfigData()
         {
-            ConfigData configData = new ConfigData();
+            ConfigData configData = new();
             if (!File.Exists(FileName))
             {
                 configData.SaveConfigData();
@@ -142,11 +156,10 @@ namespace L4D2Bridge.Models
                         {
                             // Attempt to get the value of the property if it is set
                             object? Value = property?.GetValue(configData);
+
+                            // We have the object, so cast it to the SettingsVerifier class and add the required fields
                             if (Value != null)
-                            {
-                                // We have the object, so cast it to the SettingsVerifier class and add the required fields
                                 ((SettingsVerifier)Value).AddRequiredFields(ref checkIfNotNull);
-                            }
                         }
 
                         // Check if any of the settings are invalid.

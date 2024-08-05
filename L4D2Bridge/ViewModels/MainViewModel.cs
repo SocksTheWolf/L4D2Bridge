@@ -14,7 +14,7 @@ public partial class MainViewModel : ViewModelBase
     public ConfigData Config { get; private set; }
     public ConsoleService Console { get; set; } = new ConsoleService();
     private RCONService Server { get; set; }
-    private RulesService Rules { get; set; }
+    private RulesService Rules { get; set; } = new RulesService();
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private Button? PauseButton { get; set; }
@@ -30,42 +30,39 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
+        /* Rules Engine */
+        Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
+
         // Load all configuration data
         LoadConfigs();
 
         // Start the console service
-        Console.Start();
+#pragma warning disable CS8602 // Possible null reference argument.
+        Console.Start(Config.MaxMessageLifetime);
+#pragma warning restore CS8602 // Possible null reference argument.
 
         // Set the default pause glyph
         SetPauseGlyph("f04b");
 
         /* RCON */
-#pragma warning disable CS8604 // Possible null reference argument.
         Server = new RCONService(Config);
-#pragma warning restore CS8604 // Possible null reference argument.
         Server.OnConsolePrint = (msg) => Console.AddMessage(msg, Server);
         Server.OnPauseStatus = OnPauseStatusUpdate;
         Server.Start();
 
-        /* Rules Engine */
-        Rules = new RulesService();
-        Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
-        Rules.LoadActions(ref Config.Actions);
-        Rules.Start();
-
         /* Tiltify */
-        if (Config.TiltifySettings != null && Config.TiltifySettings.Enabled)
+        if (Config.IsUsingTiltify())
         {
             CharityTracker = new TiltifyService(Config.TiltifySettings);
             CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, CharityTracker);
-            CharityTracker.OnSourceEvent = async (data) =>
-            {
+            CharityTracker.OnSourceEvent += async (data) => {
                 Console.AddMessage($"{data.Name} donated {data.Amount}", CharityTracker);
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(CharityTracker.GetWorkflow(), data);
                 Server.AddNewActions(Commands, data.Name);
+
+                PostActions(ref Commands, CharityTracker.GetSource());
             };
-            CharityTracker.OnAuthUpdate = (data) =>
-            {
+            CharityTracker.OnAuthUpdate = (data) => {
                 Config.TiltifySettings.OAuthToken = data.OAuthToken;
                 if (!string.IsNullOrWhiteSpace(data.RefreshToken))
                     Config.TiltifySettings.RefreshToken = data.RefreshToken;
@@ -76,15 +73,24 @@ public partial class MainViewModel : ViewModelBase
         }
 
         /* Twitch */
-        if (Config.TwitchSettings != null && Config.TwitchSettings.Enabled)
+        if (Config.IsUsingTwitch())
         {
             Twitch = new TwitchService(Config.TwitchSettings);
             Twitch.OnConsolePrint = (msg) => Console.AddMessage(msg, Twitch);
-            Twitch.OnSourceEvent = async (data) => {
+            Twitch.OnSourceEvent += async (data) => {
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(Twitch.GetWorkflow(), data);
                 Server.AddNewActions(Commands, data.Name);
+                PostActions(ref Commands, Twitch.GetSource());
             };
             Twitch.Start();
+
+            if (CharityTracker != null && Config.TwitchSettings.MessageOnTiltifyDonations)
+            {
+                // Send a message to every twitch channel we are currently connected to
+                CharityTracker.OnSourceEvent += (data) => {
+                    Twitch.SendMessageToAllChannels($"{data.Name} just donated ${data.Amount} with message '{data.Message}'");
+                };
+            }
         }
 
         Config.SaveConfigData();
@@ -101,6 +107,21 @@ public partial class MainViewModel : ViewModelBase
 
         // Push the command prefs to the command builder
         L4D2CommandBuilder.Initialize(Config);
+
+        // Push the rules engine data
+        Rules.LoadActions(ref Config.Actions);
+        Rules.Start();
+    }
+
+    private void PostActions(ref readonly List<L4D2Action> Actions, ConsoleSources Source)
+    {
+        // Print the actions taken to the console
+        string ActionTaken = RulesService.ResultActionsToString(in Actions);
+        Console.AddMessage(ActionTaken, Source);
+
+        // Dump them also to twitch chat
+        if (Config.IsUsingTwitch() && Config.TwitchSettings.SendActionsToChat)
+            Twitch?.SendMessageToAllChannels(ActionTaken);
     }
 
     // Flags our UI if the status of the server is paused
@@ -138,9 +159,7 @@ public partial class MainViewModel : ViewModelBase
     // Button to allow for pausing outside of the game
     public void OnPauseButton_Clicked(object msg)
     {
-        if (PauseButton == null)
-            PauseButton = ((Button)msg);
-
+        PauseButton ??= ((Button)msg);
         Server.AddNewCommand(new TogglePauseCommand());
     }
 
@@ -158,9 +177,6 @@ public partial class MainViewModel : ViewModelBase
                 Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
                 // Load up our configs again
                 LoadConfigs();
-                // Restart the rules engine
-                Rules.LoadActions(ref Config.Actions);
-                Rules.Start();
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
             else

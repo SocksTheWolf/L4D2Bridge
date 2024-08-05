@@ -60,4 +60,7 @@ namespace L4D2Bridge.Types
             return $"SourceEvent[{Enum.GetName(typeof(SourceEventType), Type)}] from {Name}, amount {Amount} - msg {Message}";
         }
     }
+
+    // A delegate signature of how events should be handled when they are fired.
+    public delegate void SourceEventHandler(SourceEvent obj);
 }

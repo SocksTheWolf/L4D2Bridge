@@ -3,50 +3,32 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using L4D2Bridge.Utils;
 using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class ConsoleMessage
+    public class ConsoleMessage(string inMessage, ConsoleSources inSource)
     {
-        private DateTime Date { get; set; }
-        public ConsoleSources Source { get; set; }
-        public string Message { get; set; }
-
-        public ConsoleMessage(string inMessage, ConsoleSources inSource)
-        {
-            Source = inSource;
-            Message = inMessage;
-            Date = DateTime.Now;
-        }
+        private DateTime Date { get; set; } = DateTime.Now;
+        public ConsoleSources Source { get; set; } = inSource;
+        public string Message { get; set; } = inMessage;
 
         public string GetTypeStr() => nameof(Source);
 
-        public bool IsExpired()
+        public bool IsExpired(int messageLifetime)
         {
+            if (messageLifetime == 0)
+                return false;
+
             TimeSpan diff = DateTime.Now - Date;
-            if (Math.Abs(diff.Minutes) > 5)
+            if (Math.Abs(diff.Minutes) > messageLifetime)
                 return true;
 
             return false;
         }
     }
 
-    public static class ObservableCollectionExtensions
-    {
-        public static void RemoveAll<T>(this ObservableCollection<T> collection,
-                                                           Func<T, bool> condition)
-        {
-            for (int i = collection.Count - 1; i >= 0; i--)
-            {
-                if (condition(collection[i]))
-                {
-                    collection.RemoveAt(i);
-                }
-            }
-        }
-    }
-    
     // This does not need to inherit from BaseService because it doesn't need a console printer
     // (as it is the console printer)
     public class ConsoleService
@@ -57,21 +39,25 @@ namespace L4D2Bridge.Models
 
         public ConsoleService()
         {
-            ConsoleMessages = new ObservableCollection<ConsoleMessage>();
+            ConsoleMessages = [];
         }
         ~ConsoleService()
         {
             ShouldRun = false;
         }
 
-        public void Start()
+        public void Start(int maxMessageLifetime=5)
         {
             // Console attempts to cleanup every 30s
-            Ticker = Tick(TimeSpan.FromSeconds(30));
+            Ticker = Tick(TimeSpan.FromSeconds(30), maxMessageLifetime);
         }
 
         public void AddMessage(string inMessage, ConsoleSources source = ConsoleSources.None)
         {
+            // Don't bother adding messages that are blank
+            if (string.IsNullOrWhiteSpace(inMessage))
+                return;
+
             Dispatcher.UIThread.Post(() => ConsoleMessages.Add(new ConsoleMessage(inMessage, source)));
         }
 
@@ -85,12 +71,12 @@ namespace L4D2Bridge.Models
             Dispatcher.UIThread.Post(() => ConsoleMessages.Clear());
         }
 
-        public async Task Tick(TimeSpan interval)
+        public async Task Tick(TimeSpan interval, int maxMessageLifetime)
         {
             using PeriodicTimer timer = new(interval);
             while (ShouldRun)
             {
-                ConsoleMessages.RemoveAll(msg => msg.IsExpired());
+                ConsoleMessages.RemoveAll(msg => msg.IsExpired(maxMessageLifetime));
                 await timer.WaitForNextTickAsync(default);
             }
         }

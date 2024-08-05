@@ -15,8 +15,8 @@ namespace L4D2Bridge.Models
 
         // Data
         private bool ShouldRun = true;
-        private int MaxTaskAttempts;
-        private ConcurrentQueue<L4D2CommandBase> CommandQueue = new ConcurrentQueue<L4D2CommandBase>();
+        private readonly int MaxTaskAttempts;
+        private ConcurrentQueue<L4D2CommandBase> CommandQueue = new();
 
         // Internals
         private RCON? Server;
@@ -31,9 +31,8 @@ namespace L4D2Bridge.Models
             if (!config.IsValid)
                 return;
 
-            IPAddress? addr = IPAddress.None;
             // See if we're an IP Address.
-            if (!IPAddress.TryParse(config.RConServerIP, out addr))
+            if (!IPAddress.TryParse(config.RConServerIP, out IPAddress? addr))
             {
                 // We are a hostname, so attempt to fetch the IP address from DNS
                 IPAddress[] Output = Dns.GetHostAddresses(config.RConServerIP);
@@ -50,7 +49,7 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            IPEndPoint endpoint = new IPEndPoint(addr, config.RConServerPort);
+            IPEndPoint endpoint = new(addr, config.RConServerPort);
             Server = new RCON(endpoint, config.RConPassword, autoConnect: false);
         }
         ~RCONService()
@@ -72,10 +71,7 @@ namespace L4D2Bridge.Models
         }
 
         // This is public so commands can print to the console still.
-        public void PushToConsole(string message)
-        {
-            PrintMessage(message);
-        }
+        public void PushToConsole(string message) => PrintMessage(message);
 
         public void AddNewCommand(L4D2CommandBase command)
         {
@@ -126,13 +122,13 @@ namespace L4D2Bridge.Models
                 }
 
                 // Check to see if we have any commands in the queue to run
-                if (CommandQueue.Count > 0)
+                if (!CommandQueue.IsEmpty)
                 {
-                    L4D2CommandBase? command;
-                    if (CommandQueue.TryDequeue(out command))
+                    if (CommandQueue.TryDequeue(out L4D2CommandBase? command))
                     {
                         bool ranCommand = await command.Execute(this, Server);
-                        if (!ranCommand && command.GetCommandType() != ServerCommands.CheckPause) {
+                        if (!ranCommand && command.GetCommandType() != ServerCommands.CheckPause)
+                        {
 
                             // Do not attempt commands longer than the maximum amount of attempts
                             if (command.GetAttemptCount() < MaxTaskAttempts)
@@ -143,8 +139,7 @@ namespace L4D2Bridge.Models
 
                         if (command.WasSuccessful() && command.GetCommandType() == ServerCommands.CheckPause)
                         {
-                            if (OnPauseStatus != null)
-                                OnPauseStatus.Invoke(((CheckPauseCommand)command).IsPaused());
+                            OnPauseStatus?.Invoke(((CheckPauseCommand)command).IsPaused());
                         }
                     }
                     else

@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using L4D2Bridge.Types;
+﻿using L4D2Bridge.Types;
 using System;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -13,6 +12,7 @@ namespace L4D2Bridge.Models
     {
         private readonly TwitchClient client;
         private readonly TwitchSettings settings;
+        private Random rng = new();
 
         public override string GetWorkflow() => "twitch";
         public override ConsoleSources GetSource() => ConsoleSources.Twitch;
@@ -26,10 +26,13 @@ namespace L4D2Bridge.Models
                 ThrottlingPeriod = TimeSpan.FromSeconds(30)
             };
 
-            WebSocketClient customClient = new WebSocketClient(clientOptions);
+            WebSocketClient customClient = new(clientOptions);
 
-            client = new TwitchClient(customClient);
-            client.AutoReListenOnException = true;
+            client = new TwitchClient(customClient)
+            {
+                AutoReListenOnException = true
+            };
+
 #pragma warning disable CS8622
             client.OnJoinedChannel += OnChannelJoined;
 
@@ -60,8 +63,14 @@ namespace L4D2Bridge.Models
 
         public override void Start()
         {
-            PrintMessage($"Twitch Initialized for {settings.Channels.Count} channels");
-            ConnectionCredentials creds = new ConnectionCredentials(settings.BotUserName, settings.OAuthToken);
+            if (settings.Channels == null)
+            {
+                PrintMessage("Twitch service is missing channels to connect to!!!");
+                return;
+            }
+
+            PrintMessage($"Twitch Initialized for {settings.Channels.Length} channels");
+            ConnectionCredentials creds = new(settings.BotUserName, settings.OAuthToken);
             client.Initialize(creds);
             if (client.Connect())
             {
@@ -79,105 +88,101 @@ namespace L4D2Bridge.Models
 
         private void OnCommandReceived(object unused, OnChatCommandReceivedArgs args)
         {
-            if (OnSourceEvent == null)
+            if (rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.ChatCommand, args.Command.ChatMessage.Username, 
+            Invoke(new SourceEvent(SourceEventType.ChatCommand, args.Command.ChatMessage.Username, 
                 args.Command.ChatMessage.Channel, args.Command.CommandText));
         }
 
         private void OnChannelRaided(object unused, OnRaidNotificationArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             string fromUser = args.RaidNotification.MsgParamLogin;
-            int viewerCount;
-            if (!int.TryParse(args.RaidNotification.MsgParamViewerCount, out viewerCount))
+            if (!int.TryParse(args.RaidNotification.MsgParamViewerCount, out int viewerCount))
                 viewerCount = 1;
 
             PrintMessage($"Channel raid for {args.Channel} from {fromUser} of {viewerCount} viewers!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Raid, fromUser, args.Channel, viewerCount, string.Empty));
+            Invoke(new SourceEvent(SourceEventType.Raid, fromUser, args.Channel, viewerCount, string.Empty));
         }
 
         private void OnNewSubscription(object unused, OnNewSubscriberArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             string planName = args.Subscriber.SubscriptionPlanName;
-            int numMonths;
-            if (!int.TryParse(args.Subscriber.MsgParamCumulativeMonths, out numMonths))
+            if (!int.TryParse(args.Subscriber.MsgParamCumulativeMonths, out int numMonths))
                 numMonths = 0;
 
             PrintMessage($"Channel subscription for {args.Channel} from {args.Subscriber.DisplayName} of {planName} for {numMonths}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Subscription, args.Subscriber.Login, args.Channel, numMonths, planName));
+            Invoke(new SourceEvent(SourceEventType.Subscription, args.Subscriber.Login, args.Channel, numMonths, planName));
         }
 
         private void OnResubscription(object unused, OnReSubscriberArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             string planName = args.ReSubscriber.SubscriptionPlanName;
 
-            int numMonths;
-            if (!int.TryParse(args.ReSubscriber.MsgParamCumulativeMonths, out numMonths))
+            if (!int.TryParse(args.ReSubscriber.MsgParamCumulativeMonths, out int numMonths))
                 numMonths = 1;
 
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ReSubscriber.DisplayName} of {planName} for {numMonths}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Resubscription, args.ReSubscriber.Login, args.Channel, numMonths, 
+            Invoke(new SourceEvent(SourceEventType.Resubscription, args.ReSubscriber.Login, args.Channel, numMonths, 
                 args.ReSubscriber.SubscriptionPlanName));
         }
 
         private void OnPrimePaidSubscription(object unused, OnPrimePaidSubscriberArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             string planName = args.PrimePaidSubscriber.SubscriptionPlanName;
 
-            int numMonths;
-            if (!int.TryParse(args.PrimePaidSubscriber.MsgParamCumulativeMonths, out numMonths))
+            if (!int.TryParse(args.PrimePaidSubscriber.MsgParamCumulativeMonths, out int numMonths))
                 numMonths = 1;
 
             PrintMessage($"Channel resubscription for {args.Channel} from {args.PrimePaidSubscriber.DisplayName} of {planName} for {numMonths}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Resubscription, args.PrimePaidSubscriber.Login, args.Channel, numMonths, 
+            Invoke(new SourceEvent(SourceEventType.Resubscription, args.PrimePaidSubscriber.Login, args.Channel, numMonths, 
                 args.PrimePaidSubscriber.SubscriptionPlanName));
         }
 
         private void OnContinuedGiftSub(object unused, OnContinuedGiftedSubscriptionArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ContinuedGiftedSubscription.DisplayName}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Resubscription, args.ContinuedGiftedSubscription.Login, args.Channel, string.Empty));
+            Invoke(new SourceEvent(SourceEventType.Resubscription, args.ContinuedGiftedSubscription.Login, args.Channel, string.Empty));
         }
 
         private void OnGiftedSubscription(object unused, OnGiftedSubscriptionArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             string recipient = args.GiftedSubscription.MsgParamRecipientUserName;
-            int numMonths;
-            if (!int.TryParse(args.GiftedSubscription.MsgParamMultiMonthGiftDuration, out numMonths))
+            if (!int.TryParse(args.GiftedSubscription.MsgParamMultiMonthGiftDuration, out int numMonths))
                 numMonths = 1;
 
             PrintMessage($"Channel gift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} to {recipient} for {numMonths}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, numMonths, recipient));
+            Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, numMonths, recipient));
         }
 
         private void OnMultiGiftSubscription(object unused, OnCommunitySubscriptionArgs args)
         {
-            if (OnSourceEvent == null)
-                return;
-
             int numGifts = args.GiftedSubscription.MsgParamMassGiftCount;
             PrintMessage($"Channel multigift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} of {numGifts}!");
-            OnSourceEvent.Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, 
+            Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, 
                 numGifts, args.GiftedSubscription.MsgParamSubPlan.ToString()));
+        }
+
+        /*** Sending messages to a channel ***/
+        public void SendMessageToChannel(string channel, string message)
+        {
+            try
+            {
+                client.SendMessage(channel, message);
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Encountered exception upon sending message to channel[{channel}]: {ex}");
+            }
+        }
+
+        public void SendMessageToAllChannels(string message)
+        {
+            if (settings.Channels == null || settings.Channels.Length <= 0 || string.IsNullOrWhiteSpace(message))
+                return;
+
+            foreach (string channel in settings.Channels)
+                SendMessageToChannel(channel, message);
         }
     }
 }

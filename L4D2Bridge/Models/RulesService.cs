@@ -17,9 +17,9 @@ namespace L4D2Bridge.Models
     {
         const string rulesFile = "rules.json";
         RulesEngine.RulesEngine? engine;
-        ActionDictionary Actions = new ActionDictionary();
+        ActionDictionary Actions = [];
 
-        public void LoadActions(ref ActionDictionary InActions)
+        public void LoadActions(ref readonly ActionDictionary InActions)
         {
             if (InActions == null)
             {
@@ -70,7 +70,7 @@ namespace L4D2Bridge.Models
         {
             // If we don't have an engine, then we don't process anything and return an empty list.
             if (engine == null)
-                return new L4D2Actions();
+                return [];
 
             PrintMessage($"Running ruleset engine against {WorkflowName} with data {data}");
             // NOTE: it's untested what happens if you change the rulesengine while it's being executed
@@ -82,7 +82,7 @@ namespace L4D2Bridge.Models
 
         private L4D2Actions ParseRuleResults(RuleResults Results)
         {
-            L4D2Actions output = new L4D2Actions();
+            L4D2Actions output = [];
             if (Actions == null)
                 return output;
 
@@ -106,11 +106,38 @@ namespace L4D2Bridge.Models
 
                 if (ActionList != null)
                 {
-                    PrintMessage($"Matched with rule {RuleName}");
+                    PrintMessage($"Matched successfully with rule {RuleName}");
                     output.AddRange(ActionList);
                     ActionList = null;
                 }
             }
+            return output;
+        }
+
+        // This transforms any actions into a human readable string.
+        public static string ResultActionsToString(ref readonly L4D2Actions actions)
+        {
+            if (actions.Count <= 0)
+                return "";
+
+            string output = "Spawning ";
+            Dictionary<L4D2Action, int> appearances = [];
+            actions.ForEach(action =>
+            {
+                if (appearances.ContainsKey(action))
+                    appearances[action] += 1;
+                else
+                    appearances[action] = 1;
+            });
+
+            foreach (var actionData in appearances)
+            {
+                string amount = (actionData.Value > 1) ? $" (x{actionData.Value})" : "";
+                string? readableName = actionData.Key.GetReadableName();
+                if (readableName != null)
+                    output += $"{actionData.Key.GetReadableName()}{amount},";
+            }
+
             return output;
         }
     }

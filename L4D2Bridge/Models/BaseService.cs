@@ -9,14 +9,20 @@ namespace L4D2Bridge.Models
         // Print something to the console service (All Services have something like this)
         public Action<string>? OnConsolePrint { private get; set; }
 
-        // Fires whenever donations are received
-        public Action<SourceEvent>? OnSourceEvent { protected get; set; }
+        // Fires whenever the service has an event (such as donation received)
+        public event SourceEventHandler? OnSourceEvent;
 
         // Helper function for printing messages to console (via Actions)
         protected void PrintMessage(string message)
         {
-            if (OnConsolePrint != null)
-                OnConsolePrint.Invoke(message);
+            OnConsolePrint?.Invoke(message);
+        }
+
+        // An invoker function that broadcasts to the event delegate that the service has
+        // an event trigger.
+        protected void Invoke(SourceEvent eventData)
+        {
+            OnSourceEvent?.Invoke(eventData);
         }
 
         public abstract ConsoleSources GetSource();

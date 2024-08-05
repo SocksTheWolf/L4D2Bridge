@@ -8,25 +8,19 @@ using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class OnAuthUpdateArgs
+    public class OnAuthUpdateArgs(string oAuthToken, string refreshToken)
     {
-        public string OAuthToken;
-        public string RefreshToken;
-
-        public OnAuthUpdateArgs(string oAuthToken, string refreshToken)
-        {
-            OAuthToken = oAuthToken;
-            RefreshToken = refreshToken;
-        }
+        public string OAuthToken = oAuthToken;
+        public string RefreshToken = refreshToken;
     }
 
     public class TiltifyService : BaseService
     {
-        private Tiltify.Tiltify? Campaign;
-        private string CampaignId = string.Empty;
+        private readonly Tiltify.Tiltify? Campaign;
+        private readonly string CampaignId = string.Empty;
         private DateTime LastPolled;
         private Task? Runner;
-        private int PollInterval;
+        private readonly int PollInterval;
         private bool ShouldRun = true;
 
         // Fires whenever the authorization updated for Tiltify
@@ -35,9 +29,11 @@ namespace L4D2Bridge.Models
         public TiltifyService(TiltifySettings config)
         {
             LastPolled = DateTime.UtcNow;
-            ApiSettings apiSettings = new ApiSettings();
-            apiSettings.ClientID = config.ClientID;
-            apiSettings.ClientSecret = config.ClientSecret;
+            ApiSettings apiSettings = new ApiSettings
+            {
+                ClientID = config.ClientID,
+                ClientSecret = config.ClientSecret
+            };
 
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
             CampaignId = config.CampaignID;
@@ -87,10 +83,9 @@ namespace L4D2Bridge.Models
         {
             PrintMessage("Tiltify Ready!");
             using PeriodicTimer timer = new(interval);
-            double temp;
             while (ShouldRun)
             {
-                if (Campaign == null || OnSourceEvent == null || OnAuthUpdate == null)
+                if (Campaign == null || OnAuthUpdate == null)
                 {
                     await timer.WaitForNextTickAsync(default);
                     continue;
@@ -109,9 +104,9 @@ namespace L4D2Bridge.Models
                             if (donoInfo.Amount == null)
                                 continue;
 
-                            if (Double.TryParse(donoInfo.Amount.Value, out temp))
+                            if (Double.TryParse(donoInfo.Amount.Value, out double temp))
                             {
-                                OnSourceEvent.Invoke(new SourceEvent(SourceEventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
+                                Invoke(new SourceEvent(SourceEventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
                             }
                         }
                     }
