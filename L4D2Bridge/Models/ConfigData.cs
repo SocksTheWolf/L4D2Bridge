@@ -87,7 +87,7 @@ namespace L4D2Bridge.Models
         [JsonProperty(Required = Required.Always)]
         public int ServerPort { get; set; } = 27015;
 
-        [JsonProperty]
+        [JsonProperty(Required = Required.Always)]
         public string Password { get; set; } = string.Empty;
 
         // Maximum amount of times to retry a task
@@ -96,7 +96,7 @@ namespace L4D2Bridge.Models
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
         {
-            RequiredFieldObj.AddRange([ServerIP]);
+            RequiredFieldObj.AddRange([ServerIP, Password]);
         }
     }
 
