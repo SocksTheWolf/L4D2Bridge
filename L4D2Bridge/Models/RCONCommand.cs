@@ -101,7 +101,7 @@ namespace L4D2Bridge.Models
             {
                 // Boot up retrying this task again up to a minute later.
                 Task.Run(async () => {
-                    await Task.Delay(Math.Min(200 * (int)Math.Pow(2, Attempts) / 2, 60000));
+                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, Attempts) / 2, 60000));
                     owner.AddNewCommand(this);
                 }).ConfigureAwait(false);
             }
