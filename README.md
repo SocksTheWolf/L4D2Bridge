@@ -33,7 +33,7 @@ For the most part, these settings are fairly straight forward to fill out. The r
 The actions section is a dictionary with key names that correspond to the `RuleName` or `SuccessEvent` of a matching rule definition (see Rules section), and the string array 
 of server commands that should be ran when rules with the given keyname matches.
 
-Acceptable server commands are:
+Acceptable server actions are:
 
 ```
     SpawnTank,
@@ -56,16 +56,16 @@ Acceptable server commands are:
     Random
 ```
 
-Random does a coin flip and if heads, will run a `RandomPositive` action, if tails, a `RandomNegative` action will execute instead.
+The `Random` server action does a coin flip and if heads, will run a `RandomPositive` action, if tails, a `RandomNegative` action will execute instead.
 
 ##### Example
 
 Here is an example of some actions that are defined in a config file. Names such as "chaos" and "santa" are used in the `rules.json` later.
 ```
-  "actions": {
+  "Actions": {
     "chaos": [
       "SpawnMobLarge",
-      "SpawnMobLarge",
+      "RandomSpecialInfected",
       "SpawnCharger"
     ],
     "tank": [
@@ -84,12 +84,12 @@ Here is an example of some actions that are defined in a config file. Names such
 
 #### Mob Sizes
 
-These are the ranges for each type of mob spawn size in the server commands list. The Rand value is when the mob size is not provided in the actions array.
+These are the ranges for each type of mob spawn size in the server commands list. The `Rand` setting is when the mob size is not provided (using `SpawnMob`).
 
 #### Negative Weights
 
 These are the weights for each of the negative-based Actions with their weightings from 1-100 on how often they should appear. These are used to calculate what affect is
-used when a rule with the action `RandomNegative` is executed. If a negative action is not specified, it will not be randomly chosen when `RandomNegative` is executed.
+used when a rule with the action `RandomNegative` is executed. If a negative action is not specified, it will not be randomly chosen when `RandomNegative` is executed. This field is also used to determine `RandomSepcialInfected` roll spawn chances.
 
 ---
 
@@ -128,6 +128,14 @@ All input objects are data objects that contain the following fields that can be
 * Amount - The numerical amount of whatever was passed.
 * Message - Any messages attached (if supported)
 
+
+#### Rules Extensions
+
+The rules can take advantage of some added extensions to the processor to do string based checks. A class named `REUtils` is provided to the RulesEngine to help you with string processing.
+
+* `REUtils.HasValue` - Returns a boolean if the given string has an actual value instead of null/whitespace
+* `REUtils.CheckContains` - Given the input and a string of a value or csv of values, will check if the input contains any of the values in the check. All values will be projected to case-insensitive checks.
+
 #### Example
 
 ```
@@ -144,7 +152,7 @@ All input objects are data objects that contain the following fields that can be
         "RuleName": "santa",
         "SuccessEvent": "nothing",
         "RuleExpressionType": "LambdaExpression",
-        "Expression": "input1.Type == EventType.Donation AND input1.Amount > 1.00"
+        "Expression": "input1.Type == EventType.Donation AND REutils.CheckContains(input1.Message, \"help,santa,save\") AND input1.Amount > 1.00"
       },
       {
         "RuleName": "EveryCoolAndAwesomeRuleName",
