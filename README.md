@@ -152,7 +152,7 @@ The rules can take advantage of some added extensions to the processor to do str
         "RuleName": "santa",
         "SuccessEvent": "nothing",
         "RuleExpressionType": "LambdaExpression",
-        "Expression": "input1.Type == EventType.Donation AND REutils.CheckContains(input1.Message, \"help,santa,save\") AND input1.Amount > 1.00"
+        "Expression": "input1.Type == EventType.Donation AND REutils.CheckContains(input1.Message, \"help,santa,save\") == true AND input1.Amount > 1.00"
       },
       {
         "RuleName": "EveryCoolAndAwesomeRuleName",
