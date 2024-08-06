@@ -59,9 +59,9 @@ namespace L4D2Bridge.Models
         public string BotUserName { get; set; } = string.Empty;
         public string OAuthToken { get; set; } = string.Empty;
         // If the resulting actions from twitch events should be redirected to chat as well.
-        public bool SendActionsToChat { get; set; } = false;
+        public bool PostEventActionsToChat { get; set; } = false;
         // Whether to message when Tiltify events should message into the chat console
-        public bool MessageOnTiltifyDonations { get; set; } = false;
+        public bool PostMessageOnTiltifyDonations { get; set; } = false;
         public int ChatCommandPercentChance { get; set; } = 50;
         public TwitchEvents Events { get; set; } = new TwitchEvents();
 

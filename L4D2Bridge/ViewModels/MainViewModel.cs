@@ -88,7 +88,7 @@ public partial class MainViewModel : ViewModelBase
             };
             Twitch.Start();
 
-            if (CharityTracker != null && Config.TwitchSettings.MessageOnTiltifyDonations)
+            if (CharityTracker != null && Config.TwitchSettings.PostMessageOnTiltifyDonations)
             {
                 // Send a message to every twitch channel we are currently connected to
                 CharityTracker.OnSourceEvent += (data) => {
@@ -137,7 +137,7 @@ public partial class MainViewModel : ViewModelBase
         Console.AddMessage(ActionTaken, Source);
 
         // Dump them also to twitch chat
-        if (Config.IsUsingTwitch() && Config.TwitchSettings.SendActionsToChat)
+        if (Config.IsUsingTwitch() && Config.TwitchSettings.PostEventActionsToChat)
             Twitch?.SendMessageToAllChannels(ActionTaken);
     }
 
