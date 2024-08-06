@@ -946,7 +946,11 @@ any Native_SpawnZombieAutoOfClass(Handle plugin, int NumArgs)
 		return -1;
 	}
 	
-	return SpawnZombieOfAmount(L4D_GetHighestFlowSurvivor(), iClass, 1);
+	int client = L4D_GetHighestFlowSurvivor();
+	if (client <= 0)
+		return -1;
+	
+	return SpawnZombieOfAmount(client, iClass, 1);
 }
 
 any Native_SpawnZombieAuto(Handle plugin, int NumArgs)
@@ -968,7 +972,11 @@ any Native_SpawnZombieAuto(Handle plugin, int NumArgs)
 		return -1;
 	}
 	
-	return SpawnZombieOfAmount(L4D_GetHighestFlowSurvivor(), iClass, 1);
+	int client = L4D_GetHighestFlowSurvivor();
+	if (client <= 0)
+		return -1;
+	
+	return SpawnZombieOfAmount(client, iClass, 1);
 }
 
 any Native_SpawnMobAuto(Handle plugin, int NumArgs)
@@ -977,7 +985,11 @@ any Native_SpawnMobAuto(Handle plugin, int NumArgs)
 		return;
 	
 	int numToSpawn = GetNativeCell(1);
-	SpawnMobOfAmount(L4D_GetHighestFlowSurvivor(), numToSpawn);
+	int client = L4D_GetHighestFlowSurvivor();
+	if (client <= 0)
+		return;
+	
+	SpawnMobOfAmount(client, numToSpawn);
 }
 
 //==========================================================================================
@@ -1394,8 +1406,8 @@ int SpawnZombie(int client, int zombieclass)
 			
 		return -1;
 	}
-// First we get a suitable spot for the infected. We use a random alive survivor and we try to get the best spot for the special we want.
-// This should try to spawn the infected at the best available spot to attack survivors.
+	// First we get a suitable spot for the infected. We use a random alive survivor and we try to get the best spot for the special we want.
+	// This should try to spawn the infected at the best available spot to attack survivors.
 	if (L4D_GetRandomPZSpawnPosition(client, zombieclass, 5, vPos))	
 		return L4D2_SpawnSpecial(zombieclass, vPos, NULL_VECTOR); // Spawn the infected with the vector we got previously. This native does not trigger players and will only spawn infected bots.
 		
