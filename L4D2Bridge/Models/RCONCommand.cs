@@ -208,7 +208,7 @@ namespace L4D2Bridge.Models
             if (!WasSuccessful())
                 return false;
 
-            if (Result == "[Bridge] game paused")
+            if (Result.Contains("[Bridge] game paused"))
                 return true;
 
             return false;

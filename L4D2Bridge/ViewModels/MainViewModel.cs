@@ -18,7 +18,7 @@ public partial class MainViewModel : ViewModelBase
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private TestService? Test { get; set; }
-    private Button? PauseButton { get; set; }
+    public static Button? PauseButton { get; set; } = null;
 
     [ObservableProperty]
     public string pauseButtonText = string.Empty;
@@ -173,7 +173,6 @@ public partial class MainViewModel : ViewModelBase
     // Button to allow for pausing outside of the game
     public void OnPauseButton_Clicked(object msg)
     {
-        PauseButton ??= ((Button)msg);
         Server.AddNewCommand(new TogglePauseCommand());
     }
 
