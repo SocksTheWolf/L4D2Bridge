@@ -25,17 +25,15 @@ namespace L4D2Bridge.Models
         private Task? RunTask;
         private Task? CheckPauseTask;
 
-        public RCONService(ConfigData config)
+        public RCONService(ServerSettings config)
         {
-            MaxTaskAttempts = config.MaxTaskRetries;
-            if (!config.IsValid)
-                return;
+            MaxTaskAttempts = config.MaxCommandAttempts;
 
             // See if we're an IP Address.
-            if (!IPAddress.TryParse(config.RConServerIP, out IPAddress? addr))
+            if (!IPAddress.TryParse(config.ServerIP, out IPAddress? addr))
             {
                 // We are a hostname, so attempt to fetch the IP address from DNS
-                IPAddress[] Output = Dns.GetHostAddresses(config.RConServerIP);
+                IPAddress[] Output = Dns.GetHostAddresses(config.ServerIP);
                 if (Output.Length > 0)
                     addr = Output[0];
                 else
@@ -49,8 +47,8 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            IPEndPoint endpoint = new(addr, config.RConServerPort);
-            Server = new RCON(endpoint, config.RConPassword, autoConnect: false);
+            IPEndPoint endpoint = new(addr, config.ServerPort);
+            Server = new RCON(endpoint, config.Password, autoConnect: false);
         }
         ~RCONService()
         {
@@ -75,24 +73,36 @@ namespace L4D2Bridge.Models
 
         public void AddNewCommand(L4D2CommandBase command)
         {
+            if (Server == null)
+                return;
+
             CommandQueue.Enqueue(command);
         }
 
         public void AddNewCommands(List<L4D2CommandBase> commands)
         {
+            if (Server == null)
+                return;
+
             foreach (L4D2CommandBase command in commands)
                 AddNewCommand(command);
         }
 
         public void AddNewAction(L4D2Action action, string SenderName)
         {
+            if (Server == null)
+                return;
+
             L4D2CommandBase? OutCommand = L4D2CommandBuilder.BuildCommand(action, SenderName);
             if (OutCommand != null)
                 AddNewCommand(OutCommand);
         }
 
         public void AddNewActions(List<L4D2Action> actions, string SenderName) 
-        { 
+        {
+            if (Server == null)
+                return;
+
             foreach (L4D2Action action in actions)
                 AddNewAction(action, SenderName);
         }
@@ -129,7 +139,6 @@ namespace L4D2Bridge.Models
                         bool ranCommand = await command.Execute(this, Server);
                         if (!ranCommand && command.GetCommandType() != ServerCommands.CheckPause)
                         {
-
                             // Do not attempt commands longer than the maximum amount of attempts
                             if (command.GetAttemptCount() < MaxTaskAttempts)
                                 command.Retry(this);

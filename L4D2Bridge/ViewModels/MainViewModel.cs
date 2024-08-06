@@ -13,7 +13,7 @@ public partial class MainViewModel : ViewModelBase
 {
     public ConfigData Config { get; private set; }
     public ConsoleService Console { get; set; } = new ConsoleService();
-    private RCONService Server { get; set; }
+    private RCONService? Server { get; set; }
     private RulesService Rules { get; set; } = new RulesService();
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
@@ -46,10 +46,13 @@ public partial class MainViewModel : ViewModelBase
         SetPauseGlyph("f04b");
 
         /* RCON */
-        Server = new RCONService(Config);
-        Server.OnConsolePrint = (msg) => Console.AddMessage(msg, Server);
-        Server.OnPauseStatus = OnPauseStatusUpdate;
-        Server.Start();
+        if (Config.IsValid)
+        {
+            Server = new RCONService(Config.ServerSettings);
+            Server.OnConsolePrint = (msg) => Console.AddMessage(msg, Server);
+            Server.OnPauseStatus = OnPauseStatusUpdate;
+            Server.Start();
+        }
 
         /* Tiltify */
         if (Config.IsUsingTiltify())
@@ -59,7 +62,7 @@ public partial class MainViewModel : ViewModelBase
             CharityTracker.OnSourceEvent += async (data) => {
                 Console.AddMessage($"{data.Name} donated {data.Amount}", CharityTracker);
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(CharityTracker.GetWorkflow(), data);
-                Server.AddNewActions(Commands, data.Name);
+                Server?.AddNewActions(Commands, data.Name);
 
                 PostActions(ref Commands, CharityTracker.GetSource());
             };
@@ -80,7 +83,7 @@ public partial class MainViewModel : ViewModelBase
             Twitch.OnConsolePrint = (msg) => Console.AddMessage(msg, Twitch);
             Twitch.OnSourceEvent += async (data) => {
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(Twitch.GetWorkflow(), data);
-                Server.AddNewActions(Commands, data.Name);
+                Server?.AddNewActions(Commands, data.Name);
                 PostActions(ref Commands, Twitch.GetSource());
             };
             Twitch.Start();
@@ -101,7 +104,7 @@ public partial class MainViewModel : ViewModelBase
             Test.OnConsolePrint = (msg) => Console.AddMessage(msg, Test);
             Test.OnSourceEvent += async (data) => {
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(Test.GetWorkflow(), data);
-                Server.AddNewActions(Commands, data.Name);
+                Server?.AddNewActions(Commands, data.Name);
                 PostActions(ref Commands, Test.GetSource());
             };
             Test.Start();
@@ -173,7 +176,7 @@ public partial class MainViewModel : ViewModelBase
     // Button to allow for pausing outside of the game
     public void OnPauseButton_Clicked(object msg)
     {
-        Server.AddNewCommand(new TogglePauseCommand());
+        Server?.AddNewCommand(new TogglePauseCommand());
     }
 
     public void OnServerCommand_Sent(object msg)
@@ -193,7 +196,7 @@ public partial class MainViewModel : ViewModelBase
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
             else
-                Server.AddNewCommand(new RawCommand(command));
+                Server?.AddNewCommand(new RawCommand(command));
 
             Box.Clear();
         }

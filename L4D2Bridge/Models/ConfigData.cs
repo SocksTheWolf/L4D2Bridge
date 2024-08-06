@@ -77,7 +77,30 @@ namespace L4D2Bridge.Models
         }
     }
 
-    /*** Settings for Test ***/
+    /*** Settings for a server ***/
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
+    public class ServerSettings : SettingsVerifier
+    {
+        [JsonProperty(Required = Required.Always)]
+        public string ServerIP { get; set; } = string.Empty;
+
+        [JsonProperty(Required = Required.Always)]
+        public int ServerPort { get; set; } = 27015;
+
+        [JsonProperty]
+        public string Password { get; set; } = string.Empty;
+
+        // Maximum amount of times to retry a task
+        [JsonProperty]
+        public int MaxCommandAttempts = 10;
+
+        public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
+        {
+            RequiredFieldObj.AddRange([ServerIP]);
+        }
+    }
+
+    /*** Settings for Test Service ***/
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
     public class TestSettings : SettingsVerifier
     {
@@ -104,14 +127,8 @@ namespace L4D2Bridge.Models
         private static readonly string FileName = "config.json";
 
         /*** Server Connection Information ***/
-        [JsonProperty(Required = Required.Always)]
-        public string RConServerIP { get; set; } = string.Empty;
-
-        [JsonProperty(Required = Required.Always)]
-        public int RConServerPort { get; set; } = 27015;
-
-        [JsonProperty]
-        public string RConPassword { get; set; } = string.Empty;
+        [JsonProperty(PropertyName = "server")]
+        public ServerSettings ServerSettings { get; set; } = new ServerSettings();
 
         /*** Twitch Settings ***/
         [JsonProperty(PropertyName = "twitch")]
@@ -122,19 +139,15 @@ namespace L4D2Bridge.Models
         public TiltifySettings TiltifySettings { get; set; } = new TiltifySettings();
 
         /*** Rules Settings ***/
-        [JsonProperty(PropertyName = "actions", Required = Required.Always)]
+        [JsonProperty(Required = Required.Always)]
         public Dictionary<string, List<L4D2Action>> Actions = [];
 
-        // Maximum amount of times to retry a task
-        [JsonProperty]
-        public int MaxTaskRetries = 10;
-
         /*** Mob Settings ***/
-        [JsonProperty(PropertyName = "mobsizes")]
+        [JsonProperty]
         public MobSizeSettings MobSizes { get; set; } = new MobSizeSettings();
 
         /*** Negative Command Randomization ***/
-        [JsonProperty(PropertyName = "negativeweights")]
+        [JsonProperty(PropertyName = "NegativeWeights")]
         public Dictionary<L4D2Action, int>? NegativeActionWeights { get; set; }
 
         /*** UI Settings ***/
@@ -142,7 +155,7 @@ namespace L4D2Bridge.Models
         public int MaxMessageLifetime = 5;
 
         /*** Testing ***/
-        [JsonProperty]
+        [JsonProperty(PropertyName = "test")]
         public TestSettings TestSettings { get; set; } = new TestSettings();
 
         /*** Utils ***/
@@ -170,7 +183,7 @@ namespace L4D2Bridge.Models
                     {
                         configData = outputConfig;
                         configData.IsValid = true;
-                        RequiredFieldContainer checkIfNotNull = [configData.RConServerIP, configData.RConPassword];
+                        RequiredFieldContainer checkIfNotNull = [];
 
                         // Get all of our properties in the config class of type SettingsVerifier
                         var verifyProperties = configData.GetType().GetProperties().Where(prop => prop.PropertyType.IsSubclassOf(typeof(SettingsVerifier)));
