@@ -77,6 +77,23 @@ namespace L4D2Bridge.Models
         }
     }
 
+    /*** Settings for Test ***/
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
+    public class TestSettings : SettingsVerifier
+    {
+        public bool Enabled { get; set; } = false;
+        public string WorkflowName { get; set; } = string.Empty;
+        public int MaxMinutesToWait { get; set; } = 1;
+
+        public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
+        {
+            if (Enabled)
+            {
+                RequiredFieldObj.Add(WorkflowName);
+            }
+        }
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
     public class ConfigData
     {
@@ -124,9 +141,14 @@ namespace L4D2Bridge.Models
         [JsonProperty]
         public int MaxMessageLifetime = 5;
 
+        /*** Testing ***/
+        [JsonProperty]
+        public TestSettings TestSettings { get; set; } = new TestSettings();
+
         /*** Utils ***/
         public bool IsUsingTwitch() => TwitchSettings != null && TwitchSettings.Enabled;
         public bool IsUsingTiltify() => TiltifySettings != null && TiltifySettings.Enabled;
+        public bool IsUsingTest() => TestSettings != null && TestSettings.Enabled;
 
         /*** Config Loading/Saving ***/
         public static ConfigData LoadConfigData()

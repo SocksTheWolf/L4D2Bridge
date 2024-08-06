@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using L4D2Bridge.Types;
+using L4D2Bridge.Utils;
 using System.Collections.Generic;
 using WeightedRandomLibrary;
 using System.Linq;
@@ -54,7 +55,8 @@ namespace L4D2Bridge.Models
         // For extra functionality that can be ran after an execution (like for printing!)
         protected virtual void OnFinish(RCONService owner)
         {
-            owner.PushToConsole(Result);
+            if (!IsSpawner)
+                owner.PushToConsole(Result);
         }
 
         public async Task<bool> Execute(RCONService owner, RCON connection)
@@ -252,10 +254,12 @@ namespace L4D2Bridge.Models
 
         // Negative Command Weight Randomization
         private static WeightedRandomizer<L4D2Action>? WeightedNegativeRandom = null;
+        private static WeightedRandomizer<L4D2Action>? WeightedSpecialInfected = null;
 
         // All Command Randomization
         private readonly static L4D2Action[] PositiveActions;
         private readonly static L4D2Action[] NegativeActions;
+        private readonly static L4D2Action[] SpawnInfectedActions;
 
         // Build the command lists from our existing enum using reflection.
         static L4D2CommandBuilder()
@@ -263,6 +267,7 @@ namespace L4D2Bridge.Models
             var AllEnumVals = typeof(L4D2Action).GetEnumValues().OfType<L4D2Action>();
             PositiveActions = AllEnumVals.Where(act => act.IsPositive()).ToArray();
             NegativeActions = AllEnumVals.Where(act => act.IsNegative()).ToArray();
+            SpawnInfectedActions = AllEnumVals.Where(act => act.SpawnsSpecialInfected()).ToArray();
         }
         
         public static void Initialize(ConfigData config)
@@ -279,7 +284,12 @@ namespace L4D2Bridge.Models
                 .Where(itm => NegativeActions.Contains(itm.Key))
                 .Select(p => new Option<L4D2Action>(p.Key, p.Value)).ToArray();
 
+            Option<L4D2Action>[] SpawnSpecialInfectedArray = RandomWeighting
+                .Where(itm => SpawnInfectedActions.Contains(itm.Key))
+                .Select(p => new Option<L4D2Action>(p.Key, p.Value)).ToArray();
+
             WeightedNegativeRandom = new WeightedRandomizer<L4D2Action>(NegativeRandArray);
+            WeightedSpecialInfected = new WeightedRandomizer<L4D2Action>(SpawnSpecialInfectedArray);
         }
 
         public static L4D2CommandBase? BuildCommand(L4D2Action Action, string SenderName)
@@ -317,6 +327,11 @@ namespace L4D2Bridge.Models
                     return new SpawnMobCommand(Mobs.Large.GetSpawnAmount(ref rng), SenderName);
                 case L4D2Action.SpawnMob:
                     return new SpawnMobCommand(Mobs.Rand.GetSpawnAmount(ref rng), SenderName);
+                case L4D2Action.RandomSpecialInfected:
+                    if (WeightedSpecialInfected != null)
+                        return BuildCommand(WeightedSpecialInfected.Next().Value, SenderName);
+                    else
+                        return BuildCommand(SpawnInfectedActions[rng.Next(0, SpawnInfectedActions.Length)], SenderName);
                 case L4D2Action.RandomPositive:
                     return BuildCommand(PositiveActions[rng.Next(0, PositiveActions.Length)], SenderName);
                 case L4D2Action.RandomNegative:
@@ -325,7 +340,7 @@ namespace L4D2Bridge.Models
                     else
                         return BuildCommand(NegativeActions[rng.Next(0, NegativeActions.Length)], SenderName);
                 case L4D2Action.Random:
-                    if (rng.Next(0, 2) == 1)
+                    if (rng.NextBool())
                         return BuildCommand(L4D2Action.RandomPositive, SenderName);
                     else
                         return BuildCommand(L4D2Action.RandomNegative, SenderName);

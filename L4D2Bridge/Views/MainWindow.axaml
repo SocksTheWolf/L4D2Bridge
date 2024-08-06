@@ -9,6 +9,7 @@
         MinWidth="790" MinHeight="460"
         x:Class="L4D2Bridge.Views.MainWindow"
         Icon="/Assets/logo.ico"
-        Title="Left 4 Dead 2 Bridge">
+        Title="Left 4 Dead 2 Bridge"
+        Topmost="True">
         <views:MainView />
 </Window>

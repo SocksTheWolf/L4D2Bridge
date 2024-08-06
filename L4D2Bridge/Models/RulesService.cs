@@ -39,7 +39,7 @@ namespace L4D2Bridge.Models
             {
                 PrintMessage("Missing rules information! Cannot handle rules engine");
                 // Create an empty file
-                File.Create("rules.json").Close();
+                File.Create(rulesFile).Close();
                 return;
             }
 
@@ -136,10 +136,10 @@ namespace L4D2Bridge.Models
                 string amount = (actionData.Value > 1) ? $" (x{actionData.Value})" : "";
                 string? readableName = actionData.Key.GetReadableName();
                 if (readableName != null)
-                    output += $"{actionData.Key.GetReadableName()}{amount},";
+                    output += $"{actionData.Key.GetReadableName()}{amount}, ";
             }
 
-            return output;
+            return output.Remove(output.Length - 2);
         }
     }
 }

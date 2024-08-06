@@ -52,6 +52,7 @@ Acceptable server commands are:
     SupplyCrate,
     RandomPositive,
     RandomNegative,
+    RandomSpecialInfected,
     Random
 ```
 

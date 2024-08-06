@@ -17,6 +17,7 @@ public partial class MainViewModel : ViewModelBase
     private RulesService Rules { get; set; } = new RulesService();
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
+    private TestService? Test { get; set; }
     private Button? PauseButton { get; set; }
 
     [ObservableProperty]
@@ -91,6 +92,19 @@ public partial class MainViewModel : ViewModelBase
                     Twitch.SendMessageToAllChannels($"{data.Name} just donated ${data.Amount} with message '{data.Message}'");
                 };
             }
+        }
+
+        /* Test Service */
+        if (Config.IsUsingTest())
+        {
+            Test = new TestService(Config.TestSettings);
+            Test.OnConsolePrint = (msg) => Console.AddMessage(msg, Test);
+            Test.OnSourceEvent += async (data) => {
+                List<L4D2Action> Commands = await Rules.ExecuteAsync(Test.GetWorkflow(), data);
+                Server.AddNewActions(Commands, data.Name);
+                PostActions(ref Commands, Test.GetSource());
+            };
+            Test.Start();
         }
 
         Config.SaveConfigData();

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using L4D2Bridge.Utils;
 using L4D2Bridge.Types;
+using Avalonia.Controls;
+using System.Linq;
 
 namespace L4D2Bridge.Models
 {
@@ -35,6 +37,7 @@ namespace L4D2Bridge.Models
     {
         public ObservableCollection<ConsoleMessage> ConsoleMessages { get; private set; }
         private Task? Ticker;
+        public static DataGrid? Griddy;
         private bool ShouldRun = true;
 
         public ConsoleService()
@@ -58,7 +61,10 @@ namespace L4D2Bridge.Models
             if (string.IsNullOrWhiteSpace(inMessage))
                 return;
 
-            Dispatcher.UIThread.Post(() => ConsoleMessages.Add(new ConsoleMessage(inMessage, source)));
+            Dispatcher.UIThread.Post(() => {
+                ConsoleMessages.Add(new ConsoleMessage(inMessage, source));
+                Griddy?.ScrollIntoView(ConsoleMessages.Last(), null);
+            });
         }
 
         public void AddMessage(string inMessage, BaseService service)

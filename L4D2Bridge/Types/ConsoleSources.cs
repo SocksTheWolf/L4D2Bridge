@@ -8,6 +8,7 @@
         RCON,
         Tiltify,
         Twitch,
-        RulesEngine
+        RulesEngine,
+        Test
     }
 }

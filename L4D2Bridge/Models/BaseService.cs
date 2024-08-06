@@ -1,5 +1,6 @@
 ﻿using System;
 using L4D2Bridge.Types;
+using System.Threading;
 
 namespace L4D2Bridge.Models
 {
@@ -22,7 +23,36 @@ namespace L4D2Bridge.Models
         // an event trigger.
         protected void Invoke(SourceEvent eventData)
         {
-            OnSourceEvent?.Invoke(eventData);
+            try
+            {
+                // Try to push this to a worker thread
+                if (!ThreadPool.QueueUserWorkItem(Internal_Invoke, eventData))
+                {
+                    // If it could not be pushed, then run it on the current thread.
+                    OnSourceEvent?.Invoke(eventData);
+                }
+            }
+            catch (NotSupportedException ex)
+            {
+                PrintMessage($"C# decided to be really confusing and forget that the `false` value exists for a boolean: {ex}");
+            }
+        }
+
+        // Internal invoker that uses a threadpool to execute functionality.
+        private void Internal_Invoke(object? eventData)
+        {
+            if (eventData == null)
+                return;
+
+            SourceEvent sourceEvent = (SourceEvent)eventData;
+            try
+            {
+                OnSourceEvent?.Invoke(sourceEvent);
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Failed to handle Invoke for {GetSource()}: {ex}");
+            }
         }
 
         public abstract ConsoleSources GetSource();

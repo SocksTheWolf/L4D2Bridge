@@ -11,13 +11,13 @@ namespace L4D2Bridge.Types
     {
         [RuleAction(ReadableName = "None")]
         None,
-        [RuleAction(ReadableName = "Tank", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Tank", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnTank,
-        [RuleAction(ReadableName = "Spitter", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Spitter", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnSpitter,
-        [RuleAction(ReadableName = "Jockey", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Jockey", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnJockey,
-        [RuleAction(ReadableName = "Witch", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Witch", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnWitch,
         [RuleAction(ReadableName = "Random Mob", NegativeEffect = true)]
         SpawnMob,
@@ -27,13 +27,13 @@ namespace L4D2Bridge.Types
         SpawnMobMedium,
         [RuleAction(ReadableName = "Large Mob", NegativeEffect = true)]
         SpawnMobLarge,
-        [RuleAction(ReadableName = "Boomer", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Boomer", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnBoomer,
-        [RuleAction(ReadableName = "Hunter", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Hunter", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnHunter,
-        [RuleAction(ReadableName = "Charger", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Charger", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnCharger,
-        [RuleAction(ReadableName = "Smoker", NegativeEffect = true)]
+        [RuleAction(ReadableName = "Smoker", NegativeEffect = true, SpawnsSpecialInfected = true)]
         SpawnSmoker,
         [RuleAction(ReadableName = "Lootbox", PositiveEffect = true)]
         Lootbox,
@@ -44,7 +44,9 @@ namespace L4D2Bridge.Types
         [RuleAction(ReadableName = "Negative RNG")]
         RandomNegative,
         [RuleAction(ReadableName = "Random Event")]
-        Random
+        Random,
+        [RuleAction(ReadableName = "Random Special Infected")]
+        RandomSpecialInfected
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
@@ -56,6 +58,8 @@ namespace L4D2Bridge.Types
         public bool PositiveEffect = false;
         // A flag to signify that this action is considered a hinderance
         public bool NegativeEffect = false;
+        // A flag to signify that this involves spawning a special infected
+        public bool SpawnsSpecialInfected = false;
     }
 
     // This extends onto the RuleAction above, to allow for pulling names and statuses easily
@@ -71,6 +75,12 @@ namespace L4D2Bridge.Types
         public static bool IsNegative(this L4D2Action Enum)
         {
             bool? ret = Enum.GetEnumAttribute<L4D2Action, RuleAction>()?.NegativeEffect;
+            return (ret != null) && (bool)ret;
+        }
+
+        public static bool SpawnsSpecialInfected(this L4D2Action Enum)
+        {
+            bool? ret = Enum.GetEnumAttribute<L4D2Action, RuleAction>()?.SpawnsSpecialInfected;
             return (ret != null) && (bool)ret;
         }
     }
