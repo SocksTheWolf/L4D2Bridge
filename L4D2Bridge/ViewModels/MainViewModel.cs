@@ -195,6 +195,10 @@ public partial class MainViewModel : ViewModelBase
                 LoadConfigs();
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
+            else if (loweredCommand == "pause" || loweredCommand == "unpause")
+            {
+                Test?.TogglePause();
+            }
             else
                 Server?.AddNewCommand(new RawCommand(command));
 

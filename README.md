@@ -15,6 +15,7 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 
 * reload - reloads the configuration of the application
 * clear - clears the console log entirely
+* pause/unpause - if the test service is running, will pause/unpause the test service from generating events
 
 ## Influence Service Sources
 

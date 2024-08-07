@@ -10,6 +10,7 @@ namespace L4D2Bridge.Models
         private TestSettings Settings;
         private Random rng = new();
         private bool ShouldRun = true;
+        private bool Paused = false;
         private Task? Runner;
         public override ConsoleSources GetSource() => ConsoleSources.Test;
         public override string GetWorkflow() => Settings.WorkflowName;
@@ -31,19 +32,33 @@ namespace L4D2Bridge.Models
             PrintMessage("Test Service now Starting");
         }
 
+        public void PauseExecution(bool ShouldPause)
+        {
+            Paused = ShouldPause;
+            PrintMessage($"Test Service set paused to: {Paused}");
+        }
+
+        public void TogglePause()
+        {
+            PauseExecution(!Paused);
+        }
+
         private async Task RunSimulation()
         {
             await Task.Delay(10000);
             while (ShouldRun)
             {
-                // Max donation amount range is in $100
-                double Amount = Math.Round(rng.NextDouble() * 100.00, 2, MidpointRounding.ToZero);
-
-                // Execute on coin flip
-                if (rng.NextBool())
+                if (!Paused)
                 {
-                    PrintMessage($"Test System generated ${Amount}!");
-                    Invoke(new SourceEvent(SourceEventType.Donation, "TestRig", Amount, string.Empty));
+                    // Max donation amount range is in $100
+                    double Amount = Math.Round(rng.NextDouble() * 100.00, 2, MidpointRounding.ToZero);
+
+                    // Execute on coin flip
+                    if (rng.NextBool())
+                    {
+                        PrintMessage($"Test System generated ${Amount}!");
+                        Invoke(new SourceEvent(SourceEventType.Donation, "TestRig", Amount, string.Empty));
+                    }
                 }
 
                 // Wait 10s-1min to try to execute again.
