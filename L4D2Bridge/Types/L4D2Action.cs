@@ -46,7 +46,15 @@ namespace L4D2Bridge.Types
         [RuleAction(ReadableName = "Random Event")]
         Random,
         [RuleAction(ReadableName = "Random Special Infected")]
-        RandomSpecialInfected
+        RandomSpecialInfected,
+        [RuleAction(ReadableName = "Heal All Small", PositiveEffect = true)]
+        HealAllPlayersSmall,
+        [RuleAction(ReadableName = "Heal All Large", PositiveEffect = true)]
+        HealAllPlayersLarge,
+        [RuleAction(ReadableName = "Respawned Players", PositiveEffect = true)]
+        RespawnAllPlayers,
+        [RuleAction(ReadableName = "Gave Players Uppies", PositiveEffect = true)]
+        UppiesPlayers
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

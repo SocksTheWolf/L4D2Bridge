@@ -193,6 +193,52 @@ namespace L4D2Bridge.Models
         }
     }
 
+    public class HealAllPlayers : L4D2CommandBase
+    {
+        private readonly int HealthAmount;
+        public HealAllPlayers(int InHealthAmount, string InSender) : base(ServerCommands.HealPlayers, InSender)
+        {
+            HealthAmount = InHealthAmount;
+            Command = $"sm_bridge_healall {HealthAmount} {Sender}";
+        }
+
+        public override string ToString()
+        {
+            return base.ToString() + $", Amount[{HealthAmount}]";
+        }
+
+        protected override string GetSuccessString()
+        {
+            return "[Bridge] health healed";
+        }
+    }
+
+    public class RespawnAllPlayers : L4D2CommandBase
+    {
+        public RespawnAllPlayers(string InSender) : base(ServerCommands.RespawnPlayers, InSender)
+        {
+            Command = $"sm_bridge_respawnall {Sender}";
+        }
+
+        protected override string GetSuccessString()
+        {
+            return "[Bridge] respawned survivors";
+        }
+    }
+
+    public class GetUpPlayers : L4D2CommandBase
+    {
+        public GetUpPlayers(string InSender) : base(ServerCommands.UnincapPlayers, InSender)
+        {
+            Command = $"sm_bridge_uncap {Sender}";
+        }
+
+        protected override string GetSuccessString()
+        {
+            return "[Bridge] uppies survivors";
+        }
+    }
+
     public class CheckPauseCommand : L4D2CommandBase
     {
         public CheckPauseCommand() : base(ServerCommands.CheckPause)
@@ -327,6 +373,14 @@ namespace L4D2Bridge.Models
                     return new SpawnMobCommand(Mobs.Large.GetSpawnAmount(ref rng), SenderName);
                 case L4D2Action.SpawnMob:
                     return new SpawnMobCommand(Mobs.Rand.GetSpawnAmount(ref rng), SenderName);
+                case L4D2Action.HealAllPlayersSmall:
+                    return new HealAllPlayers(10, SenderName);
+                case L4D2Action.HealAllPlayersLarge:
+                    return new HealAllPlayers(50, SenderName);
+                case L4D2Action.RespawnAllPlayers:
+                    return new RespawnAllPlayers(SenderName);
+                case L4D2Action.UppiesPlayers:
+                    return new GetUpPlayers(SenderName);
                 case L4D2Action.RandomSpecialInfected:
                     if (WeightedSpecialInfected != null)
                         return BuildCommand(WeightedSpecialInfected.Next().Value, SenderName);

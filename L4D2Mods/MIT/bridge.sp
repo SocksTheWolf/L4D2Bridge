@@ -8,6 +8,7 @@
 #include <l4d2_supply_woodbox>
 #include <multicolors>
 #include <keyvalues>
+#include <left4dhooks>
 
 #define CONSOLENAME "Admin"
 #define CHAT_TAG "[Bridge]"
@@ -60,6 +61,15 @@ public void OnPluginStart()
 
     // supply crates
     RegAdminCmd("sm_bridge_supplycrate", BridgeSupplyCrate, ADMFLAG_ROOT, "Spawn a supply crate");
+
+    // heal all players
+    RegAdminCmd("sm_bridge_healall", BridgeHealAll, ADMFLAG_ROOT, "Heal all players an amount");
+
+    // prepare all survivors to respawn
+    RegAdminCmd("sm_bridge_respawnall", BridgeRespawnAll, ADMFLAG_ROOT, "Respawns all dead players and puts them in closets");
+
+    // unincapacitate player
+    RegAdminCmd("sm_bridge_uncap", BridgeUncapSurvivor, ADMFLAG_ROOT, "Un-incapacitates X number of survivors it finds");
 	
 	// Show names above attacked spawned zombies
     //HookEvent("player_hurt", Event_OnPlayerHurt);
@@ -370,5 +380,106 @@ Action BridgeSupplyCrate(int client, int args)
     {
         PrintToServer("%s supplies failed", CHAT_TAG);
     }
+    return Plugin_Handled;
+}
+
+////////////////////////////////////// HEAL //////////////////////////////////////
+Action BridgeHealAll(int client, int args)
+{
+    if (!g_CanHandleCommands) return Plugin_Handled;
+    if (args <= 1) return Plugin_Handled;
+
+    int AmountHeal = GetCmdArgInt(1);
+
+    char spawnerName[DONOR_NAME_LEN];
+    // Copy donor
+    GetCmdArg(2, spawnerName, sizeof(spawnerName));
+    
+    bool healedAnyone = false;
+    for (int i = 1; i <= MaxClients; ++i)
+    {
+        if (IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+        {
+            int currentHealth = GetEntProp(i, Prop_Data, "m_iHealth");
+            if (currentHealth >= 200)
+                continue;
+
+            healedAnyone = true;
+            if (currentHealth + AmountHeal >= 200)
+            {
+                SetEntityHealth(i, 200);
+            }
+            else
+            {
+                SetEntityHealth(i, currentHealth + AmountHeal);
+            }
+        }
+    }
+
+    if (healedAnyone)
+        PrintSpawnMessage(spawnerName, "lightgreen", "health boost");
+    
+    PrintToServer("%s health healed", CHAT_TAG);
+
+    return Plugin_Handled;
+}
+
+////////////////////////////////////// RESPAWN //////////////////////////////////////
+Action BridgeRespawnAll(int client, int args)
+{
+    if (!g_CanHandleCommands) return Plugin_Handled;
+    if (args <= 0) return Plugin_Handled;
+
+    char spawnerName[DONOR_NAME_LEN];
+    // Copy donor
+    GetCmdArg(1, spawnerName, sizeof(spawnerName));
+
+    bool revivedAnyone = false;
+    for (int i = 1; i <= MaxClients; ++i)
+    {
+        if (IsPlayerAlive(i) == false && GetClientTeam(i) == TEAM_SURVIVORS)
+        {
+            revivedAnyone = true;
+            L4D_CreateRescuableSurvivors();
+            break;
+        }
+    }
+
+    if (revivedAnyone)
+        PrintSpawnMessage(spawnerName, "lightgreen", "survivors");
+
+    PrintToServer("%s respawned survivors", CHAT_TAG);
+    return Plugin_Handled;
+}
+
+////////////////////////////////////// GET UP //////////////////////////////////////
+Action BridgeUncapSurvivor(int client, int args)
+{
+    if (!g_CanHandleCommands) return Plugin_Handled;
+    if (args <= 0) return Plugin_Handled;
+
+    char spawnerName[DONOR_NAME_LEN];
+    // Copy donor
+    GetCmdArg(1, spawnerName, sizeof(spawnerName));
+
+    int SavedSurvivors = 0;
+    int NumSurvivorsToHelp = GetRandomInt(1, MaxClients);
+
+    for (int i = 1; i <= MaxClients; ++i)
+    {
+        if (SavedSurvivors >= NumSurvivorsToHelp)
+            break;
+        
+        if (IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS && L4D_IsPlayerIncapacitated(client))
+        {
+            ++SavedSurvivors;
+            L4D_ReviveSurvivor(i);
+        }
+    }
+
+    if (SavedSurvivors > 0)
+        PrintSpawnMessage(spawnerName, "lightgreen", "uppies");
+
+    PrintToServer("%s uppies survivors", CHAT_TAG);
     return Plugin_Handled;
 }

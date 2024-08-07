@@ -11,6 +11,9 @@
         SpawnMob,
         SpawnZombie,
         SpawnLootbox,
-        SpawnSupplyCrate
+        SpawnSupplyCrate,
+        HealPlayers,
+        RespawnPlayers,
+        UnincapPlayers,
     };
 }
