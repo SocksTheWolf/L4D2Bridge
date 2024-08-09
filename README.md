@@ -4,10 +4,13 @@ This is an application and service layer to a L4D2 server, that allows for exter
 
 ## Features
 
-* Live server console
+* Live server remote console
 * Robust action handling
 * Multiple service event ingesting
 * Fairly lightweight
+* History recall
+* High flexibility with actions
+* Configurable
 
 ### Console Functionality
 
