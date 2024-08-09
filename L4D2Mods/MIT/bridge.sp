@@ -42,7 +42,7 @@ static char g_zombieNames[9][] =
     "Tank"
 };
 
-bool g_CanHandleCommands = false;
+bool g_CanHandleCommands = true;
 
 ////////////////////////////////////// INIT //////////////////////////////////////
 public void OnPluginStart()
@@ -398,7 +398,7 @@ Action BridgeHealAll(int client, int args)
     bool healedAnyone = false;
     for (int i = 1; i <= MaxClients; ++i)
     {
-        if (IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+        if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS)
         {
             int currentHealth = GetEntProp(i, Prop_Data, "m_iHealth");
             if (currentHealth >= 200)
@@ -437,7 +437,7 @@ Action BridgeRespawnAll(int client, int args)
     bool revivedAnyone = false;
     for (int i = 1; i <= MaxClients; ++i)
     {
-        if (IsPlayerAlive(i) == false && GetClientTeam(i) == TEAM_SURVIVORS)
+        if (IsClientInGame(i) && IsPlayerAlive(i) == false && GetClientTeam(i) == TEAM_SURVIVORS)
         {
             revivedAnyone = true;
             L4D_CreateRescuableSurvivors();
@@ -470,7 +470,7 @@ Action BridgeUncapSurvivor(int client, int args)
         if (SavedSurvivors >= NumSurvivorsToHelp)
             break;
         
-        if (IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS && L4D_IsPlayerIncapacitated(client))
+        if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS && L4D_IsPlayerIncapacitated(i))
         {
             ++SavedSurvivors;
             L4D_ReviveSurvivor(i);
