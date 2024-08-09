@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using CoreRCON;
 using L4D2Bridge.Types;
@@ -20,6 +21,7 @@ namespace L4D2Bridge.Models
 
         // Internals
         private RCON? Server;
+        private CancellationTokenSource cancelToken = new();
 
         // Tasks
         private Task? RunTask;
@@ -52,6 +54,7 @@ namespace L4D2Bridge.Models
         }
         ~RCONService()
         {
+            CancelAllRetryTasks();
             ShouldRun = false;
         }
         public override ConsoleSources GetSource() => ConsoleSources.RCON;
@@ -107,6 +110,26 @@ namespace L4D2Bridge.Models
                 AddNewAction(action, SenderName);
         }
 
+        public void PrintNumCommands()
+        {
+            PrintMessage($"Command Queue is holding {CommandQueue.Count} commands!");
+        }
+
+        public void Clear()
+        {
+            PrintMessage("Command Queue cancelled all current and pending tasks!");
+            CommandQueue.Clear();
+            CancelAllRetryTasks();
+        }
+
+        private void CancelAllRetryTasks()
+        {
+            // Cancel any retries in progress
+            cancelToken.Cancel();
+            cancelToken.Dispose();
+            cancelToken = new();
+        }
+
         private async Task Tick()
         {
             if (Server == null)
@@ -141,7 +164,7 @@ namespace L4D2Bridge.Models
                         {
                             // Do not attempt commands longer than the maximum amount of attempts
                             if (command.GetAttemptCount() < MaxTaskAttempts)
-                                command.Retry(this);
+                                command.Retry(this, cancelToken.Token);
                             else
                                 PrintMessage($"{command} timed out after {command.GetAttemptCount()} attempts");
                         }

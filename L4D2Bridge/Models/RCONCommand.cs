@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using WeightedRandomLibrary;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading;
 
 namespace L4D2Bridge.Models
 {
@@ -96,7 +97,7 @@ namespace L4D2Bridge.Models
             }
             return false;
         }
-        public void Retry(RCONService owner)
+        public void Retry(RCONService owner, CancellationToken token)
         {
             if (!CanRetry)
                 return;
@@ -108,13 +109,12 @@ namespace L4D2Bridge.Models
             {
                 // Boot up retrying this task again up to a minute later.
                 Task.Run(async () => {
-                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, Attempts) / 2, 60000));
+                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, Attempts) / 2, 60000), token);
                     owner.AddNewCommand(this);
-                }).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
             }
             else
                 owner.AddNewCommand(this);
-
         }
 
         public override string ToString()

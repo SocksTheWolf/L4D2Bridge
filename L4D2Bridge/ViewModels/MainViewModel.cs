@@ -222,18 +222,32 @@ public partial class MainViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(command))
         {
             string loweredCommand = command.ToLower();
-            if (loweredCommand == "clear" || loweredCommand == "cls")
-                Console.ClearAllMessages();
-            else if (loweredCommand == "reload")
+            if (loweredCommand == "reload")
             {
                 Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
                 // Load up our configs again
                 LoadConfigs();
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
+            else if (loweredCommand == "clear" || loweredCommand == "cls")
+                Console.ClearAllMessages();
             else if (loweredCommand == "pause" || loweredCommand == "unpause" || loweredCommand == "resume")
-            {
                 Test?.TogglePause();
+            else if (loweredCommand == "cancel")
+                Server?.Clear();
+            else if (loweredCommand == "commands")
+                Server?.PrintNumCommands();
+            else if (loweredCommand == "help")
+            {
+                string output = string.Join(Environment.NewLine,
+                    "reload - reloads application configuration",
+                    "clear/cls - clear the console window of all messages",
+                    "pause/unpause/resume - toggles the test engine",
+                    "cancel - cancels all currently queued commands",
+                    "commands - prints the number of currently queued commands",
+                    "help - prints this message"
+                );
+                Console.AddMessage(output, ConsoleSources.Main);
             }
             else
                 Server?.AddNewCommand(new RawCommand(command));

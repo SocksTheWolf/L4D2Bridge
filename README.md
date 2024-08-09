@@ -16,9 +16,12 @@ This is an application and service layer to a L4D2 server, that allows for exter
 
 Anything typed in the text box will be sent directly to the server via RCON, with the following exceptions:
 
-* reload - reloads the configuration of the application
-* clear - clears the console log entirely
-* pause/unpause - if the test service is running, will pause/unpause the test service from generating events
+* `reload` - reloads the configuration of the application
+* `clear`/`cls` - clears the console log entirely
+* `pause`/`unpause`/`resume` - if the test service is running, will pause/unpause the test service from generating events
+* `cancel` - cancel all current command events
+* `commands` - prints the number of events in the queue
+* `help` - prints out these commands directly to the console
 
 ## Influence Service Sources
 
