@@ -1,4 +1,6 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,7 +20,14 @@ public partial class MainViewModel : ViewModelBase
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private TestService? Test { get; set; }
+
+    // GUI Objects
     public static Button? PauseButton { get; set; } = null;
+    public static TextBox? ServerInput { get; set; } = null;
+
+    // Textbox History
+    private List<string> HistoryItems = new List<string>();
+    private int HistoryIndex = 0;
 
     [ObservableProperty]
     public string pauseButtonText = string.Empty;
@@ -31,16 +40,23 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
+        // Add an override to the server input box so we can properly handle arrow keys history navigation.
+        ServerInput?.AddHandler(InputElement.KeyDownEvent, OnTextBoxKey_Down, RoutingStrategies.Tunnel);
+
         /* Rules Engine */
         Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
 
         // Load all configuration data
         LoadConfigs();
 
-        // Start the console service
+        // Preallocate the maximum size of the history items list
 #pragma warning disable CS8602 // Possible null reference argument.
-        Console.Start(Config.MaxMessageLifetime);
+        HistoryItems.Capacity = Config.MaxInputHistory;
 #pragma warning restore CS8602 // Possible null reference argument.
+
+        // Start the console service
+        Console.Start(Config.MaxMessageLifetime);
+
 
         // Set the default pause glyph
         SetPauseGlyph("f04b");
@@ -179,14 +195,34 @@ public partial class MainViewModel : ViewModelBase
         Server?.AddNewCommand(new TogglePauseCommand());
     }
 
+    public void OnTextBoxKey_Down(object? source, KeyEventArgs args)
+    {
+        bool isUp = (args.Key == Key.Up);
+        if (args.Key == Key.Down || isUp)
+        {
+            args.Handled = true;
+            HistoryIndex += (isUp) ? 1 : -1;
+            if (HistoryIndex < 0)
+                HistoryIndex = HistoryItems.Count - 1;
+            else if (HistoryIndex >= HistoryItems.Count)
+                HistoryIndex = 0;
+
+            string historyValue = HistoryItems[HistoryIndex];
+            if (ServerInput != null)
+                ServerInput.Text = historyValue;
+        }
+    }
+
     public void OnServerCommand_Sent(object msg)
     {
         TextBox Box = ((TextBox)msg);
         string? command = Box.Text;
+        Box.Clear();
+
         if (!string.IsNullOrEmpty(command))
         {
             string loweredCommand = command.ToLower();
-            if (loweredCommand == "clear")
+            if (loweredCommand == "clear" || loweredCommand == "cls")
                 Console.ClearAllMessages();
             else if (loweredCommand == "reload")
             {
@@ -195,14 +231,22 @@ public partial class MainViewModel : ViewModelBase
                 LoadConfigs();
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
-            else if (loweredCommand == "pause" || loweredCommand == "unpause")
+            else if (loweredCommand == "pause" || loweredCommand == "unpause" || loweredCommand == "resume")
             {
                 Test?.TogglePause();
             }
             else
                 Server?.AddNewCommand(new RawCommand(command));
 
-            Box.Clear();
+            // Invalidate our index, so that we will move appropriately next time we press arrow keys
+            HistoryIndex = -1;
+
+            // Push any of the commands we get to the history item list
+            HistoryItems.Insert(0, command);
+            if (HistoryItems.Count > Config.MaxInputHistory)
+            {
+                HistoryItems.RemoveAt(HistoryItems.Count - 1);
+            } 
         }
     }
 }

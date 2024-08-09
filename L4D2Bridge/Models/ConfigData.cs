@@ -154,6 +154,9 @@ namespace L4D2Bridge.Models
         [JsonProperty]
         public int MaxMessageLifetime = 5;
 
+        [JsonProperty]
+        public int MaxInputHistory = 5;
+
         /*** Testing ***/
         [JsonProperty(PropertyName = "test")]
         public TestSettings TestSettings { get; set; } = new TestSettings();
@@ -166,52 +169,54 @@ namespace L4D2Bridge.Models
         /*** Config Loading/Saving ***/
         public static ConfigData LoadConfigData()
         {
-            ConfigData configData = new();
             if (!File.Exists(FileName))
             {
+                ConfigData configData = new();
                 configData.SaveConfigData();
                 return configData;
             }
 
             string json = File.ReadAllText(FileName);
-            if (!string.IsNullOrEmpty(json))
+            if (!string.IsNullOrWhiteSpace(json))
             {
                 try
                 {
                     var outputConfig = JsonConvert.DeserializeObject<ConfigData>(json);
                     if (outputConfig != null)
                     {
-                        configData = outputConfig;
-                        configData.IsValid = true;
                         RequiredFieldContainer checkIfNotNull = [];
 
                         // Get all of our properties in the config class of type SettingsVerifier
-                        var verifyProperties = configData.GetType().GetProperties().Where(prop => prop.PropertyType.IsSubclassOf(typeof(SettingsVerifier)));
+                        var verifyProperties = outputConfig.GetType().GetProperties().Where(prop => prop.PropertyType.IsSubclassOf(typeof(SettingsVerifier)));
                         foreach (PropertyInfo? property in verifyProperties)
                         {
                             // Attempt to get the value of the property if it is set
-                            object? Value = property?.GetValue(configData);
+                            object? Value = property?.GetValue(outputConfig);
 
                             // We have the object, so cast it to the SettingsVerifier class and add the required fields
                             if (Value != null)
+                            {
                                 ((SettingsVerifier)Value).AddRequiredFields(ref checkIfNotNull);
+                            }
                         }
 
                         // Check if any of the settings are invalid.
                         if (checkIfNotNull.Any(it => string.IsNullOrEmpty(it)))
-                            configData.IsValid = false;
-                        
+                            outputConfig.IsValid = false;
+                        else
+                            outputConfig.IsValid = true;
+
                         Console.WriteLine("Settings loaded");
+                        return outputConfig;
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to load settings {ex}");
-                    configData.IsValid = false;
                 }
             }
             
-            return configData;
+            return new();
         }
 
         public void SaveConfigData()

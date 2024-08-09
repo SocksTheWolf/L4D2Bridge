@@ -37,7 +37,7 @@ namespace L4D2Bridge.Models
     {
         public ObservableCollection<ConsoleMessage> ConsoleMessages { get; private set; }
         private Task? Ticker;
-        public static DataGrid? Griddy;
+        public static DataGrid? ConsoleHistory;
         private bool ShouldRun = true;
 
         public ConsoleService()
@@ -63,7 +63,7 @@ namespace L4D2Bridge.Models
 
             Dispatcher.UIThread.Post(() => {
                 ConsoleMessages.Add(new ConsoleMessage(inMessage, source));
-                Griddy?.ScrollIntoView(ConsoleMessages.Last(), null);
+                ConsoleHistory?.ScrollIntoView(ConsoleMessages.Last(), null);
             });
         }
 

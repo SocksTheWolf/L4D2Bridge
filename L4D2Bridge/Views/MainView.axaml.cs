@@ -11,7 +11,8 @@ public partial class MainView : UserControl
         InitializeComponent();
         // Technically, this runs on the UI thread anyways, so we don't break MVVM :)
         // This thing is annoying and I hate it.
-        ConsoleService.Griddy = ConsoleLog;
+        ConsoleService.ConsoleHistory = ConsoleLog;
         MainViewModel.PauseButton = PauseStatus;
+        MainViewModel.ServerInput = ServerCommand;
     }
 }

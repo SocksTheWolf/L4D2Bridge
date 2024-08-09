@@ -27,7 +27,7 @@
     <!-- Control Panel -->
     <DockPanel>      
       <Button x:Name="PauseStatus" Foreground="Green" Background="Transparent" Margin="0" HorizontalAlignment="Stretch" FontFamily="{StaticResource FontAwesome}" Content="{Binding PauseButtonText}" ToolTip.Tip="{Binding PauseTip}" Padding="18,15" Command="{Binding OnPauseButton_Clicked}" />
-      <TextBox x:Name="ServerCommand" MaxLines="1" NewLine="False" Width="640" Height="7" AcceptsReturn="False" Margin="5,1" Watermark="Server Command" />
+      <TextBox x:Name="ServerCommand" MaxLines="1" NewLine="False" Width="640" Height="7" AcceptsReturn="False" AcceptsTab="False" Margin="5,1" Watermark="Server Command" />
       <Button IsDefault="True" Content="Send" Command="{Binding OnServerCommand_Sent}" CommandParameter="{Binding #ServerCommand}" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0 20" Width="80" />
     </DockPanel>
   </StackPanel>
