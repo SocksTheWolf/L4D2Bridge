@@ -55,8 +55,15 @@ namespace L4D2Bridge.Models
         // For extra functionality that can be ran after an execution (like for printing!)
         protected virtual void OnFinish(RCONService owner)
         {
-            if (!IsSpawner)
-                owner.PushToConsole(Result);
+            if (IsSpawner)
+                return;
+
+            // Remove RCON repeat signature, to hide ip addresses
+            int RemoveCommandRepeat = Result.IndexOf("\nL ");
+            if (RemoveCommandRepeat != -1)
+                Result = Result.Remove(RemoveCommandRepeat);
+
+            owner.PushToConsole(Result);
         }
 
         public async Task<bool> Execute(RCONService owner, RCON connection)
