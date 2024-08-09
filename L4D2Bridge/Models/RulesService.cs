@@ -34,14 +34,14 @@ namespace L4D2Bridge.Models
 
         public override void Start()
         {
-            PrintMessage($"Using {Actions.Count} actions to the executor");
             if (!File.Exists(rulesFile))
             {
-                PrintMessage("Missing rules information! Cannot handle rules engine");
+                PrintMessage("Missing rules information! Actions will not be executed!");
                 // Create an empty file
                 File.Create(rulesFile).Close();
                 return;
             }
+            PrintMessage($"Using {Actions.Count} actions to the executor");
 
             string rulesJson = File.ReadAllText(rulesFile);
             try

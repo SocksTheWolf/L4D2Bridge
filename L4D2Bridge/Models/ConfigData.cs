@@ -55,7 +55,7 @@ namespace L4D2Bridge.Models
     public class TwitchSettings : SettingsVerifier
     {
         public bool Enabled { get; set; } = false;
-        public string[]? Channels { get; set; } = null;
+        public string[] Channels { get; set; } = [];
         public string BotUserName { get; set; } = string.Empty;
         public string OAuthToken { get; set; } = string.Empty;
         // If the resulting actions from twitch events should be redirected to chat as well.
@@ -69,7 +69,7 @@ namespace L4D2Bridge.Models
         {
             if (Enabled)
             {
-                if (Channels != null)
+                if (Channels != null && Channels.Length > 0)
                     RequiredFieldObj.AddRange(Channels);
 
                 RequiredFieldObj.AddRange([BotUserName, OAuthToken]);
