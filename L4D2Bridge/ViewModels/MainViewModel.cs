@@ -240,7 +240,7 @@ public partial class MainViewModel : ViewModelBase
             else if (loweredCommand == "commands")
                 Server?.PrintNumCommands();
             else if (loweredCommand.StartsWith("raffle"))
-                Twitch?.StartRaffle(command.Substring(6));
+                Twitch?.StartRaffle(command.Substring(7));
             else if (loweredCommand == "draw")
                 Twitch?.PickRaffle();
             else if (loweredCommand == "help")
