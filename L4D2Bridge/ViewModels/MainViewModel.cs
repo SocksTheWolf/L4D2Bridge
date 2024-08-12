@@ -227,6 +227,8 @@ public partial class MainViewModel : ViewModelBase
                 Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
                 // Load up our configs again
                 LoadConfigs();
+                // Join any channels we haven't before
+                Twitch?.JoinChannels(Config.TwitchSettings);
                 Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
             else if (loweredCommand == "clear" || loweredCommand == "cls")
@@ -237,6 +239,10 @@ public partial class MainViewModel : ViewModelBase
                 Server?.Clear();
             else if (loweredCommand == "commands")
                 Server?.PrintNumCommands();
+            else if (loweredCommand.StartsWith("raffle"))
+                Twitch?.StartRaffle(command.Substring(6));
+            else if (loweredCommand == "draw")
+                Twitch?.PickRaffle();
             else if (loweredCommand == "help")
             {
                 string output = string.Join(Environment.NewLine,
@@ -244,6 +250,8 @@ public partial class MainViewModel : ViewModelBase
                     "clear/cls - clear the console window of all messages",
                     "pause/unpause/resume - toggles the test engine",
                     "cancel - cancels all currently queued commands",
+                    "raffle <award> - start a raffle with the given award",
+                    "draw - picks a winner from all the current entrants",
                     "commands - prints the number of currently queued commands",
                     "help - prints this message"
                 );

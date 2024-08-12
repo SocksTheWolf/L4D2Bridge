@@ -1,5 +1,7 @@
 ﻿using L4D2Bridge.Types;
 using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -12,7 +14,11 @@ namespace L4D2Bridge.Models
     {
         private readonly TwitchClient client;
         private readonly TwitchSettings settings;
+        private const string WinnerLogFile = "raffle.txt";
         private Random rng = new();
+        private bool RaffleOpen = false;
+        private string CurrentRafflePrize = string.Empty;
+        private Collection<string> Entries = new();
 
         public override string GetWorkflow() => "twitch";
         public override ConsoleSources GetSource() => ConsoleSources.Twitch;
@@ -75,12 +81,74 @@ namespace L4D2Bridge.Models
             if (client.Connect())
             {
                 PrintMessage("Twitch Connected!");
-                foreach (string channel in settings.Channels)
-                {
-                    client.JoinChannel(channel);
-                }
+                JoinChannels(settings);
             }
         }
+
+        public void JoinChannels(TwitchSettings settings)
+        {
+            if (!client.IsConnected)
+                return;
+
+            // GetJoinedChannel throws exceptions unless we have channels we've
+            // already joined. If we haven't joined any channels, then just join
+            // all of them.
+            if (client.JoinedChannels.Count <= 0)
+            {
+                foreach (string channel in settings.Channels)
+                    client.JoinChannel(channel);
+                return;
+            }
+
+            // Otherwise, if we have already joined channels, only join the ones we haven't
+            // joined before.
+            foreach (string channel in settings.Channels)
+            {
+                // Figure out if we haven't joined this channel previously and join it.
+                if (client.GetJoinedChannel(channel) == null)
+                {
+                    PrintMessage($"Attempting to join channel {channel}");
+                    client.JoinChannel(channel);
+                }  
+            }
+        }
+
+        /*** Raffle Support ***/
+        public void StartRaffle(string rafflePrize)
+        {
+            // If the raffle prize string is just empty, skip the command
+            if (string.IsNullOrWhiteSpace(rafflePrize))
+                return;
+
+            RaffleOpen = true;
+            Entries.Clear();
+            CurrentRafflePrize = rafflePrize;
+            SendMessageToAllChannels($"Raffle is now open for {CurrentRafflePrize}! Type !enter to enter.");
+            PrintMessage($"Raffle has now opened for {CurrentRafflePrize}!");
+        }
+
+        public void PickRaffle()
+        {
+            RaffleOpen = false;
+
+            // Choose a winner
+            int ChooseIndex = rng.Next(Entries.Count);
+            string WinnerName = Entries[ChooseIndex];
+            // Remove this selected winner, because if we have to reroll, then this person won't be a potential choice.
+            Entries.RemoveAt(ChooseIndex);
+
+            // Print a message and send it to everyone.
+            PrintMessage($"Winner picked {WinnerName} at index {ChooseIndex}");
+            SendMessageToAllChannels($"Raffle winner of {CurrentRafflePrize} is @{WinnerName}! Check your Twitch Whispers for info!");
+
+            // Print out the winner to a log file.
+            using (StreamWriter FileWriter = File.AppendText(WinnerLogFile))
+            {
+                FileWriter.WriteLine($"{CurrentRafflePrize} winner is {WinnerName}");
+            }
+        }
+
+        /*** Handle Twitch Events ***/
         private void OnChannelJoined(object unused, OnJoinedChannelArgs args)
         {
             PrintMessage($"Joined channel: {args.Channel}");
@@ -88,11 +156,23 @@ namespace L4D2Bridge.Models
 
         private void OnCommandReceived(object unused, OnChatCommandReceivedArgs args)
         {
+            string loweredCommand = args.Command.CommandText.ToLower();
+            string user = args.Command.ChatMessage.Username.ToLower();
+
+            if (loweredCommand == "enter")
+            {
+                // If raffles are opened and they haven't entered yet,
+                // enter the user
+                if (RaffleOpen && !Entries.Contains(user))
+                    Entries.Add(user);
+
+                return;
+            }
+
             if (rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
-            Invoke(new SourceEvent(SourceEventType.ChatCommand, args.Command.ChatMessage.Username, 
-                args.Command.ChatMessage.Channel, args.Command.CommandText));
+            Invoke(new SourceEvent(SourceEventType.ChatCommand, user, args.Command.ChatMessage.Channel, loweredCommand));
         }
 
         private void OnChannelRaided(object unused, OnRaidNotificationArgs args)

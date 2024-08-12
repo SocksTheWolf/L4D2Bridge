@@ -10,6 +10,7 @@ This is an application and service layer to a L4D2 server, that allows for exter
 * Fairly lightweight
 * History recall
 * High flexibility with actions
+* Raffle Support
 * Configurable
 
 ### Console Functionality
@@ -21,6 +22,8 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 * `pause`/`unpause`/`resume` - if the test service is running, will pause/unpause the test service from generating events
 * `cancel` - cancel all current command events
 * `commands` - prints the number of events in the queue
+* `raffle <award>` - start a raffle with the given award
+* `draw` - picks a winner from all the current entrants
 * `help` - prints out these commands directly to the console
 
 ## Influence Service Sources
