@@ -218,11 +218,11 @@ public partial class MainViewModel : ViewModelBase
 
     public void OnTextBoxKey_Down(object? source, KeyEventArgs args)
     {
-        bool isUp = (args.Key == Key.Up);
-        if (args.Key == Key.Down || isUp)
+        bool IsUp = (args.Key == Key.Up);
+        if (args.Key == Key.Down || IsUp)
         {
             args.Handled = true;
-            HistoryIndex += (isUp) ? 1 : -1;
+            HistoryIndex += (IsUp) ? 1 : -1;
             if (HistoryIndex < 0)
                 HistoryIndex = HistoryItems.Count - 1;
             else if (HistoryIndex >= HistoryItems.Count)
@@ -237,12 +237,12 @@ public partial class MainViewModel : ViewModelBase
     public void OnServerCommand_Sent(object msg)
     {
         TextBox Box = ((TextBox)msg);
-        string? command = Box.Text;
+        string? Command = Box.Text;
         Box.Clear();
 
-        if (!string.IsNullOrEmpty(command))
+        if (!string.IsNullOrEmpty(Command))
         {
-            string loweredCommand = command.ToLower();
+            string loweredCommand = Command.ToLower();
             if (loweredCommand == "reload")
             {
                 Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
@@ -262,7 +262,7 @@ public partial class MainViewModel : ViewModelBase
             else if (loweredCommand == "commands")
                 Server?.PrintNumCommands();
             else if (loweredCommand.StartsWith("raffle"))
-                Twitch?.StartRaffle(command.Substring(7));
+                Twitch?.StartRaffle(Command.Substring(7));
             else if (loweredCommand == "draw")
                 Twitch?.PickRaffle();
             else if (loweredCommand == "help")
@@ -281,13 +281,13 @@ public partial class MainViewModel : ViewModelBase
                 Console.AddMessage(output, ConsoleSources.Main);
             }
             else
-                Server?.AddNewCommand(new RawCommand(command));
+                Server?.AddNewCommand(new RawCommand(Command));
 
             // Invalidate our index, so that we will move appropriately next time we press arrow keys
             HistoryIndex = -1;
 
             // Push any of the commands we get to the history item list
-            HistoryItems.Insert(0, command);
+            HistoryItems.Insert(0, Command);
             if (HistoryItems.Count > Config.MaxInputHistory)
             {
                 HistoryItems.RemoveAt(HistoryItems.Count - 1);
