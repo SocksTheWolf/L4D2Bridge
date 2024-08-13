@@ -104,9 +104,14 @@ namespace L4D2Bridge.Models
                             if (donoInfo.Amount == null)
                                 continue;
 
-                            if (Double.TryParse(donoInfo.Amount.Value, out double temp))
+                            if (Double.TryParse(donoInfo.Amount.Value, out double DonationAmount))
                             {
-                                Invoke(new SourceEvent(SourceEventType.Donation, donoInfo.Name, temp, donoInfo.Comment));
+                                Invoke(new SourceEvent(SourceEventType.Donation)
+                                {
+                                    Amount = DonationAmount,
+                                    Name = donoInfo.Name,
+                                    Message = donoInfo.Comment
+                                });
                             }
                         }
                     }

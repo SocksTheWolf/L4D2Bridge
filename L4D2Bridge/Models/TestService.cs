@@ -29,7 +29,6 @@ namespace L4D2Bridge.Models
         public override void Start()
         {
             Runner = RunSimulation();
-            PrintMessage("Test Service now Starting");
         }
 
         public void PauseExecution(bool ShouldPause)
@@ -61,7 +60,11 @@ namespace L4D2Bridge.Models
                     if (rng.NextBool())
                     {
                         PrintMessage($"Test System generated ${Amount}!");
-                        Invoke(new SourceEvent(SourceEventType.Donation, "TestRig", Amount, string.Empty));
+                        Invoke(new SourceEvent(SourceEventType.Donation)
+                        {
+                            Amount = Amount,
+                            Name = "Director"
+                        });
                     }
                 }
 

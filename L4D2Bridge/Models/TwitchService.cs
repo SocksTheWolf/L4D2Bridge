@@ -212,7 +212,12 @@ namespace L4D2Bridge.Models
             if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
-            Invoke(new SourceEvent(SourceEventType.ChatCommand, user, args.Command.ChatMessage.Channel, loweredCommand));
+            Invoke(new SourceEvent(SourceEventType.ChatCommand)
+            {
+                Channel = args.Command.ChatMessage.Channel,
+                Message = loweredCommand,
+                Name = user,
+            });
         }
 
         private void OnChannelRaided(object unused, OnRaidNotificationArgs args)
@@ -222,7 +227,12 @@ namespace L4D2Bridge.Models
                 viewerCount = 1;
 
             PrintMessage($"Channel raid for {args.Channel} from {fromUser} of {viewerCount} viewers!");
-            Invoke(new SourceEvent(SourceEventType.Raid, fromUser, args.Channel, viewerCount, string.Empty));
+            Invoke(new SourceEvent(SourceEventType.Raid)
+            {
+                Channel = args.Channel,
+                Amount = viewerCount,
+                Name = fromUser,
+            });
         }
 
         private void OnNewSubscription(object unused, OnNewSubscriberArgs args)
@@ -232,7 +242,13 @@ namespace L4D2Bridge.Models
                 numMonths = 0;
 
             PrintMessage($"Channel subscription for {args.Channel} from {args.Subscriber.DisplayName} of {planName} for {numMonths}!");
-            Invoke(new SourceEvent(SourceEventType.Subscription, args.Subscriber.Login, args.Channel, numMonths, planName));
+            Invoke(new SourceEvent(SourceEventType.Subscription)
+            {
+                Channel = args.Channel,
+                Amount = numMonths,
+                Name = args.Subscriber.Login,
+                Message = planName
+            });
         }
 
         private void OnResubscription(object unused, OnReSubscriberArgs args)
@@ -243,8 +259,13 @@ namespace L4D2Bridge.Models
                 numMonths = 1;
 
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ReSubscriber.DisplayName} of {planName} for {numMonths}!");
-            Invoke(new SourceEvent(SourceEventType.Resubscription, args.ReSubscriber.Login, args.Channel, numMonths, 
-                args.ReSubscriber.SubscriptionPlanName));
+            Invoke(new SourceEvent(SourceEventType.Resubscription)
+            {
+                Channel = args.Channel,
+                Amount = numMonths,
+                Name = args.ReSubscriber.Login,
+                Message = args.ReSubscriber.SubscriptionPlanName
+            });
         }
 
         private void OnPrimePaidSubscription(object unused, OnPrimePaidSubscriberArgs args)
@@ -255,14 +276,23 @@ namespace L4D2Bridge.Models
                 numMonths = 1;
 
             PrintMessage($"Channel resubscription for {args.Channel} from {args.PrimePaidSubscriber.DisplayName} of {planName} for {numMonths}!");
-            Invoke(new SourceEvent(SourceEventType.Resubscription, args.PrimePaidSubscriber.Login, args.Channel, numMonths, 
-                args.PrimePaidSubscriber.SubscriptionPlanName));
+            Invoke(new SourceEvent(SourceEventType.Resubscription)
+            {
+                Channel = args.Channel,
+                Name = args.PrimePaidSubscriber.Login,
+                Amount = numMonths,
+                Message = args.PrimePaidSubscriber.SubscriptionPlanName
+            });
         }
 
         private void OnContinuedGiftSub(object unused, OnContinuedGiftedSubscriptionArgs args)
         {
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ContinuedGiftedSubscription.DisplayName}!");
-            Invoke(new SourceEvent(SourceEventType.Resubscription, args.ContinuedGiftedSubscription.Login, args.Channel, string.Empty));
+            Invoke(new SourceEvent(SourceEventType.Resubscription)
+            {
+                Channel = args.Channel,
+                Name = args.ContinuedGiftedSubscription.Login,
+            });
         }
 
         private void OnGiftedSubscription(object unused, OnGiftedSubscriptionArgs args)
@@ -272,15 +302,26 @@ namespace L4D2Bridge.Models
                 numMonths = 1;
 
             PrintMessage($"Channel gift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} to {recipient} for {numMonths}!");
-            Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, numMonths, recipient));
+            Invoke(new SourceEvent(SourceEventType.GiftSubscription)
+            {
+                Channel = args.Channel,
+                Name = args.GiftedSubscription.Login,
+                Amount = numMonths,
+                Message = recipient
+            });
         }
 
         private void OnMultiGiftSubscription(object unused, OnCommunitySubscriptionArgs args)
         {
             int numGifts = args.GiftedSubscription.MsgParamMassGiftCount;
             PrintMessage($"Channel multigift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} of {numGifts}!");
-            Invoke(new SourceEvent(SourceEventType.GiftSubscription, args.GiftedSubscription.Login, args.Channel, 
-                numGifts, args.GiftedSubscription.MsgParamSubPlan.ToString()));
+            Invoke(new SourceEvent(SourceEventType.MultiGiftSubscription)
+            {
+                Channel = args.Channel,
+                Name = args.GiftedSubscription.Login,
+                Amount = numGifts,
+                Message = args.GiftedSubscription.MsgParamSubPlan.ToString()
+            });
         }
 
         /*** Sending messages to a channel ***/
