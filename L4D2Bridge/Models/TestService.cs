@@ -45,7 +45,8 @@ namespace L4D2Bridge.Models
 
         private async Task RunSimulation()
         {
-            await Task.Delay(10000);
+            PrintMessage("Starting test simulation in 1 minute...");
+            await Task.Delay(60000);
             while (ShouldRun)
             {
                 if (!Paused)
