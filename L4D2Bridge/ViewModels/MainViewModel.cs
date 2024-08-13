@@ -136,7 +136,28 @@ public partial class MainViewModel : ViewModelBase
     // Separated into a different function to allow for reloading of data
     private void LoadConfigs()
     {
-        Config = ConfigData.LoadConfigData();
+        // Attempt to load Config data
+        ConfigData? Load = ConfigData.LoadConfigData();
+        if (Load == null)
+        {
+            // If we already have good config data, then don't reload the config data, and continue as normal.
+            if (Config != null)
+            {
+                Console.AddMessage("Detected an error with config.json, dropping changes", ConsoleSources.Main);
+                return;
+            }
+
+            // Otherwise, give an empty config data object (which will be invalid)
+            Config = new ConfigData();
+        }
+        else
+        {
+            // If this is not a first time load, print a message that the config did reload.
+            if (Config != null)
+                Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
+
+            Config = Load;
+        }
 
         // Push the command prefs to the command builder
         L4D2CommandBuilder.Initialize(Config);
@@ -229,7 +250,6 @@ public partial class MainViewModel : ViewModelBase
                 LoadConfigs();
                 // Join any channels we haven't before
                 Twitch?.JoinChannels(Config.TwitchSettings);
-                Console.AddMessage("Configuration Reloaded", ConsoleSources.Main);
             }
             else if (loweredCommand == "clear" || loweredCommand == "cls")
                 Console.ClearAllMessages();

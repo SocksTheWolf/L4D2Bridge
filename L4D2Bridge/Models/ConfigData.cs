@@ -169,12 +169,12 @@ namespace L4D2Bridge.Models
         public bool IsUsingTest() => TestSettings != null && TestSettings.Enabled;
 
         /*** Config Loading/Saving ***/
-        public static ConfigData LoadConfigData()
+        public static ConfigData? LoadConfigData()
         {
             if (!File.Exists(FileName))
             {
                 ConfigData configData = new();
-                configData.SaveConfigData();
+                configData.SaveConfigData(true);
                 return configData;
             }
 
@@ -218,11 +218,15 @@ namespace L4D2Bridge.Models
                 }
             }
             
-            return new();
+            return null;
         }
 
-        public void SaveConfigData()
+        public void SaveConfigData(bool OverrideInvalid = false)
         {
+            // If we are not valid, do not allow saving, unless override Invalid is true
+            if (!IsValid && !OverrideInvalid) 
+                return;
+
             string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Include
