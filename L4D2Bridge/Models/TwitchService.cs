@@ -89,7 +89,7 @@ namespace L4D2Bridge.Models
                 PrintMessage("Twitch could not connect!");
         }
 
-        public void JoinChannels(TwitchSettings settings)
+        public void JoinChannels(TwitchSettings NewSettings)
         {
             if (!client.IsConnected)
                 return;
@@ -99,8 +99,8 @@ namespace L4D2Bridge.Models
             // all of them.
             if (client.JoinedChannels.Count < 1)
             {
-                PrintMessage($"Attempting to join {settings.Channels.Count()} channels...");
-                foreach (string channel in settings.Channels)
+                PrintMessage($"Attempting to join {NewSettings.Channels.Count()} channels...");
+                foreach (string channel in NewSettings.Channels)
                     client.JoinChannel(channel);
 
                 return;
@@ -108,7 +108,7 @@ namespace L4D2Bridge.Models
 
             // Otherwise, if we have already joined channels, only join the ones we haven't
             // joined before.
-            foreach (string channel in settings.Channels)
+            foreach (string channel in NewSettings.Channels)
             {
                 // Figure out if we haven't joined this channel previously and join it.
                 if (client.GetJoinedChannel(channel) == null)
@@ -119,7 +119,7 @@ namespace L4D2Bridge.Models
             }
 
             // Reconcile any channels we were in, and part the channel.
-            var ChannelsToLeave = client.JoinedChannels.Where((JoinedChannel channel) => { return settings.Channels.Contains(channel.Channel) == false; });
+            var ChannelsToLeave = client.JoinedChannels.Where((JoinedChannel channel) => { return NewSettings.Channels.Contains(channel.Channel) == false; });
             int NumChannels = ChannelsToLeave.Count();
             if (NumChannels > 0)
             {
@@ -337,12 +337,25 @@ namespace L4D2Bridge.Models
             }
         }
 
+        public void SendMessageToChannel(JoinedChannel channel, string message)
+        {
+            try
+            {
+                client.SendMessage(channel, message);
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Encountered exception upon sending message to channel[{channel.Channel}]: {ex}");
+            }
+        }
+
         public void SendMessageToAllChannels(string message)
         {
-            if (settings.Channels == null || settings.Channels.Length <= 0 || string.IsNullOrWhiteSpace(message))
+            IReadOnlyList<JoinedChannel> AllJoinedChannels = client.JoinedChannels;
+            if (AllJoinedChannels.Count <= 0 || string.IsNullOrWhiteSpace(message))
                 return;
 
-            foreach (string channel in settings.Channels)
+            foreach (JoinedChannel channel in AllJoinedChannels)
                 SendMessageToChannel(channel, message);
         }
     }
