@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -44,6 +45,7 @@ namespace L4D2Bridge.Models
 
 #pragma warning disable CS8622
             client.OnJoinedChannel += OnChannelJoined;
+            client.OnLeftChannel += OnChannelLeft;
 
             if (settings.Events.OnCommand || settings.EnableRaffles)
                 client.OnChatCommandReceived += OnCommandReceived;
@@ -66,8 +68,8 @@ namespace L4D2Bridge.Models
                 client.OnPrimePaidSubscriber += OnPrimePaidSubscription;
                 client.OnContinuedGiftedSubscription += OnContinuedGiftSub;
             }
-
 #pragma warning restore CS8622
+
         }
 
         public override void Start()
@@ -83,6 +85,8 @@ namespace L4D2Bridge.Models
             client.Initialize(creds, ChannelsToConnect);
             if (client.Connect())
                 PrintMessage("Twitch Connected!");
+            else
+                PrintMessage("Twitch could not connect!");
         }
 
         public void JoinChannels(TwitchSettings settings)
@@ -93,8 +97,9 @@ namespace L4D2Bridge.Models
             // GetJoinedChannel throws exceptions unless we have channels we've
             // already joined. If we haven't joined any channels, then just join
             // all of them.
-            if (client.JoinedChannels.Count <= 0)
+            if (client.JoinedChannels.Count < 1)
             {
+                PrintMessage($"Attempting to join {settings.Channels.Count()} channels...");
                 foreach (string channel in settings.Channels)
                     client.JoinChannel(channel);
 
@@ -108,9 +113,22 @@ namespace L4D2Bridge.Models
                 // Figure out if we haven't joined this channel previously and join it.
                 if (client.GetJoinedChannel(channel) == null)
                 {
-                    PrintMessage($"Attempting to join channel {channel}");
+                    PrintMessage($"Attempting to join channel {channel}...");
                     client.JoinChannel(channel);
                 }  
+            }
+
+            // Reconcile any channels we were in, and part the channel.
+            var ChannelsToLeave = client.JoinedChannels.Where((JoinedChannel channel) => { return settings.Channels.Contains(channel.Channel) == false; });
+            int NumChannels = ChannelsToLeave.Count();
+            if (NumChannels > 0)
+            {
+                PrintMessage($"There are {NumChannels} twitch channels to leave");
+                foreach (JoinedChannel leavingChannel in ChannelsToLeave)
+                {
+                    PrintMessage($"Attempting to leave channel {leavingChannel.Channel}...");
+                    client.LeaveChannel(leavingChannel);
+                }
             }
         }
 
@@ -165,6 +183,11 @@ namespace L4D2Bridge.Models
         private void OnChannelJoined(object unused, OnJoinedChannelArgs args)
         {
             PrintMessage($"Joined channel: {args.Channel}");
+        }
+
+        private void OnChannelLeft(object unused, OnLeftChannelArgs args)
+        {
+            PrintMessage($"Left channel: {args.Channel}");
         }
 
         private void OnCommandReceived(object unused, OnChatCommandReceivedArgs args)
