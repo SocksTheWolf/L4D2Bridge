@@ -237,6 +237,8 @@ public partial class MainViewModel : ViewModelBase
                 Test?.TogglePause();
             else if (loweredCommand == "cancel")
                 Server?.Clear();
+            else if (loweredCommand == "respawn")
+                Server?.AddNewAction(L4D2Action.RespawnAllPlayers, "Admin");
             else if (loweredCommand == "commands")
                 Server?.PrintNumCommands();
             else if (loweredCommand.StartsWith("raffle"))
@@ -250,6 +252,7 @@ public partial class MainViewModel : ViewModelBase
                     "clear/cls - clear the console window of all messages",
                     "pause/unpause/resume - toggles the test engine",
                     "cancel - cancels all currently queued commands",
+                    "respawn - respawns all players",
                     "raffle <award> - start a raffle with the given award",
                     "draw - picks a winner from all the current entrants",
                     "commands - prints the number of currently queued commands",
