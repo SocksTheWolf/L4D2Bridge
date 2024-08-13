@@ -42,13 +42,19 @@ namespace L4D2Bridge.Models
             PauseExecution(!Paused);
         }
 
+        private void PrintMessageIfNotPaused(string message)
+        {
+            if (!Paused)
+                PrintMessage(message);
+        }
+
         private async Task RunSimulation()
         {
-            PrintMessage("Starting test simulation in 1 minute...");
+            PrintMessageIfNotPaused("Starting test simulation in 1 minute...");
             await Task.Delay(60000);
-            PrintMessage("Simulation starting...");
+            PrintMessageIfNotPaused("Simulation starting...");
             await Task.Delay(10000);
-            PrintMessage("Simulation started.");
+            PrintMessageIfNotPaused("Simulation started.");
             while (ShouldRun)
             {
                 if (!Paused)
