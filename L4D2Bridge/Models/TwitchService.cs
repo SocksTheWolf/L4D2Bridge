@@ -172,7 +172,7 @@ namespace L4D2Bridge.Models
             string loweredCommand = args.Command.CommandText.ToLower();
             string user = args.Command.ChatMessage.Username.ToLower();
 
-            if (loweredCommand == "enter")
+            if (loweredCommand == "enter" && settings.EnableRaffles)
             {
                 // If raffles are opened and they haven't entered yet,
                 // enter the user
@@ -186,7 +186,7 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            if (rng.Next(1, 101) > settings.ChatCommandPercentChance)
+            if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
             Invoke(new SourceEvent(SourceEventType.ChatCommand, user, args.Command.ChatMessage.Channel, loweredCommand));
