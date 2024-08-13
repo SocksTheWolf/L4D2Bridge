@@ -1,5 +1,6 @@
 ﻿using L4D2Bridge.Types;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using TwitchLib.Client;
@@ -14,8 +15,10 @@ namespace L4D2Bridge.Models
     {
         private readonly TwitchClient client;
         private readonly TwitchSettings settings;
-        private const string WinnerLogFile = "raffle.txt";
         private Random rng = new();
+
+        // Raffle Data
+        private const string WinnerLogFile = "raffle.txt";
         private bool RaffleOpen = false;
         private string CurrentRafflePrize = string.Empty;
         private Collection<string> Entries = new();
@@ -42,7 +45,7 @@ namespace L4D2Bridge.Models
 #pragma warning disable CS8622
             client.OnJoinedChannel += OnChannelJoined;
 
-            if (settings.Events.OnCommand)
+            if (settings.Events.OnCommand || settings.EnableRaffles)
                 client.OnChatCommandReceived += OnCommandReceived;
        
             if (settings.Events.OnRaid)
@@ -75,14 +78,11 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            PrintMessage($"Twitch Initialized for {settings.Channels.Length} channels");
+            List<string> ChannelsToConnect = [.. settings.Channels];
             ConnectionCredentials creds = new(settings.BotUserName, settings.OAuthToken);
-            client.Initialize(creds);
+            client.Initialize(creds, ChannelsToConnect);
             if (client.Connect())
-            {
                 PrintMessage("Twitch Connected!");
-                JoinChannels(settings);
-            }
         }
 
         public void JoinChannels(TwitchSettings settings)
@@ -97,6 +97,7 @@ namespace L4D2Bridge.Models
             {
                 foreach (string channel in settings.Channels)
                     client.JoinChannel(channel);
+
                 return;
             }
 
@@ -120,6 +121,9 @@ namespace L4D2Bridge.Models
             if (string.IsNullOrWhiteSpace(rafflePrize))
                 return;
 
+            if (!settings.EnableRaffles)
+                return;
+
             RaffleOpen = true;
             Entries.Clear();
             CurrentRafflePrize = rafflePrize;
@@ -129,6 +133,15 @@ namespace L4D2Bridge.Models
 
         public void PickRaffle()
         {
+            if (!settings.EnableRaffles)
+                return;
+
+            if (Entries.Count <= 0)
+            {
+                PrintMessage("There are no entries into the raffle, cannot pick a winner!");
+                return;
+            }
+
             RaffleOpen = false;
 
             // Choose a winner
@@ -164,7 +177,11 @@ namespace L4D2Bridge.Models
                 // If raffles are opened and they haven't entered yet,
                 // enter the user
                 if (RaffleOpen && !Entries.Contains(user))
+                {
                     Entries.Add(user);
+                    if (settings.RespondToRaffleEntry)
+                        SendMessageToChannel(args.Command.ChatMessage.Channel, $"@{user} you have entered!");
+                }
 
                 return;
             }
