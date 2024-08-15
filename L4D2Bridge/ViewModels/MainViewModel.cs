@@ -8,15 +8,19 @@ using L4D2Bridge.Models;
 using L4D2Bridge.Types;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace L4D2Bridge.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    public ConfigData Config { get; private set; }
+    // Main Components
+    private ConfigData Config { get; set; }
     public ConsoleService Console { get; set; } = new ConsoleService();
-    private RCONService? Server { get; set; }
     private RulesService Rules { get; set; } = new RulesService();
+
+    // Services
+    private RCONService? Server { get; set; }
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private TestService? Test { get; set; }
@@ -218,6 +222,13 @@ public partial class MainViewModel : ViewModelBase
     public void OnPauseButton_Clicked(object msg)
     {
         Server?.AddNewCommand(new TogglePauseCommand());
+        // Enqueue a check to see if this the application was paused in the future
+        Task.Run(async () =>
+        {
+            // Wait ~10s
+            await Task.Delay(10000);
+            Server?.AddNewCommand(new CheckPauseCommand());
+        });
     }
 
     public void OnTextBoxKey_Down(object? source, KeyEventArgs args)
