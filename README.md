@@ -2,6 +2,8 @@
 
 This is an application and service layer to a L4D2 server, that allows for external events to influence an active server live.
 
+![Main Window](./image.png)
+
 ## Features
 
 * Live server remote console
@@ -77,6 +79,7 @@ The `Random` server action does a coin flip and if heads, will run a `RandomPosi
 ##### Example
 
 Here is an example of some actions that are defined in a config file. Names such as "chaos" and "santa" are used in the `rules.json` later.
+
 ```
   "Actions": {
     "chaos": [
