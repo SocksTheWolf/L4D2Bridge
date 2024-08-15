@@ -46,16 +46,16 @@ namespace L4D2Bridge.Models
             {
                 if (!Paused)
                 {
-                    // Max donation amount range is in $100
-                    double Amount = Math.Round(rng.NextDouble() * 100.00, 2, MidpointRounding.ToZero);
+                    double Amount = Math.Round(rng.NextDouble() * Settings.MaxSimulatedAmount, 2, MidpointRounding.ToZero);
 
                     // Execute on coin flip
                     if (rng.NextBool())
                     {
-                        PrintMessage($"Test System generated ${Amount}!");
+                        PrintMessage($"Test System generated {Amount}USD!");
                         Invoke(new SourceEvent(SourceEventType.Donation)
                         {
                             Amount = Amount,
+                            Currency = "USD",
                             Name = "Director"
                         });
                     }
