@@ -12,6 +12,7 @@
         Title="Left 4 Dead 2 Bridge"
         Topmost="True"
         TransparencyLevelHint="AcrylicBlur"
+        CanResize="False"
         Background="Transparent">
         <views:MainView />
 </Window>
