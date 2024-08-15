@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <Reference Include="Tiltify-Client">
-      <HintPath>..\..\Tiltify-Client\bin\Release\net6.0\Tiltify-Client.dll</HintPath>
+      <HintPath>..\ThirdParty\Tiltify-Client.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
