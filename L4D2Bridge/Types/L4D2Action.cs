@@ -51,6 +51,8 @@ namespace L4D2Bridge.Types
         HealAllPlayersSmall,
         [RuleAction(ReadableName = "Heal All Large", PositiveEffect = true)]
         HealAllPlayersLarge,
+        [RuleAction(ReadableName = "Heal All Random")]
+        HealAllPlayersRand,
         [RuleAction(ReadableName = "Respawned Players", PositiveEffect = true)]
         RespawnAllPlayers,
         [RuleAction(ReadableName = "Gave Players Uppies", PositiveEffect = true)]

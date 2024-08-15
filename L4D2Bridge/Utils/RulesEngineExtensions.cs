@@ -1,10 +1,13 @@
 ﻿using System.Linq;
+using System;
 
 namespace L4D2Bridge.Utils
 {
     // Rules Engine Utilities
     public class REUtils
     {
+        private static Random rng = new Random();
+
         // Returns if the string has a value and is not null, empty or whitespace
         public static bool HasValue(string input) => !string.IsNullOrWhiteSpace(input);
 
@@ -25,6 +28,15 @@ namespace L4D2Bridge.Utils
             {
                 return checkLower.Contains(valueOrCSV);
             }
+        }
+
+        public static bool PercentChance(int chance)
+        {
+            if (chance <= 0) return false;
+            if (chance >= 100) return true;
+
+            int rngRoll = rng.Next(0, 101);
+            return rngRoll <= chance;
         }
     }
 }

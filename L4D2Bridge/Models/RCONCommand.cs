@@ -384,6 +384,11 @@ namespace L4D2Bridge.Models
                     return new HealAllPlayers(10, SenderName);
                 case L4D2Action.HealAllPlayersLarge:
                     return new HealAllPlayers(50, SenderName);
+                case L4D2Action.HealAllPlayersRand:
+                    if (rng.NextBool())
+                        return BuildCommand(L4D2Action.HealAllPlayersLarge, SenderName);
+                    else
+                        return BuildCommand(L4D2Action.HealAllPlayersSmall, SenderName);
                 case L4D2Action.RespawnAllPlayers:
                     return new RespawnAllPlayers(SenderName);
                 case L4D2Action.UppiesPlayers:

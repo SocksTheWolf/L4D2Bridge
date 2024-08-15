@@ -63,6 +63,7 @@ Acceptable server actions are:
     SupplyCrate,
     HealAllPlayersSmall,
     HealAllPlayersLarge,
+    HealAllPlayersRand,
     RespawnAllPlayers,
     UppiesPlayers,
     RandomPositive,
@@ -150,6 +151,7 @@ The rules can take advantage of some added extensions to the processor to do str
 
 * `REUtils.HasValue` - Returns a boolean if the given string has an actual value instead of null/whitespace
 * `REUtils.CheckContains` - Given the input and a string of a value or csv of values, will check if the input contains any of the values in the check. All values will be projected to case-insensitive checks.
+* `REUtils.PercentChance` - Given a whole number percentage chance, if the RNG flip is that percentage or lower, returns true
 
 #### Example
 
