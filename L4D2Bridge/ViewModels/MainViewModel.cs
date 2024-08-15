@@ -29,6 +29,7 @@ public partial class MainViewModel : ViewModelBase
     private List<string> HistoryItems = new List<string>();
     private int HistoryIndex = 0;
 
+    // Pausing functionality
     [ObservableProperty]
     public string pauseButtonText = string.Empty;
 
@@ -55,7 +56,7 @@ public partial class MainViewModel : ViewModelBase
 #pragma warning restore CS8602 // Possible null reference argument.
 
         // Start the console service
-        Console.Start(Config.MaxMessageLifetime);
+        Console.Start();
 
 
         // Set the default pause glyph
@@ -161,6 +162,9 @@ public partial class MainViewModel : ViewModelBase
 
         // Push the command prefs to the command builder
         L4D2CommandBuilder.Initialize(Config);
+
+        // Set the max message lifetime
+        Console.SetMaxMessageLifetime(Config.MaxMessageLifetime);
 
         // Push the rules engine data
         Rules.LoadActions(ref Config.Actions);

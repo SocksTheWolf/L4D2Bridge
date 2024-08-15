@@ -16,8 +16,6 @@ namespace L4D2Bridge.Models
         public ConsoleSources Source { get; set; } = inSource;
         public string Message { get; set; } = inMessage;
 
-        public string GetTypeStr() => nameof(Source);
-
         public bool IsExpired(int messageLifetime)
         {
             if (messageLifetime == 0)
@@ -31,28 +29,22 @@ namespace L4D2Bridge.Models
         }
     }
 
-    // This does not need to inherit from BaseService because it doesn't need a console printer
-    // (as it is the console printer)
-    public class ConsoleService
+    public class ConsoleService : BaseServiceTickable
     {
         public ObservableCollection<ConsoleMessage> ConsoleMessages { get; private set; }
-        private Task? Ticker;
         public static DataGrid? ConsoleHistory;
-        private bool ShouldRun = true;
+        private int MaxMessageLifetime = 5;
 
         public ConsoleService()
         {
             ConsoleMessages = [];
         }
-        ~ConsoleService()
-        {
-            ShouldRun = false;
-        }
 
-        public void Start(int maxMessageLifetime=5)
+        public override ConsoleSources GetSource() => ConsoleSources.None;
+
+        public void SetMaxMessageLifetime(int value)
         {
-            // Console attempts to cleanup every 30s
-            Ticker = Tick(TimeSpan.FromSeconds(30), maxMessageLifetime);
+            MaxMessageLifetime = value;
         }
 
         public void AddMessage(string inMessage, ConsoleSources source = ConsoleSources.None)
@@ -77,12 +69,12 @@ namespace L4D2Bridge.Models
             Dispatcher.UIThread.Post(() => ConsoleMessages.Clear());
         }
 
-        public async Task Tick(TimeSpan interval, int maxMessageLifetime)
+        protected override async Task Tick()
         {
-            using PeriodicTimer timer = new(interval);
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(30));
             while (ShouldRun)
             {
-                ConsoleMessages.RemoveAll(msg => msg.IsExpired(maxMessageLifetime));
+                ConsoleMessages.RemoveAll(msg => msg.IsExpired(MaxMessageLifetime));
                 await timer.WaitForNextTickAsync(default);
             }
         }

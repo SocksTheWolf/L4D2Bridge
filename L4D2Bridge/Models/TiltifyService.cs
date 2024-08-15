@@ -14,14 +14,12 @@ namespace L4D2Bridge.Models
         public string RefreshToken = refreshToken;
     }
 
-    public class TiltifyService : BaseService
+    public class TiltifyService : BaseServiceTickable
     {
         private readonly Tiltify.Tiltify? Campaign;
         private readonly string CampaignId = string.Empty;
         private DateTime LastPolled;
-        private Task? Runner;
         private readonly int PollInterval;
-        private bool ShouldRun = true;
 
         // Fires whenever the authorization updated for Tiltify
         public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
@@ -39,22 +37,9 @@ namespace L4D2Bridge.Models
             CampaignId = config.CampaignID;
             PollInterval = config.PollingInterval;
         }
-        ~TiltifyService()
-        {
-            ShouldRun = false;
-        }
 
         public override string GetWorkflow() => "tiltify";
         public override ConsoleSources GetSource() => ConsoleSources.Tiltify;
-
-        public override async void Start()
-        {
-            if (Campaign == null)
-                return;
-
-            await Login();
-            Runner = Tick(TimeSpan.FromSeconds(PollInterval));
-        }
 
         private async Task Login()
         {
@@ -75,14 +60,19 @@ namespace L4D2Bridge.Models
             }
             catch (Exception ex)
             {
-                PrintMessage(ex.ToString());
+                PrintMessage($"Login hit exception: {ex}");
             }
         }
 
-        private async Task Tick(TimeSpan interval)
+        protected override async Task Tick()
         {
+            if (Campaign == null)
+                return;
+
+            await Login();
+
             PrintMessage("Tiltify Ready!");
-            using PeriodicTimer timer = new(interval);
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(PollInterval));
             while (ShouldRun)
             {
                 if (Campaign == null || OnAuthUpdate == null)
@@ -123,13 +113,13 @@ namespace L4D2Bridge.Models
                 catch (TokenExpiredException)
                 {
                     // If the token expires, get a new one.
-                    PrintMessage("Fetching a new token from Tiltify.."); ;
+                    PrintMessage("Fetching a new token from Tiltify..");
                     await Login();
                     continue;
                 }
                 catch (Exception ex)
                 {
-                    PrintMessage(ex.ToString());
+                    PrintMessage($"Loop hit exception: {ex}");
                 }
 
                 await timer.WaitForNextTickAsync(default);

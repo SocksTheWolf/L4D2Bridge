@@ -16,9 +16,9 @@ namespace L4D2Bridge.Models
 
     public class RulesService : BaseService
     {
-        const string rulesFile = "rules.json";
-        RulesEngine.RulesEngine? engine;
-        ActionDictionary Actions = [];
+        private const string rulesFile = "rules.json";
+        private RulesEngine.RulesEngine? engine;
+        private ActionDictionary Actions = [];
 
         public void LoadActions(ref readonly ActionDictionary InActions)
         {

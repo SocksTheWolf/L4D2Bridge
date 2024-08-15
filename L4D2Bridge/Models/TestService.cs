@@ -5,30 +5,17 @@ using System.Threading.Tasks;
 
 namespace L4D2Bridge.Models
 {
-    public class TestService : BaseService
+    public class TestService : BaseServiceTickable
     {
         private TestSettings Settings;
         private Random rng = new();
-        private bool ShouldRun = true;
         private bool Paused = false;
-        private Task? Runner;
         public override ConsoleSources GetSource() => ConsoleSources.Test;
         public override string GetWorkflow() => Settings.WorkflowName;
 
         public TestService(TestSettings InSettings)
         {
             Settings = InSettings;
-        }
-
-        ~TestService()
-        {
-            ShouldRun = false;
-        }
-
-        // The starting entry point to all services
-        public override void Start()
-        {
-            Runner = RunSimulation();
         }
 
         public void PauseExecution(bool ShouldPause)
@@ -48,7 +35,7 @@ namespace L4D2Bridge.Models
                 PrintMessage(message);
         }
 
-        private async Task RunSimulation()
+        protected override async Task Tick()
         {
             PrintMessageIfNotPaused("Starting test simulation in 1 minute...");
             await Task.Delay(60000);

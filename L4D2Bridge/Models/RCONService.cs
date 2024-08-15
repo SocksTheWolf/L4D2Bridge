@@ -9,13 +9,12 @@ using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class RCONService : BaseService
+    public class RCONService : BaseServiceTickable
     {
         // Flags whenever the system is currently paused
         public Action<bool>? OnPauseStatus { private get; set; }
 
         // Data
-        private bool ShouldRun = true;
         private readonly int MaxTaskAttempts;
         private ConcurrentQueue<L4D2CommandBase> CommandQueue = new();
 
@@ -24,7 +23,6 @@ namespace L4D2Bridge.Models
         private CancellationTokenSource cancelToken = new();
 
         // Tasks
-        private Task? RunTask;
         private Task? CheckPauseTask;
 
         public RCONService(ServerSettings config)
@@ -52,11 +50,12 @@ namespace L4D2Bridge.Models
             IPEndPoint endpoint = new(addr, config.ServerPort);
             Server = new RCON(endpoint, config.Password, autoConnect: false);
         }
+
         ~RCONService()
         {
             CancelAllRetryTasks();
-            ShouldRun = false;
         }
+
         public override ConsoleSources GetSource() => ConsoleSources.RCON;
 
         public override void Start()
@@ -67,7 +66,7 @@ namespace L4D2Bridge.Models
                 return;
             }
 
-            RunTask = Tick();
+            StartTick();
             CheckPauseTask = CheckPause();
         }
 
@@ -130,7 +129,7 @@ namespace L4D2Bridge.Models
             cancelToken = new();
         }
 
-        private async Task Tick()
+        protected override async Task Tick()
         {
             if (Server == null)
                 return;

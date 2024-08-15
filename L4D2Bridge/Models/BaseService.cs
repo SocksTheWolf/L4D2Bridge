@@ -1,6 +1,7 @@
 ﻿using System;
 using L4D2Bridge.Types;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace L4D2Bridge.Models
 {
@@ -55,6 +56,7 @@ namespace L4D2Bridge.Models
             }
         }
 
+        // What this service should display as when it's shown in the console log.
         public abstract ConsoleSources GetSource();
 
         // Returns the RulesEngine workflow name for this class. If the class doesn't have one,
@@ -63,5 +65,36 @@ namespace L4D2Bridge.Models
 
         // The starting entry point to all services
         public abstract void Start();
+    }
+
+    // A base service class, however it also allows for async tick operations
+    public abstract class BaseServiceTickable : BaseService
+    {
+        // If set to true, this will initialize ticks
+        protected bool ShouldRun = true;
+        protected Task? TickTask = null;
+
+        ~BaseServiceTickable()
+        {
+            ShouldRun = false;
+        }
+
+        // Implement the base start functionality
+        public override void Start()
+        {
+            StartTick();
+        }
+
+        protected void StartTick()
+        {
+            TickTask = Tick();
+        }
+
+        protected virtual async Task Tick()
+        {
+            // async members cannot be abstract, so we just put a small delay and return
+            await Task.Delay(1);
+            return;
+        }
     }
 }
