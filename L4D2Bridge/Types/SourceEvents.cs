@@ -20,6 +20,8 @@ namespace L4D2Bridge.Types
         public double Amount = 0.0;
         public string Message = string.Empty;
         public string Name = string.Empty;
+        // Only valid if type is Donation
+        public string Currency = string.Empty;
         // Twitch Channel
         public string Channel = string.Empty;
 
@@ -30,7 +32,7 @@ namespace L4D2Bridge.Types
 
         public override string ToString()
         {
-            return $"SourceEvent[{Enum.GetName(typeof(SourceEventType), Type)}] from {Name}, amount {Amount} - msg {Message}";
+            return $"SourceEvent[{Enum.GetName(typeof(SourceEventType), Type)}] from {Name}, amount {Amount}{Currency} - msg {Message}";
         }
     }
 

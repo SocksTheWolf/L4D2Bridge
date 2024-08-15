@@ -102,13 +102,17 @@ namespace L4D2Bridge.Models
                         foreach (DonationInformation donoInfo in resp.Data)
                         {
                             if (donoInfo.Amount == null)
+                            {
+                                PrintMessage($"One donation was invalid from {donoInfo.Name}, no amount tied to info.");
                                 continue;
+                            }
 
                             if (Double.TryParse(donoInfo.Amount.Value, out double DonationAmount))
                             {
                                 Invoke(new SourceEvent(SourceEventType.Donation)
                                 {
                                     Amount = DonationAmount,
+                                    Currency = donoInfo.Amount.Currency,
                                     Name = donoInfo.Name,
                                     Message = donoInfo.Comment
                                 });

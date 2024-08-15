@@ -76,7 +76,7 @@ public partial class MainViewModel : ViewModelBase
             CharityTracker = new TiltifyService(Config.TiltifySettings);
             CharityTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, CharityTracker);
             CharityTracker.OnSourceEvent += async (data) => {
-                Console.AddMessage($"{data.Name} donated {data.Amount}", CharityTracker);
+                Console.AddMessage($"{data.Name} donated {data.Amount}{data.Currency}", CharityTracker);
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(CharityTracker.GetWorkflow(), data);
                 Server?.AddNewActions(Commands, data.Name);
 
@@ -108,7 +108,7 @@ public partial class MainViewModel : ViewModelBase
             {
                 // Send a message to every twitch channel we are currently connected to
                 CharityTracker.OnSourceEvent += (data) => {
-                    Twitch.SendMessageToAllChannels($"{data.Name} just donated ${data.Amount} with message '{data.Message}'");
+                    Twitch.SendMessageToAllChannels($"{data.Name} just donated {data.Amount}{data.Currency} with message '{data.Message}'");
                 };
             }
         }
