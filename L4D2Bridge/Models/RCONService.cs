@@ -27,6 +27,11 @@ namespace L4D2Bridge.Models
 
         public RCONService(ServerSettings config)
         {
+            if (!config.IsValid())
+            {
+                PrintMessage("Configs are invalid! Please address and restart");
+                return;
+            }
             MaxTaskAttempts = config.MaxCommandAttempts;
 
             // See if we're an IP Address.
@@ -58,16 +63,17 @@ namespace L4D2Bridge.Models
 
         public override ConsoleSources GetSource() => ConsoleSources.RCON;
 
-        public override void Start()
+        protected override bool Internal_Start()
         {
             if (Server == null)
             {
                 PrintMessage("RCON server configuration was invalid!");
-                return;
+                return false;
             }
 
             StartTick();
             CheckPauseTask = CheckPause();
+            return true;
         }
 
         // This is public so commands can print to the console still.

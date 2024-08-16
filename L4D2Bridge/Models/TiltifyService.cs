@@ -8,25 +8,17 @@ using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models
 {
-    public class OnAuthUpdateArgs(string oAuthToken, string refreshToken)
-    {
-        public string OAuthToken = oAuthToken;
-        public string RefreshToken = refreshToken;
-    }
-
     public class TiltifyService : BaseServiceTickable
     {
         private readonly Tiltify.Tiltify? Campaign;
-        private readonly string CampaignId = string.Empty;
+        private TiltifySettings settings;
         private DateTime LastPolled;
-        private readonly int PollInterval;
-        private readonly bool TeamCampaign;
-
-        // Fires whenever the authorization updated for Tiltify
-        public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
+        private bool HasLogin = false;
+        private int LoginAttempts = 0;
 
         public TiltifyService(TiltifySettings config)
         {
+            settings = config;
             LastPolled = DateTime.UtcNow;
             ApiSettings apiSettings = new ApiSettings
             {
@@ -35,18 +27,26 @@ namespace L4D2Bridge.Models
             };
 
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
-            CampaignId = config.CampaignID;
-            PollInterval = config.PollingInterval;
-            TeamCampaign = config.IsTeamCampaign;
         }
 
         public override string GetWorkflow() => "tiltify";
         public override ConsoleSources GetSource() => ConsoleSources.Tiltify;
 
-        private async Task Login()
+        protected override bool Internal_Start()
         {
-            if (OnAuthUpdate == null || Campaign == null)
-                return;
+            if (!settings.IsValid())
+            {
+                PrintMessage("Tiltify settings are invalid, please fix and restart.");
+                return false;
+            }
+            return base.Internal_Start();
+        }
+
+        private async Task<bool> Login()
+        {
+            ++LoginAttempts;
+            if (Campaign == null)
+                return false;
 
             try
             {
@@ -57,29 +57,41 @@ namespace L4D2Bridge.Models
                     if (!string.IsNullOrEmpty(resp.RefreshToken))
                         refreshToken = resp.RefreshToken;
 
-                    OnAuthUpdate.Invoke(new OnAuthUpdateArgs(resp.AccessToken, refreshToken));
+                    // Clear login attempts on login success
+                    LoginAttempts = 0;
+                    HasLogin = true;
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 PrintMessage($"Login hit exception: {ex}");
             }
+
+            return false;
         }
 
         protected override async Task Tick()
         {
-            if (Campaign == null)
-                return;
-
-            await Login();
-
-            PrintMessage("Tiltify Ready!");
-            using PeriodicTimer timer = new(TimeSpan.FromSeconds(PollInterval));
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.PollingInterval));
             while (ShouldRun)
             {
-                if (Campaign == null || OnAuthUpdate == null)
+                if (Campaign == null)
                 {
                     await timer.WaitForNextTickAsync(default);
+                    continue;
+                }
+
+                if (!HasLogin)
+                {
+                    PrintMessage("Logging into Tiltify...");
+                    if (await Login())
+                    {
+                        PrintMessage("Tiltify Ready!");
+                        continue;
+                    }
+                    // Exponential backoff up to 10 min
+                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, LoginAttempts) / 2, 600000));
                     continue;
                 }
 
@@ -87,10 +99,10 @@ namespace L4D2Bridge.Models
                 try
                 {
                     GetCampaignDonationsResponse resp;
-                    if (!TeamCampaign)
-                        resp = await Campaign.Campaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
+                    if (!settings.IsTeamCampaign)
+                        resp = await Campaign.Campaigns.GetCampaignDonations(settings.CampaignID, LastPolled, 100);
                     else
-                        resp = await Campaign.TeamCampaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
+                        resp = await Campaign.TeamCampaigns.GetCampaignDonations(settings.CampaignID, LastPolled, 100);
                     if (resp.Data.Length > 0)
                     {
                         PrintMessage($"Got {resp.Data.Length} new donations!");

@@ -13,6 +13,15 @@ namespace L4D2Bridge.Models
     public abstract class SettingsVerifier
     {
         public abstract void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj);
+        public bool IsValid()
+        {
+            RequiredFieldContainer checkIfNotNull = [];
+            AddRequiredFields(ref checkIfNotNull);
+
+            if (checkIfNotNull.Any(it => string.IsNullOrEmpty(it)))
+                return false;
+            return true;
+        }
     }
 
     /*** Settings for Tiltify ***/
@@ -20,18 +29,15 @@ namespace L4D2Bridge.Models
     public class TiltifySettings : SettingsVerifier
     {
         public bool Enabled { get; set; } = false;
+        // Settings
         public bool IsTeamCampaign { get; set; } = false;
-        public string OAuthToken { get; set; } = string.Empty;
-        public string ClientID { get; set; } = string.Empty;
-        public string ClientSecret { get; set; } = string.Empty;
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, Required = Required.Default)]
-        public string? RefreshToken { get; set; } = null;
-
         public string CampaignID { get; set; } = string.Empty;
-
         // https://github.com/Tiltify/api/issues/9 (it's 5, and I will come after you if you limit me)
         public int PollingInterval { get; set; } = 5;
+
+        // Auth
+        public string ClientID { get; set; } = string.Empty;
+        public string ClientSecret { get; set; } = string.Empty;
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
         {

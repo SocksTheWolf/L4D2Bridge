@@ -14,6 +14,9 @@ namespace L4D2Bridge.Models
         // Fires whenever the service has an event (such as donation received)
         public event SourceEventHandler? OnSourceEvent;
 
+        // Check for if a service has successfully started.
+        public bool HasStarted { get; private set; } = false;
+
         // Helper function for printing messages to console (via Actions)
         protected void PrintMessage(string message)
         {
@@ -64,7 +67,21 @@ namespace L4D2Bridge.Models
         public virtual string GetWorkflow() => string.Empty;
 
         // The starting entry point to all services
-        public abstract void Start();
+        public void Start()
+        {
+            try
+            {
+                if (Internal_Start())
+                    HasStarted = true;
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Could not start service, exception {ex}");
+            }
+        }
+
+        // The internals of how to start the process.
+        protected abstract bool Internal_Start();
     }
 
     // A base service class, however it also allows for async tick operations
@@ -80,9 +97,10 @@ namespace L4D2Bridge.Models
         }
 
         // Implement the base start functionality
-        public override void Start()
+        protected override bool Internal_Start()
         {
             StartTick();
+            return true;
         }
 
         protected void StartTick()

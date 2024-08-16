@@ -32,14 +32,14 @@ namespace L4D2Bridge.Models
             Actions = InActions;
         }
 
-        public override void Start()
+        protected override bool Internal_Start()
         {
             if (!File.Exists(rulesFile))
             {
-                PrintMessage("Missing rules information! Actions will not be executed!");
+                PrintMessage("Missing rules information! Please create rules and reload config.");
                 // Create an empty file
                 File.Create(rulesFile).Close();
-                return;
+                return false;
             }
             PrintMessage($"Using {Actions.Count} actions to the executor");
 
@@ -50,7 +50,7 @@ namespace L4D2Bridge.Models
                 if (workflowData == null) 
                 {
                     PrintMessage("Workflow data for rules engine is invalid! Cannot run rules engine.");
-                    return;
+                    return false;
                 }
                 ReSettings settings = new ReSettings
                 {
@@ -62,7 +62,10 @@ namespace L4D2Bridge.Models
             catch (Exception ex)
             {
                 PrintMessage(ex.ToString());
+                return false;
             }
+
+            return true;
         }
 
         public override ConsoleSources GetSource() => ConsoleSources.RulesEngine;

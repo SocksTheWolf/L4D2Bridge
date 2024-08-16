@@ -87,13 +87,6 @@ public partial class MainViewModel : ViewModelBase
 
                 PostActions(ref Commands, CharityTracker.GetSource());
             };
-            CharityTracker.OnAuthUpdate = (data) => {
-                Config.TiltifySettings.OAuthToken = data.OAuthToken;
-                if (!string.IsNullOrWhiteSpace(data.RefreshToken))
-                    Config.TiltifySettings.RefreshToken = data.RefreshToken;
-                Config.SaveConfigData();
-                Console.AddMessage("OAuth Data Updated!", CharityTracker);
-            };
             CharityTracker.Start();
         }
 
@@ -173,6 +166,15 @@ public partial class MainViewModel : ViewModelBase
         // Push the rules engine data
         Rules.LoadActions(ref Config.Actions);
         Rules.Start();
+    }
+
+    private void ReloadConfigs()
+    {
+        Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
+        // Load up our configs again
+        LoadConfigs();
+        // Join any channels we haven't before
+        Twitch?.JoinChannels(Config.TwitchSettings);
     }
 
     private void PostActions(ref readonly List<L4D2Action> Actions, ConsoleSources Source)
@@ -259,13 +261,7 @@ public partial class MainViewModel : ViewModelBase
         {
             string loweredCommand = Command.ToLower();
             if (loweredCommand == "reload")
-            {
-                Console.AddMessage("Attempting to reload configuration...", ConsoleSources.Main);
-                // Load up our configs again
-                LoadConfigs();
-                // Join any channels we haven't before
-                Twitch?.JoinChannels(Config.TwitchSettings);
-            }
+                ReloadConfigs();
             else if (loweredCommand == "clear" || loweredCommand == "cls")
                 Console.ClearAllMessages();
             else if (loweredCommand == "pause" || loweredCommand == "unpause" || loweredCommand == "resume")

@@ -72,21 +72,33 @@ namespace L4D2Bridge.Models
 
         }
 
-        public override void Start()
+        protected override bool Internal_Start()
         {
             if (settings.Channels == null)
             {
                 PrintMessage("Twitch service is missing channels to connect to!!!");
-                return;
+                return false;
+            }
+
+            if (!settings.IsValid())
+            {
+                PrintMessage("Twitch settings are invalid, cannot continue!");
+                return false;
             }
 
             List<string> ChannelsToConnect = [.. settings.Channels];
             ConnectionCredentials creds = new(settings.BotUserName, settings.OAuthToken);
             client.Initialize(creds, ChannelsToConnect);
             if (client.Connect())
+            {
                 PrintMessage("Twitch Connected!");
+                return true;
+            }
             else
+            {
                 PrintMessage("Twitch could not connect!");
+                return false;
+            }
         }
 
         public void JoinChannels(TwitchSettings NewSettings)
