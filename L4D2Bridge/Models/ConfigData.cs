@@ -20,6 +20,7 @@ namespace L4D2Bridge.Models
     public class TiltifySettings : SettingsVerifier
     {
         public bool Enabled { get; set; } = false;
+        public bool IsTeamCampaign { get; set; } = false;
         public string OAuthToken { get; set; } = string.Empty;
         public string ClientID { get; set; } = string.Empty;
         public string ClientSecret { get; set; } = string.Empty;

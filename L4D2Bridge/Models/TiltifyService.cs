@@ -20,6 +20,7 @@ namespace L4D2Bridge.Models
         private readonly string CampaignId = string.Empty;
         private DateTime LastPolled;
         private readonly int PollInterval;
+        private readonly bool TeamCampaign;
 
         // Fires whenever the authorization updated for Tiltify
         public Action<OnAuthUpdateArgs>? OnAuthUpdate { private get; set; }
@@ -36,6 +37,7 @@ namespace L4D2Bridge.Models
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
             CampaignId = config.CampaignID;
             PollInterval = config.PollingInterval;
+            TeamCampaign = config.IsTeamCampaign;
         }
 
         public override string GetWorkflow() => "tiltify";
@@ -84,7 +86,11 @@ namespace L4D2Bridge.Models
                 DateTime dateTime = DateTime.UtcNow;
                 try
                 {
-                    GetCampaignDonationsResponse resp = await Campaign.Campaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
+                    GetCampaignDonationsResponse resp;
+                    if (!TeamCampaign)
+                        resp = await Campaign.Campaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
+                    else
+                        resp = await Campaign.TeamCampaigns.GetCampaignDonations(CampaignId, LastPolled, 100);
                     if (resp.Data.Length > 0)
                     {
                         PrintMessage($"Got {resp.Data.Length} new donations!");
