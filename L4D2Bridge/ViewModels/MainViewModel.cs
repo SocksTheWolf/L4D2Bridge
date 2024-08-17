@@ -284,9 +284,7 @@ public partial class MainViewModel : ViewModelBase
                 string name = (args.Length > 1) ? args[1] : "Admin";
                 List<L4D2Action>? commands = Rules.GetActionsForName(actionType);
                 if (commands != null)
-                {
                     Server?.AddNewActions(commands, name);
-                }
             }
             else if (loweredCommand == "help")
             {
