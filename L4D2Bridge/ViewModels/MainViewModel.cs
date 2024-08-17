@@ -9,6 +9,7 @@ using L4D2Bridge.Types;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace L4D2Bridge.ViewModels;
 
@@ -276,6 +277,17 @@ public partial class MainViewModel : ViewModelBase
                 Twitch?.StartRaffle(Command.Substring(7));
             else if (loweredCommand == "draw")
                 Twitch?.PickRaffle();
+            else if (loweredCommand.StartsWith("action"))
+            {
+                string[] args = Command.Substring(7).Split(' ');
+                string actionType = args[0];
+                string name = (args.Length > 1) ? args[1] : "Admin";
+                List<L4D2Action>? commands = Rules.GetActionsForName(actionType);
+                if (commands != null)
+                {
+                    Server?.AddNewActions(commands, name);
+                }
+            }
             else if (loweredCommand == "help")
             {
                 string output = string.Join(Environment.NewLine,
@@ -284,6 +296,7 @@ public partial class MainViewModel : ViewModelBase
                     "pause/unpause/resume - toggles the test engine",
                     "cancel - cancels all currently queued commands",
                     "respawn - respawns all players",
+                    "action <actionname> <donor> - runs this action on the server",
                     "raffle <award> - start a raffle with the given award",
                     "draw - picks a winner from all the current entrants",
                     "commands - prints the number of currently queued commands",

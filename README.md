@@ -24,6 +24,7 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 * `pause`/`unpause`/`resume` - if the test service is running, will pause/unpause the test service from generating events
 * `cancel` - cancel all current command events
 * `respawn` - respawns all players
+* `action <actionname> <donor>` - runs this action on the server
 * `commands` - prints the number of events in the queue
 * `raffle <award>` - start a raffle with the given award
 * `draw` - picks a winner from all the current entrants

@@ -84,6 +84,16 @@ namespace L4D2Bridge.Models
             return ParseRuleResults(results);
         }
 
+        public L4D2Actions? GetActionsForName(string ActionName)
+        {
+            L4D2Actions? ActionList = null;
+            if (Actions.TryGetValue(ActionName.ToLower(), out ActionList))
+            {
+                return ActionList;
+            }
+            return null;
+        }
+
         private L4D2Actions ParseRuleResults(RuleResults Results)
         {
             L4D2Actions output = [];
