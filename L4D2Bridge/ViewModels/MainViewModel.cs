@@ -185,7 +185,7 @@ public partial class MainViewModel : ViewModelBase
         Console.AddMessage(ActionTaken, Source);
 
         // Dump them also to twitch chat
-        if (Config.IsUsingTwitch() && Config.TwitchSettings.PostEventActionsToChat)
+        if (Config.IsUsingTwitch() && Config.TwitchSettings.PostEventActionsToChat && Source != ConsoleSources.Test)
             Twitch?.SendMessageToAllChannels(ActionTaken);
     }
 
