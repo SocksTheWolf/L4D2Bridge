@@ -70,8 +70,6 @@ namespace L4D2Bridge.Models
         // Whether to message when Tiltify events should message into all connected chats
         public bool PostMessageOnTiltifyDonations { get; set; } = false;
         public int ChatCommandPercentChance { get; set; } = 50;
-        public bool EnableRaffles { get; set; } = false;
-        public bool RespondToRaffleEntry { get; set; } = false;
         public TwitchEvents Events { get; set; } = new TwitchEvents();
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)

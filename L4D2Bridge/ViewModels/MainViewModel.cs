@@ -272,10 +272,6 @@ public partial class MainViewModel : ViewModelBase
                 Server?.AddNewAction(L4D2Action.RespawnAllPlayers, "Admin");
             else if (loweredCommand == "commands")
                 Server?.PrintNumCommands();
-            else if (loweredCommand.StartsWith("raffle"))
-                Twitch?.StartRaffle(Command.Substring(7));
-            else if (loweredCommand == "draw")
-                Twitch?.PickRaffle();
             else if (loweredCommand.StartsWith("action"))
             {
                 string[] args = Command.Substring(7).Split(' ');
@@ -294,8 +290,6 @@ public partial class MainViewModel : ViewModelBase
                     "cancel - cancels all currently queued commands",
                     "respawn - respawns all players",
                     "action <actionname> <donor> - runs this action on the server",
-                    "raffle <award> - start a raffle with the given award",
-                    "draw - picks a winner from all the current entrants",
                     "commands - prints the number of currently queued commands",
                     "help - prints this message"
                 );

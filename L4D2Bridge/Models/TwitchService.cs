@@ -1,8 +1,6 @@
 ﻿using L4D2Bridge.Types;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -17,12 +15,6 @@ namespace L4D2Bridge.Models
         private readonly TwitchClient client;
         private readonly TwitchSettings settings;
         private Random rng = new();
-
-        // Raffle Data
-        private const string WinnerLogFile = "raffle.txt";
-        private bool RaffleOpen = false;
-        private string CurrentRafflePrize = string.Empty;
-        private Collection<string> Entries = new();
 
         public override string GetWorkflow() => "twitch";
         public override ConsoleSources GetSource() => ConsoleSources.Twitch;
@@ -47,7 +39,7 @@ namespace L4D2Bridge.Models
             client.OnJoinedChannel += OnChannelJoined;
             client.OnLeftChannel += OnChannelLeft;
 
-            if (settings.Events.OnCommand || settings.EnableRaffles)
+            if (settings.Events.OnCommand)
                 client.OnChatCommandReceived += OnCommandReceived;
        
             if (settings.Events.OnRaid)
@@ -144,53 +136,6 @@ namespace L4D2Bridge.Models
             }
         }
 
-        /*** Raffle Support ***/
-        public void StartRaffle(string rafflePrize)
-        {
-            // If the raffle prize string is just empty, skip the command
-            if (string.IsNullOrWhiteSpace(rafflePrize))
-                return;
-
-            if (!settings.EnableRaffles)
-                return;
-
-            RaffleOpen = true;
-            Entries.Clear();
-            CurrentRafflePrize = rafflePrize;
-            SendMessageToAllChannels($"Raffle is now open for {CurrentRafflePrize}! Type !enter to enter.");
-            PrintMessage($"Raffle has now opened for {CurrentRafflePrize}!");
-        }
-
-        public void PickRaffle()
-        {
-            if (!settings.EnableRaffles)
-                return;
-
-            if (Entries.Count <= 0)
-            {
-                PrintMessage("There are no entries into the raffle, cannot pick a winner!");
-                return;
-            }
-
-            RaffleOpen = false;
-
-            // Choose a winner
-            int ChooseIndex = rng.Next(Entries.Count);
-            string WinnerName = Entries[ChooseIndex];
-            // Remove this selected winner, because if we have to reroll, then this person won't be a potential choice.
-            Entries.RemoveAt(ChooseIndex);
-
-            // Print a message and send it to everyone.
-            PrintMessage($"Winner picked {WinnerName} at index {ChooseIndex}");
-            SendMessageToAllChannels($"Raffle winner of {CurrentRafflePrize} is @{WinnerName}! Check your Twitch Whispers for info!");
-
-            // Print out the winner to a log file.
-            using (StreamWriter FileWriter = File.AppendText(WinnerLogFile))
-            {
-                FileWriter.WriteLine($"{CurrentRafflePrize} winner is {WinnerName}");
-            }
-        }
-
         /*** Handle Twitch Events ***/
         private void OnChannelJoined(object unused, OnJoinedChannelArgs args)
         {
@@ -206,20 +151,6 @@ namespace L4D2Bridge.Models
         {
             string loweredCommand = args.Command.CommandText.ToLower();
             string user = args.Command.ChatMessage.Username.ToLower();
-
-            if (loweredCommand == "enter" && settings.EnableRaffles)
-            {
-                // If raffles are opened and they haven't entered yet,
-                // enter the user
-                if (RaffleOpen && !Entries.Contains(user))
-                {
-                    Entries.Add(user);
-                    if (settings.RespondToRaffleEntry)
-                        SendMessageToChannel(args.Command.ChatMessage.Channel, $"@{user} you have entered!");
-                }
-
-                return;
-            }
 
             if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
