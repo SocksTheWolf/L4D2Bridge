@@ -9,7 +9,6 @@ using L4D2Bridge.Types;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace L4D2Bridge.ViewModels;
 
