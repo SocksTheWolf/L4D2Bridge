@@ -115,6 +115,7 @@ namespace L4D2Bridge.Models
     {
         public bool Enabled { get; set; } = false;
         public string WorkflowName { get; set; } = string.Empty;
+        public int MinSecondsToWait { get; set; } = 1000;
         public int MaxMinutesToWait { get; set; } = 1;
         public double MaxSimulatedAmount { get; set; } = 100.00;
 

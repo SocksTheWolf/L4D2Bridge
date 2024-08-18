@@ -61,8 +61,8 @@ namespace L4D2Bridge.Models
                     }
                 }
 
-                // Wait 10s-1min to try to execute again.
-                await Task.Delay(rng.Next(10000, Settings.MaxMinutesToWait*60000 + 1));
+                // Wait 1s-1min to try to execute again.
+                await Task.Delay(rng.Next(Settings.MinSecondsToWait, Settings.MaxMinutesToWait*60000 + 1));
             }
         }
     }
