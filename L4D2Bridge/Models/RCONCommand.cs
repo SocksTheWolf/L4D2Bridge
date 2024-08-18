@@ -109,7 +109,7 @@ namespace L4D2Bridge.Models
             {
                 // Boot up retrying this task again up to a minute later.
                 Task.Run(async () => {
-                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, Attempts) / 2, 60000), token);
+                    await Task.Delay(Math.Min(1000 * (int)Math.Pow(2, Attempts) / 2, 120000), token);
                     owner.AddNewCommand(this);
                 }, token).ConfigureAwait(false);
             }
@@ -251,7 +251,7 @@ namespace L4D2Bridge.Models
         public CheckPauseCommand() : base(ServerCommands.CheckPause)
         {
             Command = "sm_bridge_checkpause";
-            RetriesImmediate = true;
+            CanRetry = false;
         }
 
         // NOTE: This is not valid to call unless WasSuccessful() is true

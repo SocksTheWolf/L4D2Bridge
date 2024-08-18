@@ -151,11 +151,19 @@ namespace L4D2Bridge.Models
                 {
                     if (hasConnected)
                         PushToConsole("RCON Disconnected");
+                    try
+                    {
+                        await Server.ConnectAsync();
+                        isConnected = true;
+                        hasConnected = true;
+                        PushToConsole("RCON Connected");
+                    }
+                    catch
+                    {
+                        PushToConsole("RCON still disconnected, retrying...");
+                        await Task.Delay(1000);
+                    }
 
-                    await Server.ConnectAsync();
-                    isConnected = true;
-                    hasConnected = true;
-                    PushToConsole("RCON Connected");
                     continue;
                 }
 
