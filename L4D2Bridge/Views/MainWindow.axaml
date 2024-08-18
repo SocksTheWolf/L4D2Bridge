@@ -11,8 +11,8 @@
         Icon="/Assets/logo.ico"
         Title="Left 4 Dead 2 Bridge"
         Topmost="True"
-        TransparencyLevelHint="AcrylicBlur"
-        CanResize="False"
-        Background="Transparent">
+        CanResize="False">
+  <!-- TransparencyLevelHint="AcrylicBlur"
+  Background="Transparent"-->
         <views:MainView />
 </Window>
