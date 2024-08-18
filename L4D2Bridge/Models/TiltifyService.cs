@@ -128,16 +128,18 @@ namespace L4D2Bridge.Models
                         }
                     }
                 }
-                catch (TokenExpiredException)
-                {
-                    // If the token expires, get a new one.
-                    PrintMessage("Fetching a new token from Tiltify..");
-                    await Login();
-                    continue;
-                }
                 catch (Exception ex)
                 {
-                    PrintMessage($"Loop hit exception: {ex}");
+                    // Tiltify credentials expired.
+                    if (ex is BadScopeException || ex is TokenExpiredException)
+                    {
+                        // If the token expires, get a new one.
+                        PrintMessage("Fetching a new token from Tiltify..");
+                        HasLogin = false;
+                        continue;
+                    }
+                    else   
+                       PrintMessage($"Loop hit exception: {ex}");
                 }
 
                 await timer.WaitForNextTickAsync(default);
