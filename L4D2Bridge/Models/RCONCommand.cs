@@ -302,7 +302,7 @@ namespace L4D2Bridge.Models
     // Static class to help build console commands based on a given action.
     public static class L4D2CommandBuilder
     {
-        private static Random rng = new();
+        private static Random rng = new Random(Guid.NewGuid().GetHashCode());
         private static MobSizeSettings Mobs = new();
 
         // Negative Command Weight Randomization

@@ -8,7 +8,7 @@ namespace L4D2Bridge.Models
     public class TestService : BaseServiceTickable
     {
         private TestSettings Settings;
-        private Random rng = new();
+        private Random rng = new Random(Guid.NewGuid().GetHashCode());
         private bool Paused = false;
         public override ConsoleSources GetSource() => ConsoleSources.Test;
         public override string GetWorkflow() => Settings.WorkflowName;
