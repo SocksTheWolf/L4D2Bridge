@@ -14,7 +14,7 @@ namespace L4D2Bridge.Models
     {
         private readonly TwitchClient client;
         private readonly TwitchSettings settings;
-        private Random rng = new();
+        private Random rng = new Random(Guid.NewGuid().GetHashCode());
 
         public override string GetWorkflow() => "twitch";
         public override ConsoleSources GetSource() => ConsoleSources.Twitch;
