@@ -38,11 +38,19 @@ namespace L4D2Bridge.Models
             if (!IPAddress.TryParse(config.ServerIP, out IPAddress? addr))
             {
                 // We are a hostname, so attempt to fetch the IP address from DNS
-                IPAddress[] Output = Dns.GetHostAddresses(config.ServerIP);
-                if (Output.Length > 0)
-                    addr = Output[0];
-                else
+                try
+                {
+                    IPAddress[] Output = Dns.GetHostAddresses(config.ServerIP);
+                    if (Output.Length > 0)
+                        addr = Output[0];
+                    else
+                        return;
+                }
+                catch(Exception)
+                {
+                    PrintMessage("Could not resolve address to connect to!");
                     return;
+                }
             }
 
             // Somehow the address is still invalid, so stop.
@@ -204,7 +212,7 @@ namespace L4D2Bridge.Models
             while (ShouldRun)
             {
                 AddNewCommand(new CheckPauseCommand());
-                await Task.Delay(time, default);
+                await Task.Delay(time, (CancellationToken)default);
             }
             
         }

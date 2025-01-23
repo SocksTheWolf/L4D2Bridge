@@ -64,6 +64,11 @@ namespace L4D2Bridge.Models
         public bool Enabled { get; set; } = false;
         public string[] Channels { get; set; } = [];
         public string BotUserName { get; set; } = string.Empty;
+        public bool UsingTwitchCharity { get; set; } = false;
+
+        [JsonProperty(Required = Required.Default)]
+        public string EventSubClientID { get; set; } = string.Empty;
+
         public string OAuthToken { get; set; } = string.Empty;
         // If the resulting actions from twitch events should be redirected to chat as well.
         public bool PostEventActionsToChat { get; set; } = false;

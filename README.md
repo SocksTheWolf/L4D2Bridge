@@ -31,6 +31,7 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 
 * Tiltify Donations
 * Twitch Events
+* Twitch Donations (if enabled)
 
 ## Setup
 

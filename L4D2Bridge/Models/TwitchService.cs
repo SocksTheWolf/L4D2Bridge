@@ -79,7 +79,7 @@ namespace L4D2Bridge.Models
             }
 
             List<string> ChannelsToConnect = [.. settings.Channels];
-            ConnectionCredentials creds = new(settings.BotUserName, settings.OAuthToken);
+            ConnectionCredentials creds = new(settings.BotUserName, "oauth:"+settings.OAuthToken);
             client.Initialize(creds, ChannelsToConnect);
             if (client.Connect())
             {

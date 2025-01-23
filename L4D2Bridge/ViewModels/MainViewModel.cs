@@ -8,6 +8,7 @@ using L4D2Bridge.Models;
 using L4D2Bridge.Types;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace L4D2Bridge.ViewModels;
@@ -24,6 +25,7 @@ public partial class MainViewModel : ViewModelBase
     private TiltifyService? CharityTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private TestService? Test { get; set; }
+    private TwitchEventSubService? EventSub { get; set; }
 
     // GUI Objects
     public static Button? PauseButton { get; set; } = null;
@@ -43,8 +45,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public string pauseTip = "Click here to pause the server";
 
-    public MainViewModel()
+    public MainViewModel(TwitchEventSubService evServ)
     {
+        EventSub = evServ;
+
         // Add an override to the server input box so we can properly handle arrow keys history navigation.
         ServerInput?.AddHandler(InputElement.KeyDownEvent, OnTextBoxKey_Down, RoutingStrategies.Tunnel);
 
@@ -101,6 +105,24 @@ public partial class MainViewModel : ViewModelBase
                 PostActions(ref Commands, Twitch.GetSource());
             };
             Twitch.Start();
+
+            // Add support for EventSub operations
+            if (Config.TwitchSettings.UsingTwitchCharity && EventSub != null)
+            {
+                EventSub.TwitchOAuthToken = Config.TwitchSettings.OAuthToken;
+                EventSub.TwitchClientID = Config.TwitchSettings.EventSubClientID;
+                EventSub.TwitchChannelName = Config.TwitchSettings.Channels[0];
+                EventSub.OnConsolePrint = (msg) => Console.AddMessage(msg, Twitch);
+                EventSub.OnSourceEvent += async (data) =>
+                {
+                    List<L4D2Action> Commands = await Rules.ExecuteAsync(Twitch.GetWorkflow(), data);
+                    Server?.AddNewActions(Commands, data.Name);
+                    PostActions(ref Commands, Twitch.GetSource());
+                };
+                // Start the twitch Event Sub system
+                CancellationTokenSource cancelToken = new();
+                Task.Run(() => EventSub.ConnectAsync(cancelToken.Token)).Wait();
+            }
 
             if (CharityTracker != null && Config.TwitchSettings.PostMessageOnTiltifyDonations)
             {
