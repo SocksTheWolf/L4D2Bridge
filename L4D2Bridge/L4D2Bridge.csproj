@@ -25,7 +25,11 @@
     <PackageReference Include="CoreRCON" Version="5.4.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RulesEngine" Version="5.0.3" />
-    <PackageReference Include="TwitchLib" Version="3.5.3" />
+    <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
+    <PackageReference Include="TwitchLib.Api.Core" Version="3.9.0" />
+    <PackageReference Include="TwitchLib.Api.Helix" Version="3.9.0" />
+    <PackageReference Include="TwitchLib.Api.Helix.Models" Version="3.9.0" />
+    <PackageReference Include="TwitchLib.Client" Version="3.3.1" />
   </ItemGroup>
 
   <ItemGroup>

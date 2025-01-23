@@ -2,18 +2,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
+using TwitchLib.Communication.Events;
+using TwitchLib.Api;
+using TwitchLib.Client.Enums;
 
 namespace L4D2Bridge.Models
 {
-    public class TwitchService : BaseService
+    public class TwitchService : BaseServiceTickable
     {
-        private readonly TwitchClient client;
+        private readonly TwitchClient? client = null;
         private readonly TwitchSettings settings;
+        private readonly TwitchAPI api = new();
         private Random rng = new Random(Guid.NewGuid().GetHashCode());
 
         public override string GetWorkflow() => "twitch";
@@ -22,46 +27,47 @@ namespace L4D2Bridge.Models
         public TwitchService(TwitchSettings InSettings)
         {
             settings = InSettings;
-            var clientOptions = new ClientOptions
-            {
-                MessagesAllowedInPeriod = 750,
-                ThrottlingPeriod = TimeSpan.FromSeconds(30)
-            };
+            api.Settings.ClientId = settings.ClientID;
+            api.Settings.AccessToken = settings.OAuthToken;
 
-            WebSocketClient customClient = new(clientOptions);
-
-            client = new TwitchClient(customClient)
+            if (settings.Events.UsesChatFeatures())
             {
-                AutoReListenOnException = true
-            };
+                var options = new ClientOptions();
+                client = new TwitchClient(null, ClientProtocol.WebSocket)
+                {
+                    AutoReListenOnException = true
+                };
 
 #pragma warning disable CS8622
-            client.OnJoinedChannel += OnChannelJoined;
-            client.OnLeftChannel += OnChannelLeft;
+                client.OnConnected += Client_OnConnected;
+                client.OnDisconnected += Client_OnDisconnected;
+                client.OnConnectionError += Client_OnConnectionError;
+                client.OnJoinedChannel += OnChannelJoined;
+                client.OnLeftChannel += OnChannelLeft;
 
-            if (settings.Events.OnCommand)
-                client.OnChatCommandReceived += OnCommandReceived;
-       
-            if (settings.Events.OnRaid)
-                client.OnRaidNotification += OnChannelRaided;
-            
-            if (settings.Events.OnSubscription)
-                client.OnNewSubscriber += OnNewSubscription;
+                if (settings.Events.OnCommand)
+                    client.OnChatCommandReceived += OnCommandReceived;
 
-            if (settings.Events.OnGiftSubscription)
-                client.OnGiftedSubscription += OnGiftedSubscription;
+                if (settings.Events.OnRaid)
+                    client.OnRaidNotification += OnChannelRaided;
 
-            if (settings.Events.OnMultiGiftSubscription)
-                client.OnCommunitySubscription += OnMultiGiftSubscription;
+                if (settings.Events.OnSubscription)
+                    client.OnNewSubscriber += OnNewSubscription;
 
-            if (settings.Events.OnResubscription)
-            {
-                client.OnReSubscriber += OnResubscription;
-                client.OnPrimePaidSubscriber += OnPrimePaidSubscription;
-                client.OnContinuedGiftedSubscription += OnContinuedGiftSub;
-            }
+                if (settings.Events.OnGiftSubscription)
+                    client.OnGiftedSubscription += OnGiftedSubscription;
+
+                if (settings.Events.OnMultiGiftSubscription)
+                    client.OnCommunitySubscription += OnMultiGiftSubscription;
+
+                if (settings.Events.OnResubscription)
+                {
+                    client.OnReSubscriber += OnResubscription;
+                    client.OnPrimePaidSubscriber += OnPrimePaidSubscription;
+                    client.OnContinuedGiftedSubscription += OnContinuedGiftSub;
+                }
 #pragma warning restore CS8622
-
+            }
         }
 
         protected override bool Internal_Start()
@@ -78,24 +84,49 @@ namespace L4D2Bridge.Models
                 return false;
             }
 
-            List<string> ChannelsToConnect = [.. settings.Channels];
-            ConnectionCredentials creds = new(settings.BotUserName, settings.OAuthToken);
-            client.Initialize(creds, ChannelsToConnect);
-            if (client.Connect())
+            if (settings.Events.OnCharityDonation)
             {
-                PrintMessage("Twitch Connected!");
-                return true;
+                PrintMessage("Starting the polling for Twitch Donations!");
+                StartTick();
             }
-            else
+
+            if (client != null)
             {
-                PrintMessage("Twitch could not connect!");
-                return false;
+                List<string> ChannelsToConnect = [.. settings.Channels];
+                ConnectionCredentials creds = new(settings.BotUserName, "oauth:" + settings.OAuthToken);
+
+                client.Initialize(creds, ChannelsToConnect);
+
+                if (client.Connect())
+                {
+                    return true;
+                }
+                else
+                {
+                    PrintMessage("Twitch could not connect!");
+                    return false;
+                }
             }
+            return true;
+        }
+
+        private void Client_OnDisconnected(object? sender, OnDisconnectedEventArgs e)
+        {
+            PrintMessage($"Twitch Disconnected!!");
+        }
+
+        private void Client_OnConnected(object? sender, OnConnectedArgs e)
+        {
+            PrintMessage("Twitch Connected!");
+        }
+        private void Client_OnConnectionError(object? sender, OnConnectionErrorArgs e)
+        {
+            PrintMessage($"Twitch Connection Error {e.Error.Message}");
         }
 
         public void JoinChannels(TwitchSettings NewSettings)
         {
-            if (!client.IsConnected)
+            if (client == null || !client.IsConnected)
                 return;
 
             // GetJoinedChannel throws exceptions unless we have channels we've
@@ -267,12 +298,61 @@ namespace L4D2Bridge.Models
             });
         }
 
+        protected override async Task Tick()
+        {
+            List<string> channels = new List<string>();
+            foreach (var channel in settings.Channels) {
+                channels.Add(channel);
+            }
+            var idLookup = await api.Helix.Users.GetUsersAsync(null, channels);
+            string TwitchChannelID = idLookup.Users[0].Id;
+            string LastDonationRead = string.Empty;
+
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.CharityPollingInterval));
+            while (ShouldRun)
+            {
+                try
+                {
+                    var resp = await api.Helix.Charity.GetCharityCampaignDonationsAsync(TwitchChannelID);
+                    foreach (var Donation in resp.Data)
+                    {
+                        if (Donation.Id == LastDonationRead)
+                            break;
+
+                        var amount = Donation.Amount;
+                        double decPlaces = amount.DecimalPlaces != null ? (double)amount.DecimalPlaces : 0.0;
+                        double totalAmount = amount.Value != null ? (double)amount.Value / Math.Pow(10.0, decPlaces) : 0.0;
+                        if (totalAmount == 0.0)
+                            continue;
+
+                        Invoke(new SourceEvent(SourceEventType.Donation)
+                        {
+                            Amount = totalAmount,
+                            Currency = amount.Currency,
+                            Name = Donation.UserLogin,
+                            Message = ""
+                        });
+                    }
+
+                    if (resp.Data.Length > 0)
+                        LastDonationRead = resp.Data[0].Id;
+                }
+                catch (Exception ex)
+                {
+                    PrintMessage($"Loop hit exception: {ex}");
+                }
+
+                await timer.WaitForNextTickAsync(default);
+            }
+        }
+
         /*** Sending messages to a channel ***/
         public void SendMessageToChannel(string channel, string message)
         {
             try
             {
-                client.SendMessage(channel, message);
+                if (client != null)
+                    client.SendMessage(channel, message);
             }
             catch (Exception ex)
             {
@@ -284,7 +364,8 @@ namespace L4D2Bridge.Models
         {
             try
             {
-                client.SendMessage(channel, message);
+                if (client != null)
+                    client.SendMessage(channel, message);
             }
             catch (Exception ex)
             {
@@ -294,6 +375,9 @@ namespace L4D2Bridge.Models
 
         public void SendMessageToAllChannels(string message)
         {
+            if (client == null)
+                return;
+
             IReadOnlyList<JoinedChannel> AllJoinedChannels = client.JoinedChannels;
             if (AllJoinedChannels.Count <= 0 || string.IsNullOrWhiteSpace(message))
                 return;

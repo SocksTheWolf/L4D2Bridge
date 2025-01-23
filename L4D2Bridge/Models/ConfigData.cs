@@ -56,6 +56,8 @@ namespace L4D2Bridge.Models
         public bool OnResubscription { get; set; } = false;
         public bool OnGiftSubscription { get; set; } = false;
         public bool OnMultiGiftSubscription { get; set; } = false;
+        public bool OnCharityDonation { get; set; } = false;
+        public bool UsesChatFeatures() => OnCommand || OnRaid || OnSubscription || OnResubscription || OnGiftSubscription || OnMultiGiftSubscription;
     }
 
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
@@ -64,12 +66,14 @@ namespace L4D2Bridge.Models
         public bool Enabled { get; set; } = false;
         public string[] Channels { get; set; } = [];
         public string BotUserName { get; set; } = string.Empty;
+        public string ClientID { get; set; } = string.Empty;
         public string OAuthToken { get; set; } = string.Empty;
         // If the resulting actions from twitch events should be redirected to chat as well.
         public bool PostEventActionsToChat { get; set; } = false;
         // Whether to message when Tiltify events should message into all connected chats
         public bool PostMessageOnTiltifyDonations { get; set; } = false;
         public int ChatCommandPercentChance { get; set; } = 50;
+        public int CharityPollingInterval { get; set; } = 10;
         public TwitchEvents Events { get; set; } = new TwitchEvents();
 
         public override void AddRequiredFields(ref RequiredFieldContainer RequiredFieldObj)
