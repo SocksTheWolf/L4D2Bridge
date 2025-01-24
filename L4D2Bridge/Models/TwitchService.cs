@@ -11,6 +11,7 @@ using TwitchLib.Communication.Models;
 using TwitchLib.Communication.Events;
 using TwitchLib.Api;
 using TwitchLib.Client.Enums;
+using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaignDonations;
 
 namespace L4D2Bridge.Models
 {
@@ -308,34 +309,45 @@ namespace L4D2Bridge.Models
             string TwitchChannelID = idLookup.Users[0].Id;
             string LastDonationRead = string.Empty;
 
+            // Lambda for writing the last donation read.
+            Action<GetCharityCampaignDonationsResponse> WriteLastDonation = Response => {
+                if (Response.Data.Length > 0)
+                    LastDonationRead = Response.Data[0].Id;
+            };
+
             using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.CharityPollingInterval));
             while (ShouldRun)
             {
                 try
                 {
                     var resp = await api.Helix.Charity.GetCharityCampaignDonationsAsync(TwitchChannelID);
-                    foreach (var Donation in resp.Data)
-                    {
-                        if (Donation.Id == LastDonationRead)
-                            break;
 
-                        var amount = Donation.Amount;
-                        double decPlaces = amount.DecimalPlaces != null ? (double)amount.DecimalPlaces : 0.0;
-                        double totalAmount = amount.Value != null ? (double)amount.Value / Math.Pow(10.0, decPlaces) : 0.0;
-                        if (totalAmount == 0.0)
-                            continue;
+                    // Handle initial case
+                    if (LastDonationRead == string.Empty) {
+                        WriteLastDonation(resp);
+                        PrintMessage($"Established baseline donation {LastDonationRead}");
+                    } else {
+                        foreach (var Donation in resp.Data) {
+                            if (Donation.Id == LastDonationRead)
+                                break;
 
-                        Invoke(new SourceEvent(SourceEventType.Donation)
-                        {
-                            Amount = totalAmount,
-                            Currency = amount.Currency,
-                            Name = Donation.UserLogin,
-                            Message = ""
-                        });
+                            var amount = Donation.Amount;
+                            double decPlaces = amount.DecimalPlaces != null ? (double)amount.DecimalPlaces : 0.0;
+                            double totalAmount = amount.Value != null ? (double)amount.Value / Math.Pow(10.0, decPlaces) : 0.0;
+                            if (totalAmount == 0.0)
+                                continue;
+
+                            PrintMessage($"Got new donation of {totalAmount} {amount.Currency} from {Donation.UserLogin}");
+                            Invoke(new SourceEvent(SourceEventType.Donation)
+                            {
+                                Amount = totalAmount,
+                                Currency = amount.Currency,
+                                Name = Donation.UserLogin,
+                                Message = ""
+                            });
+                        }
+                        WriteLastDonation(resp);
                     }
-
-                    if (resp.Data.Length > 0)
-                        LastDonationRead = resp.Data[0].Id;
                 }
                 catch (Exception ex)
                 {
