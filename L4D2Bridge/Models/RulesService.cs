@@ -80,8 +80,16 @@ namespace L4D2Bridge.Models
             // NOTE: it's untested what happens if you change the rulesengine while it's being executed
             // Technically, it should produce results on the old engine while new executes will run on the newer one
             // until all older rules are done running.
-            RuleResults results = await engine.ExecuteAllRulesAsync(WorkflowName, data);
-            return ParseRuleResults(results);
+            try
+            {
+                RuleResults results = await engine.ExecuteAllRulesAsync(WorkflowName, data);
+                return ParseRuleResults(results);
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Encountered exception when trying to process rules, {ex}");
+                return [];
+            }
         }
 
         public L4D2Actions? GetActionsForName(string ActionName)
