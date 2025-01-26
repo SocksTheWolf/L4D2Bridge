@@ -30,7 +30,8 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 ## Influence Service Sources
 
 * Tiltify Donations
-* Twitch Events
+* Twitch Events (Potentially Broken ATM)
+* Twitch Donations
 
 ## Setup
 
