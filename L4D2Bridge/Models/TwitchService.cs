@@ -28,8 +28,7 @@ namespace L4D2Bridge.Models
         public TwitchService(TwitchSettings InSettings)
         {
             settings = InSettings;
-            api.Settings.ClientId = settings.ClientID;
-            api.Settings.AccessToken = settings.OAuthToken;
+            UpdateAPISettings(InSettings);
 
             if (settings.Events.UsesChatFeatures())
             {
@@ -123,6 +122,12 @@ namespace L4D2Bridge.Models
         private void Client_OnConnectionError(object? sender, OnConnectionErrorArgs e)
         {
             PrintMessage($"Twitch Connection Error {e.Error.Message}");
+        }
+
+        public void UpdateAPISettings(TwitchSettings settings)
+        {
+            api.Settings.ClientId = settings.ClientID;
+            api.Settings.AccessToken = settings.OAuthToken;
         }
 
         public void JoinChannels(TwitchSettings NewSettings)
@@ -301,13 +306,23 @@ namespace L4D2Bridge.Models
 
         protected override async Task Tick()
         {
-            List<string> channels = new List<string>();
-            foreach (var channel in settings.Channels) {
-                channels.Add(channel);
-            }
-            var idLookup = await api.Helix.Users.GetUsersAsync(null, channels);
-            string TwitchChannelID = idLookup.Users[0].Id;
             string LastDonationRead = string.Empty;
+            string TwitchChannelID = string.Empty;
+            try
+            {
+                List<string> channels = new List<string>();
+                foreach (var channel in settings.Channels)
+                {
+                    channels.Add(channel);
+                }
+                var idLookup = await api.Helix.Users.GetUsersAsync(null, channels);
+                TwitchChannelID = idLookup.Users[0].Id;
+            }
+            catch (Exception ex)
+            {
+                PrintMessage($"Failed to look up the user account for parsing donations, please update token and restart. Exception: {ex}");
+                return;
+            }
 
             // Lambda for writing the last donation read.
             Action<GetCharityCampaignDonationsResponse> WriteLastDonation = Response => {

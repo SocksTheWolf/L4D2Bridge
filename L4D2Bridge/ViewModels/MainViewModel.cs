@@ -175,6 +175,8 @@ public partial class MainViewModel : ViewModelBase
         LoadConfigs();
         // Join any channels we haven't before
         Twitch?.JoinChannels(Config.TwitchSettings);
+        // Update twitch api settings
+        Twitch?.UpdateAPISettings(Config.TwitchSettings);
     }
 
     private void PostActions(ref readonly List<L4D2Action> Actions, ConsoleSources Source)
