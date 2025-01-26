@@ -186,8 +186,10 @@ void HandleDeathEvents(int zombieID, bool isWitch=false)
         char PrintMsg[MAX_MESSAGE_LENGTH];
         FormatEx(PrintMsg, sizeof(PrintMsg), "%s spawned by %s has been defeated!", g_zombieNames[zombieClass], donorName);
 
-        // Print the message out to everyone's HUD
-        PrintHintTextToAll(PrintMsg);
+        // Print the message out to everyone's HUD if not the Director
+        if (!StrEqual(donorName, "Director"))
+            PrintHintTextToAll(PrintMsg);
+		
         // Display message to all users.
         CPrintToChatAll("%s %s", CHAT_TAG_COLORED, PrintMsg);
         // Send it to the console as well
@@ -246,12 +248,14 @@ void ShowHintActionText(char[] actionText, int len)
 	PrintHintTextToAll(actionText);
 }
 
-void PrintSpawnMessage(const char[] spawnName, const char[] spawnColor, const char[] spawnType)
+void PrintSpawnMessage(const char[] spawnerName, const char[] spawnColor, const char[] spawnType)
 {
     char msgbuf[MAX_MESSAGE_LENGTH];
-    FormatEx(msgbuf, sizeof(msgbuf), "A {%s}%s{default} was spawned by {olive}%s{default}!", spawnColor, spawnType, spawnName);
+    FormatEx(msgbuf, sizeof(msgbuf), "A {%s}%s{default} was spawned by {olive}%s{default}!", spawnColor, spawnType, spawnerName);
     CPrintToChatAll("%s %s", CHAT_TAG_COLORED, msgbuf);
-    ShowHintActionText(msgbuf, sizeof(msgbuf));
+	
+    if (!StrEqual(spawnerName, "Director"))
+        ShowHintActionText(msgbuf, sizeof(msgbuf));
 }
 
 ////////////////////////////////////// ZSPAWN //////////////////////////////////////
