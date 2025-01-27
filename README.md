@@ -195,3 +195,13 @@ In addition to the modifications made in the L4D2Mods directory, the following a
 * [Survivor Utilities](https://forums.alliedmods.net/showthread.php?t=335683) by Eärendil.
 * [Explosive Shots](https://forums.alliedmods.net/showthread.php?t=342301) by Eärendil.
 * [multicolors](https://github.com/fbef0102/L4D1_2-Plugins/releases/tag/Multi-Colors) by Bara, et all.
+
+---
+
+### Prepackaged Server Setup
+
+[![LEFT4MAW Event Thumbnail](https://img.youtube.com/vi/-1qD6SKd-SQ/0.jpg)](https://www.youtube.com/watch?v=-1qD6SKd-SQ)
+
+If you would like to deploy this on a server you maintain, you can use the predefined server package that holds up to 20 players (used for the Left4MAW event seen above) from [here](https://socksthewolf.com/storage/L4D2ServerImage.zip). The bridge config that was used can also be obtained from [here](https://socksthewolf.com/storage/L4D2BridgeConfigs.zip) as well.
+
+I'd love to hear about your usage of this project, so please contact me over on [bluesky](https://bsky.app/profile/socksthewolf.com) about how you use this for your event!
