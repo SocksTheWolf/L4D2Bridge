@@ -24,7 +24,7 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0" />
     <PackageReference Include="CoreRCON" Version="5.4.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="RulesEngine" Version="5.0.4" />
+    <PackageReference Include="RulesEngine" Version="5.0.5" />
     <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
     <PackageReference Include="TwitchLib.Api.Core" Version="3.9.0" />
     <PackageReference Include="TwitchLib.Api.Helix" Version="3.9.0" />
