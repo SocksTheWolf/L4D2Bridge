@@ -29,7 +29,7 @@ public Plugin myinfo =
 };
 
 KeyValues g_specialTrackers = null; // A KV map that is used to deterime if a zombie was spawned by us or not.
-static char g_zombieNames[9][] = 
+static char g_zombieNames[9][] =
 {
     "invalid",
     "Smoker",
@@ -70,10 +70,10 @@ public void OnPluginStart()
 
     // unincapacitate player
     RegAdminCmd("sm_bridge_uncap", BridgeUncapSurvivor, ADMFLAG_ROOT, "Un-incapacitates X number of survivors it finds");
-	
+
 	// Show names above attacked spawned zombies
     //HookEvent("player_hurt", Event_OnPlayerHurt);
-    
+
     // Print messages whenever a zombie dies
     HookEvent("player_death", Event_OnPlayerDeath);
     HookEvent("witch_killed", Event_OnWitchKilled);
@@ -125,11 +125,12 @@ public Action Event_OnPlayerHurt(Event event, const char[] name, bool dontBroadc
 	int attackerID = GetClientOfUserId(event.GetInt("attacker"));
 	int zombieID = GetClientOfUserId(event.GetInt("userid"));
     // Ignore handling if this hit is caused by a bot or the world
-	if (!attackerID || !IsClientInGame(attackerID) || GetClientTeam(attackerID) != TEAM_SURVIVORS || IsFakeClient(attackerID)) 
+	if (!attackerID || !IsClientInGame(attackerID) || GetClientTeam(attackerID) != TEAM_SURVIVORS || IsFakeClient(attackerID))
         return Plugin_Continue;
-	
+
 	// Only print if this is a special zombie being attacked.
-	if (!IsSpecialZombie(zombieID)) return Plugin_Continue;
+	if (!IsSpecialZombie(zombieID))
+        return Plugin_Continue;
 
 	// Check if the special map is currently made/valid
 	if (!IsSpecialMapValid())
@@ -150,7 +151,7 @@ public Action Event_OnPlayerDeath(Event event, const char[] name, bool dontBroad
 {
     // This is the id of the zombie, also the key in our KV pair.
     int zombieID = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (!zombieID || GetClientTeam(zombieID) != TEAM_INFECTED || !IsSpecialMapValid()) 
+    if (!zombieID || GetClientTeam(zombieID) != TEAM_INFECTED || !IsSpecialMapValid())
         return Plugin_Continue;
 
     HandleDeathEvents(zombieID);
@@ -175,7 +176,7 @@ void HandleDeathEvents(int zombieID, bool isWitch=false)
 
         // Get the zombie class name
         int zombieClass;
-        if (!isWitch) 
+        if (!isWitch)
             zombieClass = GetEntProp(zombieID, Prop_Send, "m_zombieClass");
         else
             zombieClass = 7;
@@ -189,7 +190,7 @@ void HandleDeathEvents(int zombieID, bool isWitch=false)
         // Print the message out to everyone's HUD if not the Director
         if (!StrEqual(donorName, "Director"))
             PrintHintTextToAll(PrintMsg);
-		
+
         // Display message to all users.
         CPrintToChatAll("%s %s", CHAT_TAG_COLORED, PrintMsg);
         // Send it to the console as well
@@ -253,7 +254,7 @@ void PrintSpawnMessage(const char[] spawnerName, const char[] spawnColor, const 
     char msgbuf[MAX_MESSAGE_LENGTH];
     FormatEx(msgbuf, sizeof(msgbuf), "A {%s}%s{default} was spawned by {olive}%s{default}!", spawnColor, spawnType, spawnerName);
     CPrintToChatAll("%s %s", CHAT_TAG_COLORED, msgbuf);
-	
+
     if (!StrEqual(spawnerName, "Director"))
         ShowHintActionText(msgbuf, sizeof(msgbuf));
 }
@@ -266,13 +267,13 @@ Action BridgeSpawnZombie(int client, int args)
 
     char spawnerName[DONOR_NAME_LEN];
     char infectedType[10];
-    
+
     // Get the class
     GetCmdArg(1, infectedType, sizeof(infectedType));
 
     // Copy donor
     GetCmdArg(2, spawnerName, sizeof(spawnerName));
-	
+
     int zombieID = Bridge_SpawnZombie(infectedType);
     if (zombieID != -1)
     {
@@ -284,7 +285,7 @@ Action BridgeSpawnZombie(int client, int args)
 
         if (!AddZombieToTracker(zombieID, spawnerName))
             PrintToServer("%s WARN unable to track id %d", CHAT_TAG, zombieID);
-        
+
         PrintToServer("%s infected spawn success", CHAT_TAG);
     }
     else
@@ -313,7 +314,7 @@ Action BridgeSpawnMobs(int client, int args)
 
     Bridge_SpawnMobs(iCount);
     PrintSpawnMessage(spawnerName, "red", "horde");
-	
+
     PrintToServer("%s mob spawn success", CHAT_TAG);
     return Plugin_Handled;
 }
@@ -370,7 +371,7 @@ Action BridgeSupplyCrate(int client, int args)
 {
     if (args <= 0) return Plugin_Handled;
     if (!g_CanHandleCommands) return Plugin_Handled;
-    
+
     char spawnerName[DONOR_NAME_LEN];
     // Copy donor
     GetCmdArg(1, spawnerName, sizeof(spawnerName));
@@ -398,7 +399,7 @@ Action BridgeHealAll(int client, int args)
     char spawnerName[DONOR_NAME_LEN];
     // Copy donor
     GetCmdArg(2, spawnerName, sizeof(spawnerName));
-    
+
     bool healedAnyone = false;
     for (int i = 1; i <= MaxClients; ++i)
     {
@@ -422,7 +423,7 @@ Action BridgeHealAll(int client, int args)
 
     if (healedAnyone)
         PrintSpawnMessage(spawnerName, "lightgreen", "health boost");
-    
+
     PrintToServer("%s health healed", CHAT_TAG);
 
     return Plugin_Handled;
@@ -473,7 +474,7 @@ Action BridgeUncapSurvivor(int client, int args)
     {
         if (SavedSurvivors >= NumSurvivorsToHelp)
             break;
-        
+
         if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == TEAM_SURVIVORS && L4D_IsPlayerIncapacitated(i))
         {
             ++SavedSurvivors;

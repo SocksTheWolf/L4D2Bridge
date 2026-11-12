@@ -36,12 +36,12 @@ bool	g_bL4D2, g_bAllow, g_bPluginOn, g_bAllowTank, g_bAllowWitch, g_bAllowMob, g
 int		g_iFlowToken, g_iNextMobSize, g_iMobAmountMin, g_iMobAmountMax, g_iVomitAmountMin, g_iVomitAmountMax, g_iTanksForRound,
 		g_iTanksSpawned, g_iWitchesForRound, g_iWitchesSPawned, g_iAutoSTMod, g_iAutoSPanic, g_iArWeights[6], g_iArLimits[6], g_iSpecialLimit,
 		g_iAutoSAmount, g_iArAllowSI[6], g_iGameMode, g_iSurvStLimit, g_iArClassQueue[MAX_ZOMBIES], g_iZClassAm, g_iTankScav, g_iGasCount;
-		
-ConVar	g_hAllow, g_hGameModes, g_hCurrGameMode, g_hAllowSI, g_hAllowTank, g_hAllowWitch, g_hAllowMob, g_hMobAmountMin, g_hMobAmountMax, g_hVomitAmountMin, g_hVomitAmountMax, 
-		g_hTankMax, g_hTankMin, g_hWitchMax, g_hWitchMin, g_hAutoSEnable, g_hAutoSWeight, g_hAutoSTMin, g_hAutoSTMax, g_hAutoSTMod, g_hAutoSTDel, g_hAutoSFlowBlock, 
+
+ConVar	g_hAllow, g_hGameModes, g_hCurrGameMode, g_hAllowSI, g_hAllowTank, g_hAllowWitch, g_hAllowMob, g_hMobAmountMin, g_hMobAmountMax, g_hVomitAmountMin, g_hVomitAmountMax,
+		g_hTankMax, g_hTankMin, g_hWitchMax, g_hWitchMin, g_hAutoSEnable, g_hAutoSWeight, g_hAutoSTMin, g_hAutoSTMax, g_hAutoSTMod, g_hAutoSTDel, g_hAutoSFlowBlock,
 		g_hAutoSTankBlock, g_hAutoSPanic, g_hAutoSLimits, g_hSpecialLimit, g_hAutoMEnable, g_hAutoMTMin, g_hAutoMTMax, g_hAutoSAmount, g_hSurvStLimit,
 		g_hSurvStTimeMin, g_hSurvStTimeMax, g_hSurvTime, g_hWeightScale, g_hGameModeOverride, g_hTankScav, g_hAutoKick, g_hFinDuration;
-		
+
 float	g_fMapFlow, g_fLastValidTFlow, g_fMaxMapProgress, g_fNextProgressTank, g_fNextProgressWitch, g_fAutoSTMin, g_fAutoSTMax, g_fAutoSTDel, g_fAutoMTMin,
 		g_fAutoMTMax, g_fSurvStTimeMin, g_fSurvStTimeMax, g_fSurvTime, g_fSurvStart, g_fArTankFlow[64], g_fArWitchFlow[64], g_fFinDuration;
 
@@ -49,7 +49,7 @@ Handle	g_hFlowTimer, g_hSpawnTimer, g_hMobTimer, g_hPanicTimer, g_hFinaleTimer;
 
 char	g_sAutoSWeight[64], g_sAutoSLimits[64], g_sAllowSI[64], g_sArWeights[7][16], g_sArLimits[6][16], g_sArAllowSI[8][16], g_sGameMode[64];
 //Store the zombie names for calling zspawn and zauto
-static char g_sZombieClasses_L4D2[8][] = 
+static char g_sZombieClasses_L4D2[8][] =
 {
 	"tank",
 	"smoker",
@@ -168,13 +168,13 @@ public void OnPluginStart()
 		RegAdminCmd("sm_zauto",		ZSpawnAuto,		ADMFLAG_KICK,	"Spawn an infected in an automatic position. Usage: sm_zauto <zombietype> <amount>.\nValid zombietypes: hunter, smoker, boomer, tank, witch.\nAmount: 1-16 zombies, if amount is not assigned, this command will spawn 1 zombie.");
 	}
 	RegAdminCmd("sm_zmob",		ZSpawnMob,		ADMFLAG_KICK,	"Creates a mob that will attack survivors. Usage sm_zmob <amount>.");
-	
+
 	g_hCurrGameMode		= FindConVar("mp_gamemode");
-	
+
 	g_bPluginOn = false;
 	if (g_bL4D2) AutoExecConfig(true, "l4d2_zspawn");
 	else AutoExecConfig(true, "l4d_zspawn");
-	
+
 	g_hAllow.AddChangeHook(CVarChange_Enable);
 	g_hGameModes.AddChangeHook(CVarChange_Enable);
 	g_hCurrGameMode.AddChangeHook(CVarChange_Enable);
@@ -201,10 +201,10 @@ public void OnPluginStart()
 		g_hTankScav.AddChangeHook(CVarChange_CVars);
 		g_hFinDuration.AddChangeHook(CVarChange_Timers);
 	}
-	
+
 	g_hAutoMEnable.AddChangeHook(CVarChange_Timers);
 	g_hAutoSEnable.AddChangeHook(CVarChange_Timers);
-	
+
 	g_hMobAmountMin.AddChangeHook(CVarChange_Limits);
 	g_hMobAmountMax.AddChangeHook(CVarChange_Limits);
 	g_hVomitAmountMin.AddChangeHook(CVarChange_Limits);
@@ -293,7 +293,7 @@ void CVarTimers()
 			UnblockSpecials();
 		}
 	}
-	
+
 	if (g_bAutoMEnable != g_hAutoMEnable.BoolValue)
 	{
 		g_bAutoMEnable = g_hAutoMEnable.BoolValue;
@@ -312,7 +312,7 @@ void CVarTimers()
 			delete g_hFinaleTimer;
 			g_hFinaleTimer = CreateTimer(g_hFinDuration.FloatValue, Finale_Timer);
 		}
-		g_fFinDuration = g_hFinDuration.FloatValue;	
+		g_fFinDuration = g_hFinDuration.FloatValue;
 	}
 }
 
@@ -325,7 +325,7 @@ void GetWeights()
 		for (int i = 0; i < g_iZClassAm; i++)
 			g_iArWeights[i] = StringToInt(g_sArWeights[i]);
 	}
-	else 
+	else
 	{
 		ResetConVar(g_hAutoSWeight);
 		PrintToServer("[ZSpawn] WARNING: Cannot get 'zspawn_auto_weights', check if the cvar has been set properly.");
@@ -342,7 +342,7 @@ void GetAutoSpecialLimit()
 		for (int i = 0; i < g_iZClassAm; i++)
 			g_iArLimits[i] = StringToInt(g_sArLimits[i]);
 	}
-	else 
+	else
 	{
 		ResetConVar(g_hAutoSLimits);
 		PrintToServer("[ZSpawn] WARNING: Cannot get 'zspawn_class_limit', check if the cvar has been set properly.");
@@ -359,7 +359,7 @@ void GetDirectorSpecialAllow()
 		for (int i = 0; i < g_iZClassAm; i++)
 			g_iArAllowSI[i] = StringToInt(g_sArAllowSI[i]);
 	}
-	else 
+	else
 	{
 		ResetConVar(g_hAllowSI);
 		PrintToServer("[ZSpawn] WARNING: Cannot get 'zspawn_director_special_allow', check if the cvar has been set properly.");
@@ -374,7 +374,7 @@ void GetLimitCVars()
 	g_iMobAmountMin = g_hMobAmountMin.IntValue;
 	g_fAutoMTMin = g_hAutoMTMin.FloatValue;
 	g_fSurvStTimeMin = g_hSurvStTimeMin.FloatValue;
-	
+
 	if(g_fAutoSTMin > g_hAutoSTMax.FloatValue)
 	{
 		PrintToServer("[ZSpawn] WARNING: 'zspawn_auto_time_max' cannot be lower than 'zspawn_auto_time_min', clamping.");
@@ -388,14 +388,14 @@ void GetLimitCVars()
 		g_iMobAmountMax = g_iMobAmountMin;
 	}
 	else g_iMobAmountMax = g_hMobAmountMax.IntValue;
-		
+
 	if (g_fAutoMTMin > g_hAutoMTMax.FloatValue)
 	{
 		PrintToServer("[ZSpawn] WARNING: 'zspawn_automob_time_max' cannot be lower than 'zspawn_automob_time_min, clamping.");
-		g_fAutoMTMax = g_fAutoMTMin; 
+		g_fAutoMTMax = g_fAutoMTMin;
 	}
 	else g_fAutoMTMax = g_hAutoMTMax.FloatValue;
-	
+
 	if (g_fSurvStTimeMin > g_hSurvStTimeMax.FloatValue)
 	{
 		PrintToServer("[ZSpawn] WARNING: 'zspawn_survival_time_max' cannot be lower than 'zspawn_survival_time_max', clamping.");
@@ -451,7 +451,7 @@ void GetGameMode()	//Returns 0 if gamemode is not allowed, 1-3 if gamemode is al
 	char sGameModes[64];
 	g_hCurrGameMode.GetString(g_sGameMode, sizeof(g_sGameMode));	// Store "mp_gamemode" result in g_sGameMode
 	g_hGameModes.GetString(sGameModes, sizeof(sGameModes));		// Store all gamemodes which will start plugin in sGameModes
-	
+
 	if (sGameModes[0])	// If string is not empty that means that server admin only wants plugin in some gamemodes
 	{
 		if (StrContains(sGameModes, g_sGameMode, false) == -1)	// Check if the current gamemode is not in the list of allowed gamemodes
@@ -481,7 +481,7 @@ void GetGameMode()	//Returns 0 if gamemode is not allowed, 1-3 if gamemode is al
 		if( IsValidEntity(entity) ) // Because sometimes "PostSpawnActivate" seems to kill the ent.
 			RemoveEdict(entity); // Because multiple plugins creating at once, avoid too many duplicate ents in the same frame
 	}
-	
+
 	if (g_iGameMode == 0)	// If we reach this line of code that means that the current gamemode is not detected.
 		PrintToServer("[ZSpawn] ERROR: Plugin cannot detect current gamemode, use 'zspawn_gamemode_override' to get full functionality in this gamemode.");
 }
@@ -510,7 +510,7 @@ void EndGame()
 	}
 	if (g_bIsFinale)
 		g_bIsFinale = false;
-		
+
 	if (g_bIsPanicEvent)
 		g_bIsPanicEvent = false;
 }
@@ -530,14 +530,14 @@ void SetMaxSpecials()	// Remove SI limits for vs and survival, coop limits are o
 void ResetMaxSpecials()
 {
 	ResetConVar(FindConVar("z_max_player_zombies"), true, false);	// Reset convar for all clients but do not notify
-	ResetConVar(FindConVar("z_minion_limit"), true, false);	
+	ResetConVar(FindConVar("z_minion_limit"), true, false);
 	if (g_bL4D2)
 		ResetConVar(FindConVar("survival_max_specials"), true, false);
 }
 
 /* When autospawn is enabled plugin will block SI with ConVars, using "L4D_OnSpawnSpecial" to block everything but autospawn would block other plugin spawns,
  * making it incompatible with other plugins.*/
-void BlockSpecials()	
+void BlockSpecials()
 {
 	SetConVarInt(FindConVar("z_hunter_limit"), 0);
 	if (g_bL4D2)
@@ -613,7 +613,7 @@ public void OnPluginEnd()
 }
 
 
-public Action Event_Panic_Start(Event event, const char[] name, bool dontBroadcast)
+public void Event_Panic_Start(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bIsPanicEvent = true;
 	if (g_iGameMode == 3 && !g_bGameStarted)
@@ -633,19 +633,20 @@ public Action Event_Panic_Start(Event event, const char[] name, bool dontBroadca
 	}
 }
 
-public Action Event_Panic_End(Event event, const char[] name, bool dontBroadcast)
+public void Event_Panic_End(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bIsPanicEvent = false;
 }
 
-public Action Event_Finale_Start(Event event, const char[] name, bool dontBroadcast)
+public void Event_Finale_Start(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bIsFinale = true;
 	delete g_hFinaleTimer;
-	if( g_bL4D2 ) g_hFinaleTimer = CreateTimer(g_fFinDuration, Finale_Timer);
+	if( g_bL4D2 )
+		g_hFinaleTimer = CreateTimer(g_fFinDuration, Finale_Timer);
 }
 
-public Action Event_Round_End(Event event, const char[] name, bool dontBroadcast)
+public void Event_Round_End(Event event, const char[] name, bool dontBroadcast)
 {
 	EndGame();
 	UnblockSpecials();
@@ -659,7 +660,7 @@ public Action Event_Player_Death(Event event, const char[] name, bool dontBroadc
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(!client || !IsClientInGame(client) || !IsFakeClient(client) )
 		return Plugin_Continue;
-		
+
 	if( GetClientTeam(client) == 3 )
 	{
 		int class = GetEntProp(client, Prop_Send, "m_zombieClass");
@@ -667,48 +668,48 @@ public Action Event_Player_Death(Event event, const char[] name, bool dontBroadc
 		{
 			if( class ==  4 || class == 8 )	// Ignore spitter and tank (kicking them upon death causes bugs)
 				return Plugin_Continue;
-				
+
 			KickClient(client);
 		}
 		else
 		{
 			if( class == 5 )
 				return Plugin_Continue;
-				
+
 			KickClient(client);
 		}
 	}
 	return Plugin_Continue;
 }
 
-public Action Event_Gascan(Event event, const char[] name, bool dontBroadcast)
+public void Event_Gascan(Event event, const char[] name, bool dontBroadcast)
 {
 	if (g_iTankScav == 0)
 		return;
-	
+
 	g_iGasCount++;
 	if (g_iGasCount >= g_iTankScav)
 	{
 		float vPos[3];
 		if (L4D_GetRandomPZSpawnPosition(0, 8, 5, vPos))
 			L4D2_SpawnTank(vPos, NULL_VECTOR);
-			
+
 		else
 		PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
 	}
 }
 
-public Action Event_Tank_Spawn(Event event, const char[] name, bool dontBroadcast)
+public void Event_Tank_Spawn(Event event, const char[] name, bool dontBroadcast)
 {
 	if( !g_bIsFinale ) return;
-	
+
 	g_bFinaleTank = true;
 }
 
-public Action Event_Tank_Killed(Event event, const char[] name, bool dontBroadcast)
+public void Event_Tank_Killed(Event event, const char[] name, bool dontBroadcast)
 {
 	if( !g_bIsFinale ) return;
-	
+
 	g_bFinaleTank = false;
 	delete g_hFinaleTimer;
 	g_hFinaleTimer = CreateTimer(g_fFinDuration, Finale_Timer);
@@ -737,12 +738,12 @@ public Action L4D_OnFirstSurvivorLeftSafeArea(int client)
 		SetMaxSpecials();
 		g_hSpawnTimer = CreateTimer(NextSpawnTime(true), AutoSpawn_Timer);
 		BlockSpecials();
-	}	
+	}
 	if (g_bAutoMEnable)
 	{
 		delete g_hMobTimer;
 		g_hMobTimer = CreateTimer(GetRandomFloat(g_fAutoMTMin, g_fAutoMTMax), Mob_Timer);
-	}	
+	}
 	g_bGameStarted = true;
 }
 // Hook Special infected spawn. zombieClass: 1=Smoker, 2=Boomer, 3=Hunter, 4=Spitter, 5=Jockey, 6=Charger
@@ -750,7 +751,7 @@ public Action L4D_OnSpawnSpecial(int &zombieClass, const float vecPos[3], const 
 {
 	if (!g_bPluginOn)
 		return Plugin_Continue;
-		
+
 	if (g_bPluginSpawnRequest == true)	// If the spawn has been requested from the plugin, allow special to spawn
 	{
 		g_bPluginSpawnRequest = false;
@@ -758,11 +759,11 @@ public Action L4D_OnSpawnSpecial(int &zombieClass, const float vecPos[3], const 
 	}
 // Dont use this, it was used to block director spawns when autospawn was enabled, but also was blocking other plugins spawn
 //	if (g_bAutoSEnable)	return Plugin_Handled;
-		
+
 	if (g_iArAllowSI[zombieClass -1] == 0)	// If zombieclass is forbidden plugin will try to spawn another random allowed class
 	{
 		int iValidClass = GetValidZombie();
-		if (iValidClass == 0) 
+		if (iValidClass == 0)
 			return Plugin_Handled;
 
 		else
@@ -816,7 +817,7 @@ public Action L4D_OnSpawnMob(int &amount)
 		amount = g_iNextMobSize;
 		g_bPluginSpawnRequest = false;
 		return Plugin_Changed;
-	}	
+	}
 	if (!g_bAllowMob && !g_bIsFinale && !g_bIsPanicEvent)
 		return Plugin_Handled;
 
@@ -867,7 +868,7 @@ int GetClassForString(char[] str)
 			{
 				iClass = i;
 				break;
-			}	
+			}
 		}
 	}
 	return iClass;
@@ -877,20 +878,20 @@ int SpawnZombieOfAmount(int client, int iClass, int iAmt)
 {
 	if (iClass == -1)
 		return -1;
-	
+
 	int iZPreSpawnCount, iZPostSPawnCount, spawnID;
 	if (iClass == g_iZClassAm + 1)
 		iZPreSpawnCount = GetWitchAm();
 	else
 		iZPreSpawnCount = GetSpecialAm();
-		
+
 	for (int i = 0; i < iAmt; i++)
 	{
 		g_bPluginSpawnRequest = true;
 		// TODO: Support more than one client return id.
 		spawnID = SpawnZombie(client, iClass);
 	}
-	
+
 	if (iClass == g_iZClassAm + 1)
 		iZPostSPawnCount = GetWitchAm();
 
@@ -901,7 +902,7 @@ int SpawnZombieOfAmount(int client, int iClass, int iAmt)
 	{
 		if (iAmt == 1)
 			ReplyToCommand(client, "%s Zombie successfully spawned.", CHAT_TAG);
-			
+
 		else
 			ReplyToCommand(client, "%s Successfully spawned %i/%i zombies.", CHAT_TAG, (iZPostSPawnCount - iZPreSpawnCount), iAmt);
 
@@ -931,7 +932,7 @@ void SpawnMobOfAmount(int client, int number)
 		int iFlags = GetCommandFlags("z_spawn");
 		SetCommandFlags("z_spawn", iFlags & ~FCVAR_CHEAT);
 		FakeClientCommand(client, "z_spawn %s", "mob");
-		SetCommandFlags("z_spawn", iFlags);	
+		SetCommandFlags("z_spawn", iFlags);
 	}
 }
 
@@ -945,11 +946,11 @@ any Native_SpawnZombieAutoOfClass(Handle plugin, int NumArgs)
 	{
 		return -1;
 	}
-	
+
 	int client = L4D_GetHighestFlowSurvivor();
 	if (client <= 0)
 		return -1;
-	
+
 	return SpawnZombieOfAmount(client, iClass, 1);
 }
 
@@ -971,24 +972,24 @@ any Native_SpawnZombieAuto(Handle plugin, int NumArgs)
 	{
 		return -1;
 	}
-	
+
 	int client = L4D_GetHighestFlowSurvivor();
 	if (client <= 0)
 		return -1;
-	
+
 	return SpawnZombieOfAmount(client, iClass, 1);
 }
 
-any Native_SpawnMobAuto(Handle plugin, int NumArgs)
+void Native_SpawnMobAuto(Handle plugin, int NumArgs)
 {
 	if (!g_bPluginOn)
 		return;
-	
+
 	int numToSpawn = GetNativeCell(1);
 	int client = L4D_GetHighestFlowSurvivor();
 	if (client <= 0)
 		return;
-	
+
 	SpawnMobOfAmount(client, numToSpawn);
 }
 
@@ -1016,7 +1017,7 @@ public Action ZSpawnView(int client, int args)
 		ReplyToCommand(client, "%s Cannot Spawn infected, please try another location.", CHAT_TAG);
 		return Plugin_Handled;
 	}
-	
+
 	char sArgs[16], sArgs2[8];
 	int iAmt;
 	GetCmdArg(1, sArgs, sizeof(sArgs));
@@ -1029,14 +1030,14 @@ public Action ZSpawnView(int client, int args)
 		iAmt = 1;
 	if (iAmt > 16)
 		iAmt = 16;
-		
+
 	int iClass = GetClassForString(sArgs);
 	int iZPreSpawnCount, iZPostSPawnCount;
 	if (iClass < 0)
 	{
 		if (g_bL4D2)
 			ReplyToCommand(client, "%s Invalid zombie class, valid classes: hunter, boomer, smoker, charger, jockey, spitter, tank & witch.", CHAT_TAG);
-			
+
 		else
 			ReplyToCommand(client, "%s Invalid zombie class, valid classes: hunter, boomer, smoker, tank & witch.", CHAT_TAG);
 		return Plugin_Handled;
@@ -1075,13 +1076,13 @@ public Action ZSpawnView(int client, int args)
 	{
 		if (iAmt == 1)
 			ReplyToCommand(client, "%s Zombie successfully spawned.", CHAT_TAG);
-			
+
 		else
 			ReplyToCommand(client, "%s Successfully spawned %i/%i zombies.", CHAT_TAG, (iZPostSPawnCount - iZPreSpawnCount), iAmt);
 	}
 	else
 		ReplyToCommand(client, "%s ERROR: Zombie spawn failed.", CHAT_TAG);
-		
+
 	return Plugin_Handled;
 }
 
@@ -1089,7 +1090,7 @@ public Action ZSpawnAuto(int client, int args)
 {
 	if (!g_bPluginOn)
 		return Plugin_Handled;
-		
+
 	if (!client)
 	{
 		ReplyToCommand(client, "%s This command can be only used in game.", CHAT_TAG);
@@ -1112,21 +1113,21 @@ public Action ZSpawnAuto(int client, int args)
 		iAmt = 1;
 	if (iAmt > 16)
 		iAmt = 16;
-		
+
 	int iClass = GetClassForString(sArgs);
 	if (iClass < 0)
 	{
 		if (g_bL4D2)
 			ReplyToCommand(client, "%s Invalid zombie class, valid classes: hunter, boomer, smoker, charger, jockey, spitter, tank & witch.", CHAT_TAG);
-			
+
 		else
 			ReplyToCommand(client, "%s Invalid zombie class, valid classes: hunter, boomer, smoker, tank & witch.", CHAT_TAG);
-			
+
 		return Plugin_Handled;
 	}
 	else
 		SpawnZombieOfAmount(client, iClass, iAmt);
-		
+
 	return Plugin_Handled;
 }
 
@@ -1149,7 +1150,7 @@ public Action ZSpawnMob (int client, int args)
 		ReplyToCommand(client, "%s Invalid number of arguments, use sm_zmob <amount>.", CHAT_TAG);
 		return Plugin_Handled;
 	}
-	
+
 	char sArgs[16];
 	GetCmdArg(1, sArgs, sizeof(sArgs));
 	int numToSpawn = StringToInt(sArgs);
@@ -1199,7 +1200,7 @@ bool HasNoObstacles(const float vPos[3])
 		}
 	}
 	vAng[0]= 0.0;
-	
+
 	for (int i = 0; i < 8; i++)	// Fire 8 traces to check if there is a wall or an obstacle near the spawn which could block zombie
 	{
 		vAng[1] = 45.0 * i;
@@ -1239,12 +1240,12 @@ public Action GetFlow_Timer(Handle timer)		//Get team flow to check if team is m
 
 	float fPlayerFlow, fTeamFlow, fFlowDelta, fHighestFlow, fMapProgress;
 	int iAliveSurv = 0;
-	
+
 // Trying to get map max flow at the beggining of round is usually inacurate, it gets more and more accurate when survivors are closer to saferoom.
 	g_fMapFlow = L4D2Direct_GetMapMaxFlowDistance();
-	
+
 // Get the count of alive survivors and the sum of all player flow to get the average team flow
-	for (int i = 1; i < MaxClients; i++)	
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
 		{
@@ -1257,17 +1258,17 @@ public Action GetFlow_Timer(Handle timer)		//Get team flow to check if team is m
 		}
 	}
 // Set the max map progress in % for boss spawning
-	fMapProgress = (fHighestFlow * 100) / g_fMapFlow;	
+	fMapProgress = (fHighestFlow * 100) / g_fMapFlow;
 	if (g_fMaxMapProgress < fMapProgress)
 		g_fMaxMapProgress = fMapProgress;
-		
+
 // Determine if team has moved enough to add or remove tokens for autospawn. When 50 tokens have been reached autospawn will stop
 	fTeamFlow = fTeamFlow/iAliveSurv;
 	fFlowDelta = FloatAbs(fTeamFlow - g_fLastValidTFlow);
 	if (fFlowDelta < 500.0)
 	{
 		if (g_iFlowToken < 50)
-			g_iFlowToken ++;	// Add 1 token per timer (second) when survivors dont move 
+			g_iFlowToken ++;	// Add 1 token per timer (second) when survivors dont move
 		else
 			g_iFlowToken = 50;
 	}
@@ -1276,7 +1277,7 @@ public Action GetFlow_Timer(Handle timer)		//Get team flow to check if team is m
 		g_fLastValidTFlow = fTeamFlow;
 		g_iFlowToken = 0;	//Remove all tokens if team moves
 	}
-	
+
 // Compare map progress and progress required to spawn tankm for tank autospawn
 	if (g_fNextProgressTank > -1.0 && g_fNextProgressTank < g_fMaxMapProgress)
 	{
@@ -1284,7 +1285,7 @@ public Action GetFlow_Timer(Handle timer)		//Get team flow to check if team is m
 		g_iTanksSpawned++;
 		g_fNextProgressTank = NextTankInProgress();
 	}
-	
+
 	if (g_fNextProgressWitch > -1.0 && g_fNextProgressWitch < g_fMaxMapProgress)
 	{
 		SpawnZombie(RandomAliveSurvivor(), 7);
@@ -1310,11 +1311,11 @@ public Action AutoSpawn_Timer(Handle timer)
 	int iSurvivor = RandomAliveSurvivor();
 	NextSpecialSpawn();
 	for (int i = 0; i < g_iAutoSAmount; i++)
-	{	
+	{
 		int zc = g_iArClassQueue[i];
 		if (zc != -1)
 			SpawnZombie(iSurvivor, zc + 1);
-			
+
 		else break;
 	}
 	if (IsAutoAllowed() == -1)	// A horde has enabled again the special spawn, it will respawn autospawn without adding a delay
@@ -1340,7 +1341,7 @@ public Action Mob_Timer(Handle timer)
 	if(IsAutoAllowed() == 0)
 	{
 		g_hMobTimer = CreateTimer(1.0, Mob_Timer);
-		return;
+		return Plugin_Continue;
 	}
 	int iClient;
 	for (int i = 1; i <= MaxClients; i++)
@@ -1356,24 +1357,29 @@ public Action Mob_Timer(Handle timer)
 	FakeClientCommand(iClient, "z_spawn_old %s", "mob");
 	SetCommandFlags("z_spawn_old", iFlags);
 	g_hMobTimer = CreateTimer(GetRandomFloat(g_fAutoMTMin, g_fAutoMTMax), Mob_Timer);
+	return Plugin_Continue;
 }
 
 public Action Panic_Timer(Handle timer)
 {
 	g_bIsPanicEvent = false;
 	g_hPanicTimer = null;
+	return Plugin_Stop;
 }
 
 public Action Finale_Timer(Handle timer)
 {
 	g_hFinaleTimer = null;
-	if( !g_bIsFinale || !g_bGameStarted ) return;
-	
-	if( L4D2_GetCurrentFinaleStage() == 6 || g_bFinaleTank ) return;	// Don't change game to tank mode if the vehicle is ready to leave with survivors or is already in tank mode
-	
+	if( !g_bIsFinale || !g_bGameStarted )
+		return Plugin_Continue;
+
+	if( L4D2_GetCurrentFinaleStage() == 6 || g_bFinaleTank )
+		return Plugin_Continue;	// Don't change game to tank mode if the vehicle is ready to leave with survivors or is already in tank mode
+
 	// Force the stage to spawn a finale tank if the game is struggling to spawn one
 	char nullchar[4];
 	L4D2_ChangeFinaleStage(8, nullchar);
+	return Plugin_Continue;
 }
 
 //==========================================================================================
@@ -1389,10 +1395,10 @@ int SpawnZombie(int client, int zombieclass)
 		// Instead of using a random player, use the player with highest flow
 		if (L4D_GetRandomPZSpawnPosition(L4D_GetHighestFlowSurvivor(), g_iZClassAm + 2, 5, vPos))	// I use 0 for tank but here is 8
 			return L4D2_SpawnTank(vPos, NULL_VECTOR);
-			
+
 		else
 			PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
-			
+
 		return -1;
 	}
 	if (zombieclass == g_iZClassAm + 1)
@@ -1400,20 +1406,20 @@ int SpawnZombie(int client, int zombieclass)
 
 		if (L4D_GetRandomPZSpawnPosition(L4D_GetHighestFlowSurvivor(), g_iZClassAm + 1, 5, vPos))
 			return L4D2_SpawnWitch(vPos, NULL_VECTOR);
-			
+
 		else
 			PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
-			
+
 		return -1;
 	}
 	// First we get a suitable spot for the infected. We use a random alive survivor and we try to get the best spot for the special we want.
 	// This should try to spawn the infected at the best available spot to attack survivors.
-	if (L4D_GetRandomPZSpawnPosition(client, zombieclass, 5, vPos))	
+	if (L4D_GetRandomPZSpawnPosition(client, zombieclass, 5, vPos))
 		return L4D2_SpawnSpecial(zombieclass, vPos, NULL_VECTOR); // Spawn the infected with the vector we got previously. This native does not trigger players and will only spawn infected bots.
-		
+
 	else
 		PrintToServer("[ZSspawn] Couldn't find a valid spawn position in 5 tries.");
-		
+
 	return -1;
 }
 
@@ -1438,7 +1444,7 @@ float NextSpawnTime(const bool startloop)
 	float fTime, fMinTime, fMaxTime;
 	int iMaxSpecials;
 
-// Modify max specials and spawn times in survival based over time	
+// Modify max specials and spawn times in survival based over time
 	if (g_iGameMode == 3 && GetGameTime() < (g_fSurvStart + g_fSurvTime))
 	{
 		fMinTime = LinealInterpolation(0.0, g_fSurvTime, g_fSurvStTimeMin, g_fAutoSTMin, (GetGameTime() - g_fSurvStart));
@@ -1469,7 +1475,7 @@ float NextSpawnTime(const bool startloop)
 		fTime = LinealInterpolation(float(iMaxSpecials), 0.0, fMinTime, fMaxTime, float( AliveSpecials() ));
 	}
 	return fTime;
-	
+
 }
 
 float LinealInterpolation(const float x0, const float x1, const float y0, const float y1, const float x)
@@ -1488,7 +1494,7 @@ void NextSpecialSpawn()	// v1.1: Optimized function to try to prevent server lag
 	}
 	else iMaxSpecials = g_iSpecialLimit;
 	// Get a list of all alive zombies and for each class
-	for (int i = 1; i < MaxClients; i++)	
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == 3)
 		{
@@ -1517,7 +1523,7 @@ void NextSpecialSpawn()	// v1.1: Optimized function to try to prevent server lag
 		g_iArClassQueue[0] = -1;
 		return;
 	}
-		
+
 	for (int i = 0; i < g_iAutoSAmount; i++)
 	{
 		int iTotalWeight = 0;
@@ -1530,10 +1536,10 @@ void NextSpecialSpawn()	// v1.1: Optimized function to try to prevent server lag
 			}
 			else if (g_bWeightScale)	// DIvide class weight by alive class members +1
 				iArWeights[j] = g_iArWeights[j] / (iArSpecialAm[j] + 1);
-				
+
 			else
 				iArWeights[j] = g_iArWeights[j];
-			
+
 			iTotalWeight += iArWeights[j];	// Get also the total weight
 		}
 		if (iTotalWeight == 0) 	// If zombie classes are full (even if limit has not reached) stop this function
@@ -1541,7 +1547,7 @@ void NextSpecialSpawn()	// v1.1: Optimized function to try to prevent server lag
 			g_iArClassQueue[i] = -1;	// -1 is the signal to stop reading the array
 			return;
 		}
-		
+
 		// Get a random special infected based on the weights
 		int iRoll = GetRandomInt(0, iTotalWeight);
 		int iSum, iClass;
@@ -1552,14 +1558,14 @@ void NextSpecialSpawn()	// v1.1: Optimized function to try to prevent server lag
 				iClass = k;
 				break;
 			}
-				
+
 			iSum += iArWeights[k];
 		}
 
 		g_iArClassQueue[i] = iClass;	// Add the zombie class to the queue
 		iArSpecialAm[iClass]++;			// Increase zombie class amount by 1
 		iTotalAm++;						// Increase total zombies by 1
-		if (iTotalAm >= iMaxSpecials && i < (MAX_ZOMBIES -1))	// Check again if we have reached the limit of specials to end loop 
+		if (iTotalAm >= iMaxSpecials && i < (MAX_ZOMBIES -1))	// Check again if we have reached the limit of specials to end loop
 		{
 			g_iArClassQueue[i+1] = -1;							// Next class in the array will tell plugin to stop reading
 			break;
@@ -1578,20 +1584,20 @@ int IsAutoAllowed()
 		{
 			if (g_bAutoSFlowBlock && g_iFlowToken == 50)
 				return 0;
-			
+
 			return -1;
 		}
 		if (g_iAutoSPanic == 1)
 		{
 			if (g_bAutoSTankBlock && IsTankInPlay())
 				return 0;
-			
+
 			return -1;
 		}
 	}
 	else if ((g_bAutoSFlowBlock && g_iFlowToken == 50) || g_bAutoSTankBlock && IsTankInPlay())
 		return 0;
-		
+
 	return 1;
 }
 
@@ -1616,10 +1622,10 @@ int GetValidZombie()	// If zombie cannot be spawned by director try to get anoth
 	{
 		if (g_iArAllowSI[iRand] < 0)
 			return iRand + 1;	// Position in the array is 1 unit lower than the zombie class
-		
+
 		if (iRand == 5)
 			iRand = 0;
-			
+
 		else
 			iRand++;
 	}
@@ -1639,7 +1645,7 @@ void SetupBosses()	// Decide where will spawn tanks and witches at the beggining
 			g_fArTankFlow[i] = fInterval * i + GetRandomFloat(0.0, fInterval);
 		}
 	}
-	
+
 	g_iWitchesForRound = GetRandomInt(g_hWitchMin.IntValue, g_hWitchMax.IntValue);
 	if (g_iWitchesForRound > 0)
 	{
@@ -1657,7 +1663,7 @@ void SetupBosses()	// Decide where will spawn tanks and witches at the beggining
 int RandomAliveSurvivor()
 {
 	int iArPlayers[MAXPLAYERS+1], iAliveSurvivor;
-	
+
 	for (int i = 1; i < MaxClients; i++)	// Get all alive survivors
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
@@ -1675,7 +1681,7 @@ bool IsTankInPlay()
 {
 	if (g_bL4D2)	// Use Left 4 DHooks native
 		return L4D2_IsTankInPlay();
-		
+
 	else	// Cannot use that native in L4D, so, lets use a loop to check if a player is a tank
 	{
 		for (int i = 1; i < MaxClients; i++)
@@ -1717,13 +1723,13 @@ int GetWitchAm()
 * 1.2.4 (23-Sep-2021)
 	- Fixed finale tanks unable to spawn in L4D2 with ConVar (thanks to Mr. Man for the report).
 * 1.2.3 (05-Aug-2021)
-	- Fixed "array out of bounds" error in special infected spawn (thanks to ricksfishin and Mr. Man for the report).	
+	- Fixed "array out of bounds" error in special infected spawn (thanks to ricksfishin and Mr. Man for the report).
 * 1.2.2 (03-Aug-2021)
 	- Fixed code error in mob autospawn timer.
 	- Special infected can be kicked instantly when dead (new ConVar).
 * 1.2.1 (09-May-2021)
 	- Added extra check if plugin was able to find a valid location for auto spawning and prevent spawn errors.
-	- Deleted PrintToServer() functions used as debugging.	
+	- Deleted PrintToServer() functions used as debugging.
 * 1.2	(09-May-2021)
 	- Added support for Left 4 Dead.
 	- Plugin uses "info_gamemode" to check current gamemode (thanks to Silvers for the suggestion).

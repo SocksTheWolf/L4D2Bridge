@@ -5,12 +5,12 @@
 #include <sdkhooks>
 #include <left4dhooks>
 
-public Plugin myinfo = 
+public Plugin myinfo =
 {
-	name = "[L4D2] CSO Random Supply Boxes drop", 
-	author = "Lux & HarryPotter", 
-	description = "CSO Random Supply Boxes in l4d2", 
-	version = "1.6-2024/3/1", 
+	name = "[L4D2] CSO Random Supply Boxes drop",
+	author = "Lux & HarryPotter",
+	description = "CSO Random Supply Boxes in l4d2",
+	version = "1.6-2024/3/1",
 	url = "https://steamcommunity.com/profiles/76561198026784913"
 };
 
@@ -50,7 +50,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 // Cvar Handles/Variables
 ConVar g_hCvarAllow, g_hCvarModes, g_hCvarModesOff, g_hCvarModesTog, g_hCvarMapOff, g_hUseTimers;
 ConVar g_hCvarDropItemMax, g_hCvarDropItemMin, g_hCvarDropItemChance, g_hCvarDropItemTime,
-	g_hCvarColor, g_hCvarGlowRange, g_hSupplyBoxMaxTime, g_hSupplyBoxMinTime, g_hSupplyBoxLimit, 
+	g_hCvarColor, g_hCvarGlowRange, g_hSupplyBoxMaxTime, g_hSupplyBoxMinTime, g_hSupplyBoxLimit,
 	g_hSupplyBoxLife, g_hSupplyBoxMaxDrop, g_hSupplyBoxMinDrop, g_hSupplyBoxSpawnFinal, g_hSupplyBoxSoundFile,
 	g_hBoxType, g_hItemAnnounceType;
 
@@ -66,11 +66,11 @@ Handle PlayerLeftStartTimer = null, SupplyBoxDropTimer = null;
 bool g_bSupplyBoxSpawnFinal, g_bFinaleStarted, g_bUseTimers;
 Handle g_ItemDeleteTimer[MAXENTITIES+1];
 
-int 
+int
 	g_iMeleeClassCount,
 	g_iGlowEnt[MAXENTITIES+1] = {0};
 
-char 
+char
 	g_sMeleeClass[16][32];
 
 #define SOUND_DROP1 "npc/chopper_pilot/hospital_intro_heli_12.wav"
@@ -93,10 +93,10 @@ ArrayList
 	g_aOthersList,
 	g_alPluginBoxes;
 
-Handle 
+Handle
 	DelayWatchGlow_Timer[MAXPLAYERS+1] ; //prepare to disable player box glow
 
-StringMap 
+StringMap
 	g_smVaildItems;
 
 public void OnPluginStart()
@@ -108,18 +108,18 @@ public void OnPluginStart()
 	g_hCvarModesOff =			CreateConVar(	"l4d2_supply_woodbox_modes_off",		"",				"Turn off the plugin in these game modes, separate by commas (no spaces). (Empty = none).", CVAR_FLAGS );
 	g_hCvarModesTog =			CreateConVar(	"l4d2_supply_woodbox_modes_tog",		"0",			"Turn on the plugin in these game modes. 0=All, 1=Coop, 2=Survival, 4=Versus, 8=Scavenge. Add numbers together.", CVAR_FLAGS );
 	g_hCvarMapOff =				CreateConVar(	"l4d2_supply_woodbox_map_off",			"",				"Turn off the plugin in these maps, separate by commas (no spaces). (0=All maps, Empty = none).", CVAR_FLAGS );
-	g_hCvarDropItemMax =		CreateConVar(	"l4d2_supply_woodbox_item_max",			"4",			"Max Items that could drop in woodbox.", CVAR_FLAGS, true, 0.0); 
-	g_hCvarDropItemMin =		CreateConVar(	"l4d2_supply_woodbox_item_min",			"2",			"Min Items that could drop in woodbox.", CVAR_FLAGS, true, 0.0); 
-	g_hCvarDropItemChance =		CreateConVar(	"l4d2_supply_woodbox_item_chance",		"25,5,40,15,15","Item chance to drop Weapons/Melee/Medic/Throwable/Others, separate by commas (no spaces), the sum of 5 value must be 100", CVAR_FLAGS); 
+	g_hCvarDropItemMax =		CreateConVar(	"l4d2_supply_woodbox_item_max",			"4",			"Max Items that could drop in woodbox.", CVAR_FLAGS, true, 0.0);
+	g_hCvarDropItemMin =		CreateConVar(	"l4d2_supply_woodbox_item_min",			"2",			"Min Items that could drop in woodbox.", CVAR_FLAGS, true, 0.0);
+	g_hCvarDropItemChance =		CreateConVar(	"l4d2_supply_woodbox_item_chance",		"25,5,40,15,15","Item chance to drop Weapons/Melee/Medic/Throwable/Others, separate by commas (no spaces), the sum of 5 value must be 100", CVAR_FLAGS);
 	g_hCvarDropItemTime = 		CreateConVar(	"l4d2_supply_woodbox_item_life", 		"60", 			"Time in seconds to remove item if no one picks up after it drops from box (0=off)", CVAR_FLAGS, true, 0.0);
 	g_hCvarColor =				CreateConVar(	"l4d2_supply_woodbox_color",			"0 145 200",	"The default Supply box color. Three values between 0-255 separated by spaces. RGB Color255 - Red Green Blue. (empty=disable)", CVAR_FLAGS );
 	g_hCvarGlowRange =			CreateConVar(	"l4d2_supply_woodbox_glow_range",		"1800",			"The default Supply box glow range.", CVAR_FLAGS );
-	g_hSupplyBoxMaxTime =		CreateConVar(	"l4d2_supply_woodbox_time_max",			"80",			"Set the max spawn time for Supply box drop.", CVAR_FLAGS, true, 5.0); 
-	g_hSupplyBoxMinTime =		CreateConVar(	"l4d2_supply_woodbox_time_min",			"60",			"Set the min spawn time for Supply box drop.", CVAR_FLAGS, true, 0.0); 
-	g_hSupplyBoxMaxDrop =		CreateConVar(	"l4d2_supply_woodbox_drop_max",			"2",			"Max Supply boxes that could drop once.", CVAR_FLAGS, true, 1.0); 
+	g_hSupplyBoxMaxTime =		CreateConVar(	"l4d2_supply_woodbox_time_max",			"80",			"Set the max spawn time for Supply box drop.", CVAR_FLAGS, true, 5.0);
+	g_hSupplyBoxMinTime =		CreateConVar(	"l4d2_supply_woodbox_time_min",			"60",			"Set the min spawn time for Supply box drop.", CVAR_FLAGS, true, 0.0);
+	g_hSupplyBoxMaxDrop =		CreateConVar(	"l4d2_supply_woodbox_drop_max",			"2",			"Max Supply boxes that could drop once.", CVAR_FLAGS, true, 1.0);
 	g_hSupplyBoxMinDrop =		CreateConVar(	"l4d2_supply_woodbox_drop_min",			"1",			"Min Supply boxes that could drop once.", CVAR_FLAGS, true, 0.0);
-	g_hSupplyBoxLimit =			CreateConVar(	"l4d2_supply_woodbox_limit",			"6",			"Set the limit for Supply box spawned by the plugin.", CVAR_FLAGS, true, 0.0); 
-	g_hSupplyBoxLife =			CreateConVar(	"l4d2_supply_woodbox_box_life",			"180",			"Set the life time for Supply box.", CVAR_FLAGS, true, 0.0); 
+	g_hSupplyBoxLimit =			CreateConVar(	"l4d2_supply_woodbox_limit",			"6",			"Set the limit for Supply box spawned by the plugin.", CVAR_FLAGS, true, 0.0);
+	g_hSupplyBoxLife =			CreateConVar(	"l4d2_supply_woodbox_box_life",			"180",			"Set the life time for Supply box.", CVAR_FLAGS, true, 0.0);
 	g_hSupplyBoxSoundFile = 	CreateConVar(	"l4d2_supply_woodbox_soundfile", 		"", 			"Supply Box - Drop sound file (relative to to sound/, empty=random helicopter sound, -1: disable)", CVAR_FLAGS);
 	g_hSupplyBoxSpawnFinal = 	CreateConVar(	"l4d2_supply_woodbox_drop_final",		"0", 			"If 1, still dorp supply box in final stage rescue", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_hBoxType = 				CreateConVar(	"l4d2_supply_woodbox_type",				"1", 			"Supply box model type, 1: wood_crate001a, 2: wood_crate001a_damagedMAX, 3: wood_crate002a (0=random)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
@@ -216,7 +216,7 @@ public void OnMapEnd()
 public void OnClientDisconnect(int client)
 {
 	delete DelayWatchGlow_Timer[client];
-} 
+}
 
 // ====================================================================================================
 //					CVARS
@@ -323,7 +323,7 @@ void GetCvars()
 	g_iCvarSupplyBoxMinDrop = g_hSupplyBoxMinDrop.IntValue;
 	g_fSupplyBoxLife = g_hSupplyBoxLife.FloatValue;
 	g_hSupplyBoxSoundFile.GetString(g_sCvarSupplyBoxSoundFile, sizeof(g_sCvarSupplyBoxSoundFile));
-	if (strlen(g_sCvarSupplyBoxSoundFile) > 0 && strcmp(g_sCvarSupplyBoxSoundFile, "-1") != 0) 
+	if (strlen(g_sCvarSupplyBoxSoundFile) > 0 && strcmp(g_sCvarSupplyBoxSoundFile, "-1") != 0)
 	{
 		if(g_bMapStarted) PrecacheSound(g_sCvarSupplyBoxSoundFile);
 	}
@@ -347,7 +347,7 @@ void IsAllowed()
 
 		delete PlayerLeftStartTimer;
 		PlayerLeftStartTimer = CreateTimer(1.0, Timer_PlayerLeftStart, _, TIMER_REPEAT);
-		
+
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i))
@@ -438,7 +438,7 @@ void OnGamemode(const char[] output, int caller, int activator, float delay)
 Action CmdSpawnBox(int iClient, int iArgs)
 {
 	if (g_bCvarAllow == false) return Plugin_Continue;
-	
+
 	if (iClient < 1)
 	{
 		SpawnBoxInRandomLocation(1);
@@ -470,7 +470,7 @@ void HookEvents()
 	HookEvent("finale_vehicle_leaving", Event_RoundEnd,		EventHookMode_PostNoCopy);//救援載具離開之時  (沒有觸發round_end)
 	HookEvent("finale_start", 			evtFinaleStart, EventHookMode_PostNoCopy); //final starts, some of final maps won't trigger
 	HookEvent("finale_radio_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, all final maps trigger
-	HookEvent("gauntlet_finale_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, only rushing maps trigger (C5M5, C13M4)	
+	HookEvent("gauntlet_finale_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, only rushing maps trigger (C5M5, C13M4)
 	HookEvent("player_team",            Event_PlayerTeam);
 }
 
@@ -484,27 +484,27 @@ void UnhookEvents()
 	UnhookEvent("finale_vehicle_leaving", Event_RoundEnd,	EventHookMode_PostNoCopy);//救援載具離開之時  (沒有觸發round_end)
 	UnhookEvent("finale_start", 			evtFinaleStart, EventHookMode_PostNoCopy); //final starts, some of final maps won't trigger
 	UnhookEvent("finale_radio_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, all final maps trigger
-	UnhookEvent("gauntlet_finale_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, only rushing maps trigger (C5M5, C13M4)	
+	UnhookEvent("gauntlet_finale_start", 	evtFinaleStart, EventHookMode_PostNoCopy); //final starts, only rushing maps trigger (C5M5, C13M4)
 }
 
-void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) 
+void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bFinaleStarted = false;
 	delete PlayerLeftStartTimer;
 	PlayerLeftStartTimer = CreateTimer(1.0, Timer_PlayerLeftStart, _, TIMER_REPEAT);
 }
 
-void Event_SurvivalRoundStart(Event event, const char[] name, bool dontBroadcast) 
+void Event_SurvivalRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	GameStart();
 }
 
-void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast) 
+void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	ResetTimer();
 }
 
-void evtFinaleStart(Event event, const char[] name, bool dontBroadcast) 
+void evtFinaleStart(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bFinaleStarted = true;
 }
@@ -527,7 +527,7 @@ void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 //function
 void eBreakBreakable(const char[] Output, int Caller, int Activator, float Delay)
 {
-	float fPos[3];		
+	float fPos[3];
 	GetEntPropVector(Caller, Prop_Send, "m_vecOrigin", fPos);
 	fPos[2] += 17.5;
 
@@ -536,10 +536,10 @@ void eBreakBreakable(const char[] Output, int Caller, int Activator, float Delay
 	int iChanceMax = g_iDropItemChance_Other;
 	EWeaponData eWeaponData;
 	char sWeaponName[64];
-	for (int i = 1; i <= iDrops; i++) 
+	for (int i = 1; i <= iDrops; i++)
 	{
 		iItemChance = GetRandomInt(1, iChanceMax);
-		if(0 < iItemChance && iItemChance <= g_iDropItemChance_Weapon) 
+		if(0 < iItemChance && iItemChance <= g_iDropItemChance_Weapon)
 		{
 			if(g_aeWeaponsList.Length == 0) continue;
 
@@ -551,11 +551,11 @@ void eBreakBreakable(const char[] Output, int Caller, int Activator, float Delay
 				SetEntProp(iWeapon, Prop_Send, "m_iExtraPrimaryAmmo", GetRandomInt(eWeaponData.m_iAmmoMin, eWeaponData.m_iAmmoMax));
 			}
 		}
-		else if(g_iDropItemChance_Weapon < iItemChance && iItemChance <= g_iDropItemChance_Melee) 
+		else if(g_iDropItemChance_Weapon < iItemChance && iItemChance <= g_iDropItemChance_Melee)
 		{
 			SpawnItem("weapon_melee", fPos);
 		}
-		else if(g_iDropItemChance_Melee < iItemChance && iItemChance <= g_iDropItemChance_Medic) 
+		else if(g_iDropItemChance_Melee < iItemChance && iItemChance <= g_iDropItemChance_Medic)
 		{
 			if(g_aMedicList.Length == 0) continue;
 
@@ -563,7 +563,7 @@ void eBreakBreakable(const char[] Output, int Caller, int Activator, float Delay
 			g_aMedicList.GetString(random, sWeaponName, sizeof(sWeaponName));
 			iWeapon = SpawnItem(sWeaponName, fPos);
 		}
-		else if(g_iDropItemChance_Medic < iItemChance && iItemChance <= g_iDropItemChance_Throwable) 
+		else if(g_iDropItemChance_Medic < iItemChance && iItemChance <= g_iDropItemChance_Throwable)
 		{
 			if(g_aThrowableList.Length == 0) continue;
 
@@ -571,7 +571,7 @@ void eBreakBreakable(const char[] Output, int Caller, int Activator, float Delay
 			g_aThrowableList.GetString(random, sWeaponName, sizeof(sWeaponName));
 			iWeapon = SpawnItem(sWeaponName, fPos);
 		}
-		else if(g_iDropItemChance_Throwable < iItemChance && iItemChance <= g_iDropItemChance_Other) 
+		else if(g_iDropItemChance_Throwable < iItemChance && iItemChance <= g_iDropItemChance_Other)
 		{
 			if(g_aOthersList.Length == 0) continue;
 
@@ -674,7 +674,7 @@ bool SpawnBoxInRandomLocation(int spawnMax=-1)
 					vecPos[2] += 20;
 					if(SpawnBox(vecPos) == true){
 						iBoxCount++;
-						bDrop = true;				
+						bDrop = true;
 					}
 				}
 				else
@@ -744,9 +744,9 @@ bool SpawnBox(float vPos[3], float vAng[3] = NULL_VECTOR)
 	int iBox = CreateEntityByName("prop_physics");
 	if (CheckIfEntitySafe( iBox ) == false)
 		return false;
-	
+
 	TeleportEntity(iBox, vPos, vAng, NULL_VECTOR);
-	
+
 	int box_model = g_iBoxType;
 	if (box_model == 0 ) box_model = GetRandomInt(1, 3);
 	switch (box_model) {
@@ -754,7 +754,7 @@ bool SpawnBox(float vPos[3], float vAng[3] = NULL_VECTOR)
 		case 2: DispatchKeyValue(iBox, "model", BOX_2);
 		case 3: DispatchKeyValue(iBox, "model", BOX_3);
 	}
-	
+
 	DispatchSpawn(iBox);
 	DispatchKeyValue(iBox, "spawnflags", "256");		// 256="Generate output on +USE", 8196:"Force Server Side"
 	DispatchKeyValue(iBox, "solid", "1"); //1: 穿透 (只有倖存者能用子彈打中，特感與小殭屍會穿透), 6: 固體
@@ -822,9 +822,9 @@ int SpawnItem(const char[] sClassname, float fPos[3], const char[] sModel = "")
 	TeleportEntity(entity, fPos, NULL_VECTOR, NULL_VECTOR);
 	DispatchSpawn(entity);
 	ActivateEntity(entity);
-	
+
 	if(g_fCvarDropItemTime > 0.0) SetTimer_DeleteWeapon(entity);
-	
+
 	return entity;
 }
 
@@ -850,7 +850,7 @@ Action Timer_KillWeapon(Handle timer, DataPack hPack)
 	if(!g_bCvarAllow) return Plugin_Continue;
 
 	if(entity == INVALID_ENT_REFERENCE) return Plugin_Continue;
-	
+
 	if(IsInUse(entity) == false)
 	{
 		RemoveEntity(entity);
@@ -861,8 +861,8 @@ Action Timer_KillWeapon(Handle timer, DataPack hPack)
 
 void Box_UsePost(int box, int client, int caller, UseType type, float value)
 {
-	if(client > 0 && client <= MaxClients 
-		&& IsClientInGame(client) 
+	if(client > 0 && client <= MaxClients
+		&& IsClientInGame(client)
 		&& GetClientTeam(client) == TEAM_SURVIVORS
 		&& IsPlayerAlive(client))
 	{
@@ -879,7 +879,7 @@ void Use(int entity, int activator, int caller, UseType type, float value)
 {
 	if(entity < 1 || !IsValidEntity(entity))
 		return;
-	
+
 	SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKUnhook(entity, SDKHook_Use, Use);
 }
@@ -888,7 +888,7 @@ Action UnHookEnt(Handle Timer, any iEntRef)
 {
 	if(!IsValidEntRef(iEntRef))
 		return Plugin_Continue;
-	
+
 	int entity = EntRefToEntIndex(iEntRef);
 	SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKUnhook(entity, SDKHook_Use, Use);
@@ -1041,7 +1041,7 @@ Action Timer_PlayerLeftStart(Handle Timer)
 		PlayerLeftStartTimer = null;
 		return Plugin_Stop;
 	}
-	return Plugin_Continue; 
+	return Plugin_Continue;
 }
 
 void ResetTimer()
@@ -1096,7 +1096,7 @@ bool IsValidEntityIndex(int entity)
 }
 
 bool IsInUse(int entity)
-{	
+{
 	int client;
 	if(HasEntProp(entity, Prop_Data, "m_hOwner"))
 	{
@@ -1104,7 +1104,7 @@ bool IsInUse(int entity)
 		if (IsValidClient(client))
 			return true;
 	}
-	
+
 	// if(HasEntProp(entity, Prop_Data, "m_hOwnerEntity"))
 	// {
 	// 	client = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
@@ -1112,7 +1112,7 @@ bool IsInUse(int entity)
 	// 		return true;
 	// }
 
-	for (int i = 1; i <= MaxClients; i++) 
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsValidClient(i) && GetActiveWeapon(i) == entity)
 			return true;
@@ -1124,33 +1124,38 @@ bool IsInUse(int entity)
 int GetActiveWeapon(int client)
 {
 	int weapon = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
-	if (!IsValidEntityIndex(weapon)) 
+	if (!IsValidEntityIndex(weapon))
 	{
 		return 0;
 	}
-	
+
 	return weapon;
 }
 
-bool IsValidClient(int client) 
+bool IsValidClient(int client)
 {
-    if ( !( 1 <= client <= MaxClients ) || !IsClientInGame(client) ) return false;      
-    return true; 
+    if ( !( 1 <= client <= MaxClients ) || !IsClientInGame(client) ) return false;
+    return true;
 }
 
 //credit spirit12 for auto melee detection
 void GetMeleeClasses()
 {
 	int MeleeStringTable = FindStringTable( "MeleeWeapons" );
+	if( MeleeStringTable == INVALID_STRING_TABLE )
+	{
+		g_iMeleeClassCount = -1;
+		return;
+	}
 	g_iMeleeClassCount = GetStringTableNumStrings( MeleeStringTable );
-	
+
 	int len = sizeof(g_sMeleeClass[]);
-	
+
 	for( int i = 0; i < g_iMeleeClassCount; i++ )
 	{
 		ReadStringTable( MeleeStringTable, i, g_sMeleeClass[i], len );
-		//LogAcitivity( "Function::GetMeleeClasses - Getting melee classes: %s", g_sMeleeClass[i]);
-	}	
+		//LogActivity( "Function::GetMeleeClasses - Getting melee classes: %s", g_sMeleeClass[i]);
+	}
 }
 void GameStart()
 {
@@ -1161,7 +1166,7 @@ void StartBoxSpawnTimer()
 {
 	if (!g_bUseTimers)
 		return;
-	
+
 	int SpawnTime = GetRandomInt(g_iCvarSupplyBoxMinTime, g_iCvarSupplyBoxMaxTime);
 	SupplyBoxDropTimer = CreateTimer(float(SpawnTime), Timer_SupplyBoxDrop);
 }
@@ -1173,11 +1178,11 @@ int CountAllSupplyBox()
 	while ((box = FindEntityByClassname(box, "prop_physics")) != -1)
 	{
 		if (!IsValidEntity(box))
-			continue;	
+			continue;
 
 		GetEntPropString(box, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
 
-		if(strcmp(sTargetName, "l4d2_supply_woodbox", false) == 0) 
+		if(strcmp(sTargetName, "l4d2_supply_woodbox", false) == 0)
 			iBoxCount ++;
 	}*/
 
@@ -1375,11 +1380,11 @@ void LoadData()
 					g_aeWeaponsList.PushArray(eWeaponData);
 				}
 
-				hData.GoBack();	
+				hData.GoBack();
 			}
 		}
 
-		hData.GoBack();	
+		hData.GoBack();
 	}
 
 	if(hData.JumpToKey("Medic"))
@@ -1401,11 +1406,11 @@ void LoadData()
 					g_aMedicList.PushString(sName);
 				}
 
-				hData.GoBack();	
+				hData.GoBack();
 			}
 		}
 
-		hData.GoBack();	
+		hData.GoBack();
 	}
 
 	if(hData.JumpToKey("Throwable"))
@@ -1427,11 +1432,11 @@ void LoadData()
 					g_aThrowableList.PushString(sName);
 				}
 
-				hData.GoBack();	
+				hData.GoBack();
 			}
 		}
 
-		hData.GoBack();	
+		hData.GoBack();
 	}
 
 	if(hData.JumpToKey("Others"))
@@ -1453,11 +1458,11 @@ void LoadData()
 					g_aOthersList.PushString(sName);
 				}
 
-				hData.GoBack();	
+				hData.GoBack();
 			}
 		}
 
-		hData.GoBack();	
+		hData.GoBack();
 	}
 
 	delete hData;

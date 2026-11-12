@@ -15,7 +15,7 @@ public Plugin myinfo =
 	url = "https://steamcommunity.com/profiles/76561198026784913/"
 };
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) 
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	EngineVersion test = GetEngineVersion();
 	if(test != Engine_Left4Dead2 && test != Engine_Left4Dead)
@@ -27,8 +27,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Bridge_GamePaused", Native_IsAdminPaused);
 	CreateNative("Bridge_TogglePaused", Native_ToggleAdminPaused);
 	RegPluginLibrary("GamePause_Bridge");
-	
-	return APLRes_Success; 
+
+	return APLRes_Success;
 }
 
 #define	PRIVAT_TRIGGER	"/"
@@ -140,7 +140,7 @@ Action Say_Command(int client, const char[] command, int args)
 		CPrintToChatAll("(Sur) {lightgreen}%N{default} : %s", client, buffer);
 	else if(team == 3)
 		CPrintToChatAll("(Inf) {lightgreen}%N{default} : %s", client, buffer);
-		
+
 	return Plugin_Handled;
 }
 
@@ -152,7 +152,7 @@ Action SayTeam_Command(int client, const char[] command, int args)
 	char buffer[256];
 	GetCmdArg(1, buffer, sizeof(buffer));
 	if (IsSayCommandPrivate(buffer)) return Plugin_Continue; // If its a private chat trigger, return continue
-	
+
 	int team = GetClientTeam(client);
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -164,7 +164,7 @@ Action SayTeam_Command(int client, const char[] command, int args)
 		else if(team == 3)
 			CPrintToChat(i, "{default}(Inf)(team) {red}%N{default} : %s", client, buffer);
 	}
-		
+
 	return Plugin_Handled;
 
 }
@@ -215,11 +215,11 @@ void Event_PlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
 
 void Pause(int client)
 {
-	ResetPauseRequest(); 
-	g_bIsPaused = true; 
+	ResetPauseRequest();
+	g_bIsPaused = true;
 	SetConVarInt(g_hPausable, 1);
 	if (client >= 1)
-		FakeClientCommand(client, "setpause"); 
+		FakeClientCommand(client, "setpause");
 	else
 	{
 		int newClient = GetRandomSurvivor(1, 0);
@@ -233,9 +233,9 @@ void Pause(int client)
 
 void Unpause(int client)
 {
-	ResetPauseRequest(); 
-	g_bIsPaused = false; 
-	SetConVarInt(g_hPausable, 1); 
+	ResetPauseRequest();
+	g_bIsPaused = false;
+	SetConVarInt(g_hPausable, 1);
 	if (client >= 1)
 		FakeClientCommand(client, "unpause");
 	else
@@ -245,7 +245,7 @@ void Unpause(int client)
 	}
 	SetConVarInt(g_hPausable, 0);
 	PrintToServer("unpaused");
-	
+
 	g_bIsUnpausing = false; //Game is active so it is no longer in the unpausing state
 }
 
