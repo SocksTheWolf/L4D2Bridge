@@ -88,9 +88,9 @@ namespace L4D2Bridge.Models
                 return false;
             }
 
-            if (settings.Events.OnCharityDonation)
+            if (settings.Events.OnCharityDonation || settings.Events.UsesEventSub())
             {
-                PrintMessage("Starting the polling for Twitch Donations!");
+                PrintMessage("Starting Twitch async task thread");
                 StartTick();
             }
 

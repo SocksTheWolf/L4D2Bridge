@@ -46,6 +46,14 @@ namespace L4D2Bridge.Models
         }
     }
 
+    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.DisallowNull)]
+    public class RequestPollSettings
+    {
+        public bool Enabled { get; set; } = false;
+        public string RequestLocation { get; set; } = string.Empty;
+        public int PollingInterval { get; set; } = 5;
+    }
+
     /*** Settings for Twitch ***/
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
     public class TwitchEvents
@@ -154,6 +162,9 @@ namespace L4D2Bridge.Models
         [JsonProperty(PropertyName = "tiltify")]
         public TiltifySettings TiltifySettings { get; set; } = new TiltifySettings();
 
+        [JsonProperty(PropertyName = "poll")]
+        public RequestPollSettings PollSettings { get; set; } = new RequestPollSettings();
+
         /*** Rules Settings ***/
         [JsonProperty(Required = Required.Always)]
         public Dictionary<string, List<L4D2Action>> Actions = [];
@@ -179,6 +190,7 @@ namespace L4D2Bridge.Models
 
         /*** Utils ***/
         public bool IsUsingTwitch() => TwitchSettings != null && TwitchSettings.Enabled;
+        public bool IsUsingRequestPoller() => PollSettings != null && PollSettings.Enabled;
         public bool IsUsingTiltify() => TiltifySettings != null && TiltifySettings.Enabled;
         public bool IsUsingTest() => TestSettings != null && TestSettings.Enabled;
 

@@ -23,6 +23,7 @@ public partial class MainViewModel : ViewModelBase
     // Services
     private RCONService? Server { get; set; }
     private TiltifyService? CharityTracker { get; set; }
+    private RequestPollerService? RequestTracker { get; set; }
     private TwitchService? Twitch { get; set; }
     private TestService? Test { get; set; }
 
@@ -109,6 +110,19 @@ public partial class MainViewModel : ViewModelBase
                     Twitch.SendMessageToAllChannels($"{data.Name} just donated {data.Amount}{data.Currency} with message '{data.Message}'");
                 };
             }
+        }
+
+        if (Config.IsUsingRequestPoller())
+        {
+            RequestTracker = new RequestPollerService(Config.PollSettings);
+            RequestTracker.OnConsolePrint = (msg) => Console.AddMessage(msg, RequestTracker);
+            RequestTracker.OnSourceEvent += async (data) => {
+                Console.AddMessage($"{data.Name} donated {data.Amount}{data.Currency}", RequestTracker);
+                List<L4D2Action> Commands = await Rules.ExecuteAsync(RequestTracker.GetWorkflow(), data);
+                Server?.AddNewActions(Commands, data.Name);
+
+                PostActions(ref Commands, RequestTracker.GetSource());
+            };
         }
 
         /* Test Service */

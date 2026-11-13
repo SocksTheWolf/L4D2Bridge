@@ -7,6 +7,7 @@
         Main,
         RCON,
         Tiltify,
+        RequestPoller,
         Twitch,
         RulesEngine,
         Test

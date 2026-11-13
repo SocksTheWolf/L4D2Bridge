@@ -29,7 +29,7 @@ namespace L4D2Bridge.Models
             Campaign = new Tiltify.Tiltify(null, null, apiSettings);
         }
 
-        public override string GetWorkflow() => "tiltify";
+        public override string GetWorkflow() => "donation";
         public override ConsoleSources GetSource() => ConsoleSources.Tiltify;
 
         protected override bool Internal_Start()
