@@ -99,8 +99,29 @@ namespace L4D2Bridge.Models
         // Implement the base start functionality
         protected override bool Internal_Start()
         {
+            if (UsesAsyncStart())
+            {
+                return Task.Run(() => Internal_Start_Async())
+                    .GetAwaiter().GetResult();
+            } 
+            else
+            {
+                StartTick();
+            }   
+            return true;
+        }
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        protected virtual async Task<bool> Internal_Start_Async()
+        {
             StartTick();
             return true;
+        }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        protected virtual bool UsesAsyncStart()
+        {
+            return false;
         }
 
         protected void StartTick()

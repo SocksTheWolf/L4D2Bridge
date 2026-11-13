@@ -1,17 +1,17 @@
 ﻿using L4D2Bridge.Types;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaignDonations;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using TwitchLib.Communication.Models;
-using TwitchLib.Communication.Events;
-using TwitchLib.Api;
-using TwitchLib.Client.Enums;
-using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaignDonations;
+
+#pragma warning disable CS1998
 
 namespace L4D2Bridge.Models
 {
@@ -20,23 +20,26 @@ namespace L4D2Bridge.Models
         private readonly TwitchClient? client = null;
         private readonly TwitchSettings settings;
         private readonly TwitchAPI api = new();
-        private Random rng = new Random(Guid.NewGuid().GetHashCode());
+        private readonly Random rng = new(Guid.NewGuid().GetHashCode());
+
+        // EventSub System
+        private readonly EventSubService wsEventSub;
+
+        // EventSub Cancel Token
+        private CancellationTokenSource cancelToken = new();
 
         public override string GetWorkflow() => "twitch";
         public override ConsoleSources GetSource() => ConsoleSources.Twitch;
 
-        public TwitchService(TwitchSettings InSettings)
+        public TwitchService(TwitchSettings InSettings, IHostedService service)
         {
             settings = InSettings;
+            wsEventSub = service as EventSubService;
             UpdateAPISettings(InSettings);
 
             if (settings.Events.UsesChatFeatures())
             {
-                var options = new ClientOptions();
-                client = new TwitchClient(null, ClientProtocol.WebSocket)
-                {
-                    AutoReListenOnException = true
-                };
+                client = new TwitchClient();
 
 #pragma warning disable CS8622
                 client.OnConnected += Client_OnConnected;
@@ -69,8 +72,9 @@ namespace L4D2Bridge.Models
 #pragma warning restore CS8622
             }
         }
+        protected override bool UsesAsyncStart() => true;
 
-        protected override bool Internal_Start()
+        protected override async Task<bool> Internal_Start_Async()
         {
             if (settings.Channels == null)
             {
@@ -92,12 +96,10 @@ namespace L4D2Bridge.Models
 
             if (client != null)
             {
-                List<string> ChannelsToConnect = [.. settings.Channels];
-                ConnectionCredentials creds = new(settings.BotUserName, "oauth:" + settings.OAuthToken);
+                var credentials = new ConnectionCredentials(settings.BotUserName, "oauth:" + settings.OAuthToken);
+                client.Initialize(credentials);
 
-                client.Initialize(creds, ChannelsToConnect);
-
-                if (client.Connect())
+                if (await client.ConnectAsync())
                 {
                     return true;
                 }
@@ -110,27 +112,35 @@ namespace L4D2Bridge.Models
             return true;
         }
 
-        private void Client_OnDisconnected(object? sender, OnDisconnectedEventArgs e)
+        private async Task Client_OnDisconnected(object? sender, TwitchLib.Client.Events.OnDisconnectedArgs e)
         {
             PrintMessage($"Twitch Disconnected!!");
         }
-
-        private void Client_OnConnected(object? sender, OnConnectedArgs e)
-        {
-            PrintMessage("Twitch Connected!");
-        }
-        private void Client_OnConnectionError(object? sender, OnConnectionErrorArgs e)
+        private async Task Client_OnConnectionError(object? sender, OnConnectionErrorArgs e)
         {
             PrintMessage($"Twitch Connection Error {e.Error.Message}");
+        }
+
+        private async Task Client_OnConnected(object? sender, TwitchLib.Client.Events.OnConnectedEventArgs e)
+        {
+            PrintMessage("Twitch Connected!");
+            await SyncChannels(settings.Channels);
         }
 
         public void UpdateAPISettings(TwitchSettings settings)
         {
             api.Settings.ClientId = settings.ClientID;
             api.Settings.AccessToken = settings.OAuthToken;
+
+            wsEventSub.RunConfiguration(settings);
         }
 
         public void JoinChannels(TwitchSettings NewSettings)
+        {
+            Task.Run(() => SyncChannels(NewSettings.Channels)).GetAwaiter().GetResult();
+        }
+
+        private async Task SyncChannels(string[] Channels)
         {
             if (client == null || !client.IsConnected)
                 return;
@@ -140,27 +150,27 @@ namespace L4D2Bridge.Models
             // all of them.
             if (client.JoinedChannels.Count < 1)
             {
-                PrintMessage($"Attempting to join {NewSettings.Channels.Count()} channels...");
-                foreach (string channel in NewSettings.Channels)
-                    client.JoinChannel(channel);
+                PrintMessage($"Attempting to join {Channels.Count()} channels...");
+                foreach (string channel in Channels)
+                    await client.JoinChannelAsync(channel);
 
                 return;
             }
 
             // Otherwise, if we have already joined channels, only join the ones we haven't
             // joined before.
-            foreach (string channel in NewSettings.Channels)
+            foreach (string channel in Channels)
             {
                 // Figure out if we haven't joined this channel previously and join it.
                 if (client.GetJoinedChannel(channel) == null)
                 {
                     PrintMessage($"Attempting to join channel {channel}...");
-                    client.JoinChannel(channel);
-                }  
+                    await client.JoinChannelAsync(channel);
+                }
             }
 
             // Reconcile any channels we were in, and part the channel.
-            var ChannelsToLeave = client.JoinedChannels.Where((JoinedChannel channel) => { return NewSettings.Channels.Contains(channel.Channel) == false; });
+            var ChannelsToLeave = client.JoinedChannels.Where(channel => { return Channels.Contains(channel.Channel) == false; });
             int NumChannels = ChannelsToLeave.Count();
             if (NumChannels > 0)
             {
@@ -168,39 +178,39 @@ namespace L4D2Bridge.Models
                 foreach (JoinedChannel leavingChannel in ChannelsToLeave)
                 {
                     PrintMessage($"Attempting to leave channel {leavingChannel.Channel}...");
-                    client.LeaveChannel(leavingChannel);
+                    await client.LeaveChannelAsync(leavingChannel);
                 }
             }
         }
 
         /*** Handle Twitch Events ***/
-        private void OnChannelJoined(object unused, OnJoinedChannelArgs args)
+        private async Task OnChannelJoined(object unused, OnJoinedChannelArgs args)
         {
             PrintMessage($"Joined channel: {args.Channel}");
         }
 
-        private void OnChannelLeft(object unused, OnLeftChannelArgs args)
+        private async Task OnChannelLeft(object unused, OnLeftChannelArgs args)
         {
             PrintMessage($"Left channel: {args.Channel}");
         }
 
-        private void OnCommandReceived(object unused, OnChatCommandReceivedArgs args)
+        private async Task OnCommandReceived(object unused, OnChatCommandReceivedArgs args)
         {
-            string loweredCommand = args.Command.CommandText.ToLower();
-            string user = args.Command.ChatMessage.Username.ToLower();
+            string loweredCommand = args.Command.Name.ToLower();
+            string user = args.ChatMessage.Username.ToLower();
 
             if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
             Invoke(new SourceEvent(SourceEventType.ChatCommand)
             {
-                Channel = args.Command.ChatMessage.Channel,
+                Channel = args.ChatMessage.Channel,
                 Message = loweredCommand,
                 Name = user,
             });
         }
 
-        private void OnChannelRaided(object unused, OnRaidNotificationArgs args)
+        private async Task OnChannelRaided(object unused, OnRaidNotificationArgs args)
         {
             string fromUser = args.RaidNotification.MsgParamLogin;
             if (!int.TryParse(args.RaidNotification.MsgParamViewerCount, out int viewerCount))
@@ -215,11 +225,10 @@ namespace L4D2Bridge.Models
             });
         }
 
-        private void OnNewSubscription(object unused, OnNewSubscriberArgs args)
+        private async Task OnNewSubscription(object unused, OnNewSubscriberArgs args)
         {
-            string planName = args.Subscriber.SubscriptionPlanName;
-            if (!int.TryParse(args.Subscriber.MsgParamCumulativeMonths, out int numMonths))
-                numMonths = 0;
+            string planName = args.Subscriber.MsgParamSubPlanName;
+            int numMonths = args.Subscriber.MsgParamCumulativeMonths;
 
             PrintMessage($"Channel subscription for {args.Channel} from {args.Subscriber.DisplayName} of {planName} for {numMonths}!");
             Invoke(new SourceEvent(SourceEventType.Subscription)
@@ -231,12 +240,10 @@ namespace L4D2Bridge.Models
             });
         }
 
-        private void OnResubscription(object unused, OnReSubscriberArgs args)
+        private async Task OnResubscription(object unused, OnReSubscriberArgs args)
         {
-            string planName = args.ReSubscriber.SubscriptionPlanName;
-
-            if (!int.TryParse(args.ReSubscriber.MsgParamCumulativeMonths, out int numMonths))
-                numMonths = 1;
+            string planName = args.ReSubscriber.MsgParamSubPlanName;
+            int numMonths = args.ReSubscriber.MsgParamCumulativeMonths;
 
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ReSubscriber.DisplayName} of {planName} for {numMonths}!");
             Invoke(new SourceEvent(SourceEventType.Resubscription)
@@ -244,28 +251,23 @@ namespace L4D2Bridge.Models
                 Channel = args.Channel,
                 Amount = numMonths,
                 Name = args.ReSubscriber.Login,
-                Message = args.ReSubscriber.SubscriptionPlanName
+                Message = planName
             });
         }
 
-        private void OnPrimePaidSubscription(object unused, OnPrimePaidSubscriberArgs args)
+        private async Task OnPrimePaidSubscription(object unused, OnPrimePaidSubscriberArgs args)
         {
-            string planName = args.PrimePaidSubscriber.SubscriptionPlanName;
-
-            if (!int.TryParse(args.PrimePaidSubscriber.MsgParamCumulativeMonths, out int numMonths))
-                numMonths = 1;
-
-            PrintMessage($"Channel resubscription for {args.Channel} from {args.PrimePaidSubscriber.DisplayName} of {planName} for {numMonths}!");
+            PrintMessage($"Channel prime subscription for {args.Channel} from {args.PrimePaidSubscriber.DisplayName}!");
             Invoke(new SourceEvent(SourceEventType.Resubscription)
             {
                 Channel = args.Channel,
                 Name = args.PrimePaidSubscriber.Login,
-                Amount = numMonths,
-                Message = args.PrimePaidSubscriber.SubscriptionPlanName
+                Amount = 1,
+                Message = "prime"
             });
         }
 
-        private void OnContinuedGiftSub(object unused, OnContinuedGiftedSubscriptionArgs args)
+        private async Task OnContinuedGiftSub(object unused, OnContinuedGiftedSubscriptionArgs args)
         {
             PrintMessage($"Channel resubscription for {args.Channel} from {args.ContinuedGiftedSubscription.DisplayName}!");
             Invoke(new SourceEvent(SourceEventType.Resubscription)
@@ -275,11 +277,10 @@ namespace L4D2Bridge.Models
             });
         }
 
-        private void OnGiftedSubscription(object unused, OnGiftedSubscriptionArgs args)
+        private async Task OnGiftedSubscription(object unused, OnGiftedSubscriptionArgs args)
         {
             string recipient = args.GiftedSubscription.MsgParamRecipientUserName;
-            if (!int.TryParse(args.GiftedSubscription.MsgParamMultiMonthGiftDuration, out int numMonths))
-                numMonths = 1;
+            int numMonths = args.GiftedSubscription.MsgParamMultiMonthGiftDuration;
 
             PrintMessage($"Channel gift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} to {recipient} for {numMonths}!");
             Invoke(new SourceEvent(SourceEventType.GiftSubscription)
@@ -291,7 +292,7 @@ namespace L4D2Bridge.Models
             });
         }
 
-        private void OnMultiGiftSubscription(object unused, OnCommunitySubscriptionArgs args)
+        private async Task OnMultiGiftSubscription(object unused, OnCommunitySubscriptionArgs args)
         {
             int numGifts = args.GiftedSubscription.MsgParamMassGiftCount;
             PrintMessage($"Channel multigift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} of {numGifts}!");
@@ -306,10 +307,12 @@ namespace L4D2Bridge.Models
 
         protected override async Task Tick()
         {
+            // This is primarily used for Twitch Charity endpoints
             string LastDonationRead = string.Empty;
             string TwitchChannelID = string.Empty;
             try
             {
+                // NOTE: this only works on one channel. Probably should fix this better in the future.
                 List<string> channels = new List<string>();
                 foreach (var channel in settings.Channels)
                 {
@@ -331,55 +334,76 @@ namespace L4D2Bridge.Models
             };
 
             using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.CharityPollingInterval));
+            await wsEventSub.StartAsync(cancelToken.Token);
             while (ShouldRun)
             {
-                try
+                // Run Charity Stuff
+                if (settings.Events.OnCharityDonation)
                 {
-                    var resp = await api.Helix.Charity.GetCharityCampaignDonationsAsync(TwitchChannelID);
+                    try
+                    {
+                        var resp = await api.Helix.Charity.GetCharityCampaignDonationsAsync(TwitchChannelID);
 
-                    // Handle initial case
-                    if (LastDonationRead == string.Empty) {
-                        WriteLastDonation(resp);
-                        PrintMessage($"Established baseline donation {LastDonationRead}");
-                    } else {
-                        foreach (var Donation in resp.Data) {
-                            if (Donation.Id == LastDonationRead)
-                                break;
-
-                            var amount = Donation.Amount;
-                            double decPlaces = amount.DecimalPlaces != null ? (double)amount.DecimalPlaces : 0.0;
-                            double totalAmount = amount.Value != null ? (double)amount.Value / Math.Pow(10.0, decPlaces) : 0.0;
-                            if (totalAmount == 0.0)
-                                continue;
-
-                            PrintMessage($"Got new donation of {totalAmount} {amount.Currency} from {Donation.UserLogin}");
-                            Invoke(new SourceEvent(SourceEventType.Donation)
-                            {
-                                Amount = totalAmount,
-                                Currency = amount.Currency,
-                                Name = Donation.UserLogin,
-                                Message = ""
-                            });
+                        // Handle initial case
+                        if (LastDonationRead == string.Empty)
+                        {
+                            WriteLastDonation(resp);
+                            PrintMessage($"Established baseline donation {LastDonationRead}");
                         }
-                        WriteLastDonation(resp);
+                        else
+                        {
+                            foreach (var Donation in resp.Data)
+                            {
+                                if (Donation.Id == LastDonationRead)
+                                    break;
+
+                                var amount = Donation.Amount;
+                                double decPlaces = amount.DecimalPlaces != null ? (double)amount.DecimalPlaces : 0.0;
+                                double totalAmount = amount.Value != null ? (double)amount.Value / Math.Pow(10.0, decPlaces) : 0.0;
+                                if (totalAmount == 0.0)
+                                    continue;
+
+                                PrintMessage($"Got new donation of {totalAmount} {amount.Currency} from {Donation.UserLogin}");
+                                Invoke(new SourceEvent(SourceEventType.Donation)
+                                {
+                                    Amount = totalAmount,
+                                    Currency = amount.Currency,
+                                    Name = Donation.UserLogin,
+                                    Message = ""
+                                });
+                            }
+                            WriteLastDonation(resp);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintMessage($"Twitch Charity Loop hit exception: {ex}");
+                    }
+                    
+                }
+
+                if (settings.Events.UsesEventSub())
+                {
+                    if (!wsEventSub.eventQueue.IsEmpty)
+                    {
+                        if (wsEventSub.eventQueue.TryDequeue(out EventSubEvent ev))
+                        {
+                            // TODO: All of this
+                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    PrintMessage($"Loop hit exception: {ex}");
-                }
-
                 await timer.WaitForNextTickAsync(default);
             }
+            await wsEventSub.StopAsync(cancelToken.Token);
         }
 
         /*** Sending messages to a channel ***/
-        public void SendMessageToChannel(string channel, string message)
+        public async Task SendMessageToChannel(string channel, string message)
         {
             try
             {
                 if (client != null)
-                    client.SendMessage(channel, message);
+                    await client.SendMessageAsync(channel, message);
             }
             catch (Exception ex)
             {
@@ -387,12 +411,12 @@ namespace L4D2Bridge.Models
             }
         }
 
-        public void SendMessageToChannel(JoinedChannel channel, string message)
+        public async Task SendMessageToChannel(JoinedChannel channel, string message)
         {
             try
             {
                 if (client != null)
-                    client.SendMessage(channel, message);
+                    await client.SendMessageAsync(channel, message);
             }
             catch (Exception ex)
             {
@@ -402,6 +426,11 @@ namespace L4D2Bridge.Models
 
         public void SendMessageToAllChannels(string message)
         {
+            Task.Run(() => SendMessageToAllChannelsAsync(message)).GetAwaiter().GetResult();
+        }
+
+        internal async Task SendMessageToAllChannelsAsync(string message)
+        {
             if (client == null)
                 return;
 
@@ -410,7 +439,8 @@ namespace L4D2Bridge.Models
                 return;
 
             foreach (JoinedChannel channel in AllJoinedChannels)
-                SendMessageToChannel(channel, message);
+                await SendMessageToChannel(channel, message);
         }
     }
 }
+#pragma warning restore CS1998

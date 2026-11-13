@@ -58,6 +58,8 @@ namespace L4D2Bridge.Models
         public bool OnMultiGiftSubscription { get; set; } = false;
         public bool OnCharityDonation { get; set; } = false;
         public bool UsesChatFeatures() => OnCommand || OnRaid || OnSubscription || OnResubscription || OnGiftSubscription || OnMultiGiftSubscription;
+        // TODO: REMEMBER THAT THIS IS TRUE, AND SHOULD BE BASED ON RULES
+        public bool UsesEventSub() => true;
     }
 
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
@@ -73,6 +75,7 @@ namespace L4D2Bridge.Models
         // Whether to message when Tiltify events should message into all connected chats
         public bool PostMessageOnTiltifyDonations { get; set; } = false;
         public int ChatCommandPercentChance { get; set; } = 50;
+
         public int CharityPollingInterval { get; set; } = 10;
         public TwitchEvents Events { get; set; } = new TwitchEvents();
 

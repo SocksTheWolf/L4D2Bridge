@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
 using L4D2Bridge.Types;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public string pauseTip = "Click here to pause the server";
 
-    public MainViewModel()
+    public MainViewModel(IHostedService service)
     {
         // Add an override to the server input box so we can properly handle arrow keys history navigation.
         ServerInput?.AddHandler(InputElement.KeyDownEvent, OnTextBoxKey_Down, RoutingStrategies.Tunnel);
@@ -61,7 +62,6 @@ public partial class MainViewModel : ViewModelBase
 
         // Start the console service
         Console.Start();
-
 
         // Set the default pause glyph
         SetPauseGlyph("f04b");
@@ -93,7 +93,7 @@ public partial class MainViewModel : ViewModelBase
         /* Twitch */
         if (Config.IsUsingTwitch())
         {
-            Twitch = new TwitchService(Config.TwitchSettings);
+            Twitch = new TwitchService(Config.TwitchSettings, service);
             Twitch.OnConsolePrint = (msg) => Console.AddMessage(msg, Twitch);
             Twitch.OnSourceEvent += async (data) => {
                 List<L4D2Action> Commands = await Rules.ExecuteAsync(Twitch.GetWorkflow(), data);
