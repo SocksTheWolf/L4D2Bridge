@@ -6,13 +6,13 @@ namespace L4D2Bridge.Views;
 
 public partial class MainView : UserControl
 {
-    public MainView()
-    {
-        InitializeComponent();
-        // Technically, this runs on the UI thread anyways, so we don't break MVVM :)
-        // This thing is annoying and I hate it.
-        ConsoleService.ConsoleHistory = ConsoleLog;
-        MainViewModel.PauseButton = PauseStatus;
-        MainViewModel.ServerInput = ServerCommand;
-    }
+  public MainView()
+  {
+    InitializeComponent();
+    // Technically, this runs on the UI thread anyways, so we don't break MVVM :)
+    // This thing is annoying and I hate it.
+    ConsoleService.ConsoleHistory = ConsoleLog;
+    MainViewModel.PauseButton = PauseStatus;
+    MainViewModel.ServerInput = ServerCommand;
+  }
 }

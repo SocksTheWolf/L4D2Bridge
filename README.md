@@ -112,7 +112,7 @@ These are the ranges for each type of mob spawn size in the server commands list
 #### Negative Weights
 
 These are the weights for each of the negative-based Actions with their weightings from 1-100 on how often they should appear. These are used to calculate what affect is
-used when a rule with the action `RandomNegative` is executed. If a negative action is not specified, it will not be randomly chosen when `RandomNegative` is executed. This field is also used to determine `RandomSepcialInfected` roll spawn chances.
+used when a rule with the action `RandomNegative` is executed. If a negative action is not specified, it will not be randomly chosen when `RandomNegative` is executed. This field is also used to determine `RandomSpecialInfected` roll spawn chances.
 
 ---
 
@@ -124,7 +124,7 @@ The following important notes are:
 
 * `WorkflowName` has to be one of the services that this application supports. Currently `tiltify` or `twitch`
 * For each rule, either `RuleName` or `SuccessEvent` should be the name of one of the actions you have defined in the `config.json` file earlier. The system will check for `RuleName` matches first and upon failure to match, will check the `SuccessEvent` for an action match.
-* All rules are evaluated for every event of a given service type. Execution does not stop on the first rule event, so you can have mutliple rules running at once.
+* All rules are evaluated for every event of a given service type. Execution does not stop on the first rule event, so you can have multiple rules running at once.
 * Rules run every time against a given source event.
 
 #### Source Event Types
@@ -139,8 +139,8 @@ Rules can check their input object types against these values to determine actio
     MultiGiftSubscription,
     Raid,
     ChatCommand,
-	Cheer,
-	PointRedeem
+    Cheer,
+    PointRedeem
 ```
 
 #### Source Event Data

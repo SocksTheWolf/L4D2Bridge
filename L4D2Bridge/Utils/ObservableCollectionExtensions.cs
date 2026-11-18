@@ -3,15 +3,15 @@ using System.Collections.ObjectModel;
 
 namespace L4D2Bridge.Utils
 {
-    public static class ObservableCollectionExtensions
+  public static class ObservableCollectionExtensions
+  {
+    public static void RemoveAll<T>(this ObservableCollection<T> collection, Func<T, bool> condition)
     {
-        public static void RemoveAll<T>(this ObservableCollection<T> collection, Func<T, bool> condition)
-        {
-            for (int i = collection.Count - 1; i >= 0; i--)
-            {
-                if (condition(collection[i]))
-                    collection.RemoveAt(i);
-            }
-        }
+      for (int i = collection.Count - 1; i >= 0; i--)
+      {
+        if (condition(collection[i]))
+          collection.RemoveAt(i);
+      }
     }
+  }
 }
