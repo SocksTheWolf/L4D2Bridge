@@ -65,9 +65,10 @@ namespace L4D2Bridge.Models
         public bool OnGiftSubscription { get; set; } = false;
         public bool OnMultiGiftSubscription { get; set; } = false;
         public bool OnCharityDonation { get; set; } = false;
+        public bool OnBits { get; set; } = false;
+        public bool OnChannelRedeem { get; set; } = false;
         public bool UsesChatFeatures() => OnCommand || OnRaid || OnSubscription || OnResubscription || OnGiftSubscription || OnMultiGiftSubscription;
-        // TODO: REMEMBER THAT THIS IS TRUE, AND SHOULD BE BASED ON RULES
-        public bool UsesEventSub() => true;
+        public bool UsesEventSub() => OnBits || OnChannelRedeem;
     }
 
     [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]

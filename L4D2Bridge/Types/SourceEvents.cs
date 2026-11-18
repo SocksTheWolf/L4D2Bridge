@@ -11,7 +11,9 @@ namespace L4D2Bridge.Types
         GiftSubscription,
         MultiGiftSubscription,
         Raid,
-        ChatCommand
+        ChatCommand,
+        Cheer,
+        PointRedeem
     }
 
     public class SourceEvent
@@ -24,6 +26,8 @@ namespace L4D2Bridge.Types
         public string Currency = string.Empty;
         // Twitch Channel
         public string Channel = string.Empty;
+        // Only valid if type is PointRedeem
+        public string RedeemID = string.Empty;
 
         public SourceEvent(SourceEventType type)
         {

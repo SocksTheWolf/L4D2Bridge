@@ -24,6 +24,7 @@ namespace L4D2Bridge
         private readonly TwitchAPI _twitchApi = new();
         public ConcurrentQueue<EventSubEvent> eventQueue = new();
         private string _userId = string.Empty;
+        public bool isConnected { get; private set; } = false;
 
         public EventSubService(ILogger<EventSubService> logger, EventSubWebsocketClient eventSubWebsocketClient)
         {
@@ -36,15 +37,15 @@ namespace L4D2Bridge
             _eventSubWebsocketClient.ErrorOccurred += OnErrorOccurred;
 
             _eventSubWebsocketClient.UnknownEventSubNotification += OnUnknownEventSubNotification;
-            // TODO: bits, channel point redeems
-            _eventSubWebsocketClient.ChannelChatMessage += OnChannelChatMessage;
+            _eventSubWebsocketClient.ChannelPointsCustomRewardRedemptionAdd += OnChannelPointRedeem;
+            _eventSubWebsocketClient.ChannelBitsUse += OnChannelBitsUsed;
         }
 
-        public void RunConfiguration(TwitchSettings settings)
+        public void RunConfiguration(TwitchAuthData settings)
         {
             _twitchApi.Settings.ClientId = settings.ClientID;
             _twitchApi.Settings.AccessToken = settings.OAuthToken;
-            _userId = "753911692";
+            _userId = settings.UserID;
         }
 
         private async Task OnErrorOccurred(object? sender, ErrorOccuredArgs e)
@@ -58,9 +59,20 @@ namespace L4D2Bridge
             eventQueue.Enqueue(new EventSubEvent(e.Payload, EventSubEventType.Message));
         }
 
+        private async Task OnChannelPointRedeem(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
+        {
+            _logger.LogInformation($"@{e.Payload.Event.UserLogin} #{e.Payload.Event.BroadcasterUserName}: {e.Payload.Event.Reward.Title} Redeemed");
+            eventQueue.Enqueue(new EventSubEvent(e.Payload, EventSubEventType.Redeem));
+        }
+
+        private async Task OnChannelBitsUsed(object? sender, ChannelBitsUseArgs e)
+        {
+            _logger.LogInformation($"@{e.Payload.Event.UserLogin} #{e.Payload.Event.BroadcasterUserName}: {e.Payload.Event.Bits} Bits Spent");
+            eventQueue.Enqueue(new EventSubEvent(e.Payload, EventSubEventType.Cheer));
+        }
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("TEST TEST TEST TEST TEST");
             await _eventSubWebsocketClient.ConnectAsync();
         }
 
@@ -75,23 +87,22 @@ namespace L4D2Bridge
 
             if (!e.IsRequestedReconnect)
             {
-                // subscribe to topics
-                // create condition Dictionary
-                // You need BOTH broadcaster and moderator values or EventSub returns an Error!
-                var condition = new Dictionary<string, string> { { "broadcaster_user_id", _userId }, { "user_id", _userId } };
+                var condition = new Dictionary<string, string> { { "broadcaster_user_id", _userId }};
+
                 // Create and send EventSubscription
-                await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.chat.message", "1", condition, EventSubTransportMethod.Websocket, _eventSubWebsocketClient.SessionId);
-                // If you want to get Events for special Events you need to additionally add the AccessToken of the ChannelOwner to the request.
-                // https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/
+                await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.cheer", "1", condition, EventSubTransportMethod.Websocket, _eventSubWebsocketClient.SessionId);
+                await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.channel_points_custom_reward_redemption.add", "1", condition, EventSubTransportMethod.Websocket, _eventSubWebsocketClient.SessionId);
             }
+            isConnected = true;
         }
 
 
         private async Task OnWebsocketDisconnected(object? sender, WebsocketDisconnectedArgs e)
         {
             _logger.LogError($"Websocket {_eventSubWebsocketClient.SessionId} disconnected!");
+            isConnected = false;
 
-            // Don't do this in production. You should implement a better reconnect strategy
+            // Don't do this in production. You should implement a better reconnect strategy (nah)
             while (!await _eventSubWebsocketClient.ReconnectAsync())
             {
                 _logger.LogError("Websocket reconnect failed!");
@@ -102,6 +113,7 @@ namespace L4D2Bridge
         private async Task OnWebsocketReconnected(object? sender, WebsocketReconnectedArgs e)
         {
             _logger.LogWarning($"Websocket {_eventSubWebsocketClient.SessionId} reconnected");
+            isConnected = true;
         }
 
         // Handling notifications that are not (yet) implemented

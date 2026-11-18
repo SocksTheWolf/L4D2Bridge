@@ -384,11 +384,47 @@ namespace L4D2Bridge.Models
 
                 if (settings.Events.UsesEventSub())
                 {
+                    string userName;
                     if (!wsEventSub.eventQueue.IsEmpty)
                     {
                         if (wsEventSub.eventQueue.TryDequeue(out EventSubEvent ev))
                         {
-                            // TODO: All of this
+                            userName = string.Empty;
+                            switch (ev.type)
+                            {
+                                case EventSubEventType.Cheer:
+                                    {
+                                        var payloadData = (ev.data as ChannelBitsUse);
+                                        if (payloadData == null)
+                                            continue;
+
+                                        userName = payloadData.UserLogin;
+                                        Invoke(new SourceEvent(SourceEventType.Cheer)
+                                        {
+                                            Amount = payloadData.Bits,
+                                            Name = payloadData.UserLogin,
+                                        });
+                                    }
+                                break;
+
+                                case EventSubEventType.Redeem:
+                                    {
+                                        var payloadData = (ev.data as ChannelPointsCustomRewardRedemption);
+                                        if (payloadData == null)
+                                            continue;
+
+                                        userName = payloadData.UserLogin;
+                                        Invoke(new SourceEvent(SourceEventType.PointRedeem)
+                                        {
+                                            RedeemID = payloadData.Reward.Id,
+                                            Name = payloadData.UserLogin,
+                                            Message = payloadData.Reward.Title
+                                        });
+                                    }
+                                break;
+
+                            }
+                            PrintMessage($"Got new Twitch EventSub from {userName} was {ev.type}");
                         }
                     }
                 }
