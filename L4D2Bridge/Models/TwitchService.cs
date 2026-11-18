@@ -1,15 +1,21 @@
-﻿using L4D2Bridge.Types;
+﻿using Avalonia.Controls;
+using L4D2Bridge.Types;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Charity;
 using TwitchLib.Api.Helix.Models.Charity.GetCharityCampaignDonations;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 
 #pragma warning disable CS1998
 
@@ -21,6 +27,10 @@ namespace L4D2Bridge.Models
         private readonly TwitchSettings settings;
         private readonly TwitchAPI api = new();
         private readonly Random rng = new(Guid.NewGuid().GetHashCode());
+        internal readonly HttpClient httpClient = new();
+
+        // Auth data
+        internal TwitchAuthData auth = new();
 
         // EventSub System
         private readonly EventSubService wsEventSub;
@@ -35,7 +45,10 @@ namespace L4D2Bridge.Models
         {
             settings = InSettings;
             wsEventSub = service as EventSubService;
-            UpdateAPISettings(InSettings);
+
+            httpClient.DefaultRequestHeaders.Accept.Clear();
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {settings.TwitchAuthKey}");
 
             if (settings.Events.UsesChatFeatures())
             {
@@ -88,6 +101,12 @@ namespace L4D2Bridge.Models
                 return false;
             }
 
+            if (await RefreshAuthToken() == false)
+            {
+                PrintMessage("Failed to get Twitch Auth Refresh Token");
+                return false;
+            }
+
             if (settings.Events.OnCharityDonation || settings.Events.UsesEventSub())
             {
                 PrintMessage("Starting Twitch async task thread");
@@ -96,7 +115,7 @@ namespace L4D2Bridge.Models
 
             if (client != null)
             {
-                var credentials = new ConnectionCredentials(settings.BotUserName, "oauth:" + settings.OAuthToken);
+                var credentials = new ConnectionCredentials(settings.BotUserName, "oauth:" + auth.OAuthToken);
                 client.Initialize(credentials);
 
                 if (await client.ConnectAsync())
@@ -127,12 +146,34 @@ namespace L4D2Bridge.Models
             await SyncChannels(settings.Channels);
         }
 
-        public void UpdateAPISettings(TwitchSettings settings)
+        public async Task<bool> RefreshAuthToken()
         {
-            api.Settings.ClientId = settings.ClientID;
-            api.Settings.AccessToken = settings.OAuthToken;
+            // TODO: Fully make this recoverable when an auth token expires instead of
+            // requiring full application restart. It's partially there, but nothing
+            // calls on this.
+            PrintMessage("Fetching Twitch Tokens...");
+            var response = await httpClient.PostAsync("https://make.twitchauth.work/get", null);
+            if (response.IsSuccessStatusCode)
+            {
+                var rawResponse = await response.Content.ReadAsStringAsync();
+                var data = JsonConvert.DeserializeObject<TwitchAuthData>(rawResponse);
+                if (data != null)
+                {
+                    this.auth = data;
+                    api.Settings.ClientId = auth.ClientID;
+                    api.Settings.AccessToken = auth.OAuthToken;
 
-            wsEventSub.RunConfiguration(settings);
+                    wsEventSub.RunConfiguration(auth);
+                    if (settings.Events.UsesEventSub() && wsEventSub.isConnected)
+                    {
+                        PrintMessage("Reconnecting EventSub...");
+                        await wsEventSub.StopAsync(cancelToken.Token);
+                        await wsEventSub.StartAsync(cancelToken.Token);
+                    }
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void JoinChannels(TwitchSettings NewSettings)
@@ -202,9 +243,11 @@ namespace L4D2Bridge.Models
             if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
                 return;
 
+            string channel = args.ChatMessage.Channel;
+            PrintMessage($"Command Sent from {channel}: {loweredCommand} by {user}");
             Invoke(new SourceEvent(SourceEventType.ChatCommand)
             {
-                Channel = args.ChatMessage.Channel,
+                Channel = channel,
                 Message = loweredCommand,
                 Name = user,
             });
