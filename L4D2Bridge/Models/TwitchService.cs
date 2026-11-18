@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using L4D2Bridge.Types;
+﻿using L4D2Bridge.Types;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using System;

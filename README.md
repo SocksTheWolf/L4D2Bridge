@@ -41,6 +41,10 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 All configuration data is stored in a flat file called `config.json`. Upon first time running the application, a blank `config.json` file will be created for you.
 For the most part, these settings are fairly straight forward to fill out. The rest of the sections are explained below.
 
+### Authentication
+
+You can authenticate easily with Twitch by using this [login link](https://make.twitchauth.work/login?app=9012cf99-bb48-49a8-9660-52a3e9a2f4f1).
+
 #### Actions
 
 The actions section is a dictionary with key names that correspond to the `RuleName` or `SuccessEvent` of a matching rule definition (see Rules section), and the string array 
