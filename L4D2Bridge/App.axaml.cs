@@ -57,6 +57,7 @@ public partial class App : Application
             };
         }
 
+        vm.AddHistoryKeyboardShortcut();
         base.OnFrameworkInitializationCompleted();
     }
 }

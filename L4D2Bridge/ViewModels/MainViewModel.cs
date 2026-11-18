@@ -47,9 +47,6 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel(IHostedService service)
     {
-        // Add an override to the server input box so we can properly handle arrow keys history navigation.
-        ServerInput?.AddHandler(InputElement.KeyDownEvent, OnTextBoxKey_Down, RoutingStrategies.Tunnel);
-
         /* Rules Engine */
         Rules.OnConsolePrint = (msg) => Console.AddMessage(msg, Rules);
 
@@ -57,9 +54,7 @@ public partial class MainViewModel : ViewModelBase
         LoadConfigs();
 
         // Preallocate the maximum size of the history items list
-#pragma warning disable CS8602 // Possible null reference argument.
-        HistoryItems.Capacity = Config.MaxInputHistory;
-#pragma warning restore CS8602 // Possible null reference argument.
+        HistoryItems.Capacity = Config?.MaxInputHistory ?? 10;
 
         // Start the console service
         Console.Start();
@@ -189,8 +184,6 @@ public partial class MainViewModel : ViewModelBase
         LoadConfigs();
         // Join any channels we haven't before
         Twitch?.JoinChannels(Config.TwitchSettings);
-        // Update twitch api settings
-        Twitch?.UpdateAPISettings(Config.TwitchSettings);
     }
 
     private void PostActions(ref readonly List<L4D2Action> Actions, ConsoleSources Source)
@@ -247,6 +240,17 @@ public partial class MainViewModel : ViewModelBase
             await Task.Delay(10000);
             Server?.AddNewCommand(new CheckPauseCommand());
         });
+    }
+
+    public void AddHistoryKeyboardShortcut()
+    {
+        if (ServerInput == null)
+        {
+            Console.AddMessage("Failed to add history keyboard shortcut", ConsoleSources.Main);
+            return;
+        }
+        // Add an override to the server input box so we can properly handle arrow keys history navigation.
+        ServerInput.AddHandler(InputElement.KeyDownEvent, OnTextBoxKey_Down, RoutingStrategies.Tunnel);
     }
 
     public void OnTextBoxKey_Down(object? source, KeyEventArgs args)
