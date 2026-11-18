@@ -134,7 +134,9 @@ Rules can check their input object types against these values to determine actio
     GiftSubscription,
     MultiGiftSubscription,
     Raid,
-    ChatCommand
+    ChatCommand,
+	Cheer,
+	PointRedeem
 ```
 
 #### Source Event Data
@@ -146,6 +148,8 @@ All input objects are data objects that contain the following fields that can be
 * Channel - The twitch channel this occurred on (tiltify does not pass this data)
 * Amount - The numerical amount of whatever was passed.
 * Message - Any messages attached (if supported)
+* Currency - For donations (poller/twitch charity/tiltify)
+* RedeemID - For channel point redemptions
 
 
 #### Rules Extensions
