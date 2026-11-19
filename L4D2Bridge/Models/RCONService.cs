@@ -27,6 +27,8 @@ namespace L4D2Bridge.Models
     // Internals
     private readonly RCON? Server;
     private CancellationTokenSource cancelToken = new();
+    internal CancellationTokenSource cancelConnectionToken = new();
+    internal int numRetries = 0;
 
     // Tasks
     private Task? CheckPauseTask;
@@ -136,9 +138,17 @@ namespace L4D2Bridge.Models
 
     public void Clear()
     {
-      PrintMessage("Command Queue cancelled all current and pending tasks!");
+      PrintMessage("Command Queue canceled all current and pending tasks!");
       CommandQueue.Clear();
       CancelAllRetryTasks();
+    }
+
+    public void ResetRetries()
+    {
+      numRetries = 1;
+      cancelConnectionToken.Cancel();
+      cancelConnectionToken.Dispose();
+      cancelConnectionToken = new();
     }
 
     private void CancelAllRetryTasks()
@@ -154,7 +164,6 @@ namespace L4D2Bridge.Models
       if (Server == null)
         return;
 
-      int numRetries = 1;
       Server.OnDisconnected += () => {
         PushToConsole("RCON Disconnected");
         isConnected = false;
@@ -164,9 +173,11 @@ namespace L4D2Bridge.Models
       while (ShouldRun)
       {
         if (!isConnected)
-        {           
+        {
+          numRetries = int.Clamp(++numRetries, 0, 30);
           try
           {
+            await Task.Delay(1000 * numRetries, cancelConnectionToken.Token);
             await Server.ConnectAsync();
             if (Server.Authenticated)
             {
@@ -176,11 +187,8 @@ namespace L4D2Bridge.Models
           }
           catch
           {
-            numRetries = int.Clamp(numRetries, 0, 30);
             PushToConsole($"RCON still disconnected, retrying in {numRetries} seconds...");
-            await Task.Delay(1000 * numRetries);
           }
-          ++numRetries;
           continue;
         }
 

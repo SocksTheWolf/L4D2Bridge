@@ -297,6 +297,8 @@ public partial class MainViewModel : ViewModelBase
         Server?.AddNewAction(L4D2Action.RespawnAllPlayers, "Admin");
       else if (loweredCommand == "commands")
         Server?.PrintNumCommands();
+      else if (loweredCommand == "reconnect")
+        Server?.ResetRetries();
       else if (loweredCommand.StartsWith("action"))
       {
         string[] args = Command[7..].Split(' ');
@@ -314,6 +316,7 @@ public partial class MainViewModel : ViewModelBase
           "pause/unpause/resume - toggles the test engine",
           "cancel - cancels all currently queued commands",
           "respawn - respawns all players",
+          "reconnect - forces a rcon to connect now",
           "action <actionname> <donor> - runs this action on the server",
           "commands - prints the number of currently queued commands",
           "help - prints this message"
