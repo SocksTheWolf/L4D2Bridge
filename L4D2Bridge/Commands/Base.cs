@@ -65,6 +65,11 @@ namespace L4D2Bridge.Commands
 
     public async Task<bool> Execute(RCONService owner, RCON connection)
     {
+      if (!owner.isConnected)
+      {
+        owner.PushToConsole($"Attempted to push command {this} while disconnected");
+        return false;
+      }
       try
       {
         Result = await connection.SendCommandAsync(Command);

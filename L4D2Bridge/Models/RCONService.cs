@@ -17,6 +17,9 @@ namespace L4D2Bridge.Models
     // Flags whenever the system is currently paused
     public Action<bool>? OnPauseStatus { private get; set; }
 
+    // Status
+    public bool isConnected { private set; get; } = false;
+
     // Data
     private readonly int MaxTaskAttempts;
     private ConcurrentQueue<L4D2CommandBase> CommandQueue = new();
@@ -151,33 +154,33 @@ namespace L4D2Bridge.Models
       if (Server == null)
         return;
 
-      bool isConnected = false, hasConnected = false;
+      int numRetries = 1;
       Server.OnDisconnected += () => {
+        PushToConsole("RCON Disconnected");
         isConnected = false;
+        numRetries = 1;
       };
 
       while (ShouldRun)
       {
         if (!isConnected)
-        {
-          if (hasConnected) {
-            PushToConsole("RCON Disconnected");
-            hasConnected = false;
-          }
-            
+        {           
           try
           {
             await Server.ConnectAsync();
-            isConnected = true;
-            hasConnected = true;
-            PushToConsole("RCON Connected");
+            if (Server.Authenticated)
+            {
+              isConnected = true;
+              PushToConsole("RCON Connected");
+            }
           }
           catch
           {
-            PushToConsole("RCON still disconnected, retrying...");
-            await Task.Delay(1000);
+            numRetries = int.Clamp(numRetries, 0, 30);
+            PushToConsole($"RCON still disconnected, retrying in {numRetries} seconds...");
+            await Task.Delay(1000 * numRetries);
           }
-
+          ++numRetries;
           continue;
         }
 
