@@ -1,4 +1,5 @@
 ﻿using L4D2Bridge.Types;
+using L4D2Bridge.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Net.Http;
@@ -18,6 +19,7 @@ namespace L4D2Bridge.Models
       settings = config;
       client.DefaultRequestHeaders.Accept.Clear();
       client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+      client.DefaultRequestHeaders.UserAgent.ParseAdd("L4D2Bridge Client");
     }
 
     public override string GetWorkflow() => "donation";
@@ -56,7 +58,7 @@ namespace L4D2Bridge.Models
         }
         catch (Exception ex)
         {
-          PrintMessage($"Poll Loop hit exception: {ex}");
+          PrintMessage($"Poll Loop hit exception: {Helpers.PrintException(ex)}");
         }
 
         await timer.WaitForNextTickAsync(default);

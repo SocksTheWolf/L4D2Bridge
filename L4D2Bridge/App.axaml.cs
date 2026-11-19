@@ -2,6 +2,7 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using L4D2Bridge.Models;
 using L4D2Bridge.ViewModels;
 using L4D2Bridge.Views;
 using Microsoft.Extensions.DependencyInjection;

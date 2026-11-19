@@ -60,7 +60,7 @@ namespace L4D2Bridge.Models
       }
       catch (Exception ex)
       {
-        PrintMessage(ex.ToString());
+        PrintMessage(Helpers.PrintException(ex));
         return false;
       }
 
@@ -86,7 +86,7 @@ namespace L4D2Bridge.Models
       }
       catch (Exception ex)
       {
-        PrintMessage($"Encountered exception when trying to process rules, {ex}");
+        PrintMessage($"Encountered exception when trying to process rules, {Helpers.PrintException(ex)}");
         return [];
       }
     }

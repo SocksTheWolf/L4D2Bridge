@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
 using L4D2Bridge.Types;
+using L4D2Bridge.Utils;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -118,6 +119,7 @@ public partial class MainViewModel : ViewModelBase
 
         PostActions(ref Commands, RequestTracker.GetSource());
       };
+      RequestTracker.Start();
     }
 
     /* Test Service */
@@ -134,6 +136,8 @@ public partial class MainViewModel : ViewModelBase
     }
 
     Config.SaveConfigData();
+
+    Helpers.SetSettings(Config.DebugSettings);
     if (!Config.IsValid)
       Console.AddMessage("Invalid configuration, please check configs and restart", ConsoleSources.Main);
     else

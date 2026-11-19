@@ -141,6 +141,12 @@ namespace L4D2Bridge.Models
     }
   }
 
+  [JsonObject(MemberSerialization.OptOut)]
+  public class DebugSettings
+  {
+    public bool ShowExceptionDetails { get; set; } = false;
+  }
+
   [JsonObject(MemberSerialization.OptIn)]
   public class ConfigData
   {
@@ -187,6 +193,10 @@ namespace L4D2Bridge.Models
     /*** Testing ***/
     [JsonProperty(PropertyName = "test")]
     public TestSettings TestSettings { get; set; } = new TestSettings();
+
+    /*** Debug ***/
+    [JsonProperty(PropertyName = "Debug")]
+    public DebugSettings DebugSettings { get; set; } = new DebugSettings();
 
     /*** Utils ***/
     public bool IsUsingTwitch() => TwitchSettings != null && TwitchSettings.Enabled;

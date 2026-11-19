@@ -1,5 +1,4 @@
-﻿using L4D2Bridge.Models;
-using L4D2Bridge.Types;
+﻿using L4D2Bridge.Types;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,9 +13,8 @@ using TwitchLib.EventSub.Websockets;
 using TwitchLib.EventSub.Websockets.Core.EventArgs;
 using TwitchLib.EventSub.Websockets.Core.Models;
 
-namespace L4D2Bridge
+namespace L4D2Bridge.Models
 {
-
   public class EventSubService : IHostedService
   {
     private readonly ILogger<EventSubService> _logger;
