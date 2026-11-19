@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace L4D2Bridge.Types
+namespace L4D2Bridge.Settings
 {
   [JsonObject(ItemRequired = Required.Always)]
   public class SpawnSizeRange(int min, int max)

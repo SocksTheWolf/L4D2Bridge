@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CoreRCON;
 using L4D2Bridge.Types;
+using L4D2Bridge.Settings;
 
 namespace L4D2Bridge.Models
 {

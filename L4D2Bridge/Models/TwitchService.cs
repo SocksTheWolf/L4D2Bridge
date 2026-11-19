@@ -1,4 +1,5 @@
 ﻿using L4D2Bridge.Types;
+using L4D2Bridge.Settings;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using System;

@@ -8,6 +8,7 @@ using WeightedRandomLibrary;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading;
+using L4D2Bridge.Settings;
 
 namespace L4D2Bridge.Models
 {

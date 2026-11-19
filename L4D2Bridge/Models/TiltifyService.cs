@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Tiltify;
 using Tiltify.Exceptions;
 using Tiltify.Models;
+using L4D2Bridge.Settings;
 using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Models

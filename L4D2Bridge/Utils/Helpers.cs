@@ -1,4 +1,4 @@
-﻿using L4D2Bridge.Models;
+﻿using L4D2Bridge.Settings;
 using System;
 
 namespace L4D2Bridge.Utils

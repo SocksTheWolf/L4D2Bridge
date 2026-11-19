@@ -1,5 +1,6 @@
 ﻿using L4D2Bridge.Types;
 using L4D2Bridge.Utils;
+using L4D2Bridge.Settings;
 using Newtonsoft.Json;
 using System;
 using System.Net.Http;
