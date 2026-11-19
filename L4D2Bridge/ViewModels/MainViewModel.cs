@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using L4D2Bridge.Models;
 using L4D2Bridge.Types;
 using L4D2Bridge.Utils;
+using L4D2Bridge.Commands;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -259,15 +260,15 @@ public partial class MainViewModel : ViewModelBase
 
   public void OnTextBoxKey_Down(object? source, KeyEventArgs args)
   {
+    if (HistoryItems.Count == 0)
+      return;
+
     bool IsUp = (args.Key == Key.Up);
     if (args.Key == Key.Down || IsUp)
     {
       args.Handled = true;
       HistoryIndex += (IsUp) ? 1 : -1;
-      if (HistoryIndex < 0)
-        HistoryIndex = HistoryItems.Count - 1;
-      else if (HistoryIndex >= HistoryItems.Count)
-        HistoryIndex = 0;
+      HistoryIndex = int.Clamp(HistoryIndex, 0, HistoryItems.Count);
 
       string historyValue = HistoryItems[HistoryIndex];
       if (ServerInput != null)
