@@ -15,5 +15,6 @@
     HealPlayers,
     RespawnPlayers,
     UnincapPlayers,
+    ExplosiveCars,
   };
 }

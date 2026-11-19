@@ -56,7 +56,9 @@ namespace L4D2Bridge.Types
     [RuleAction(ReadableName = "Respawned Players", PositiveEffect = true)]
     RespawnAllPlayers,
     [RuleAction(ReadableName = "Gave Players Uppies", PositiveEffect = true)]
-    UppiesPlayers
+    UppiesPlayers,
+    [RuleAction(ReadableName = "Explosive Cars", NegativeEffect = true)]
+    ExplosiveCars,
   }
 
   [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]

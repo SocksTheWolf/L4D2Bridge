@@ -9,6 +9,7 @@
 #include <multicolors>
 #include <keyvalues>
 #include <left4dhooks>
+#include <l4d_explosive_cars>
 
 #define CONSOLENAME "Admin"
 #define CHAT_TAG "[Bridge]"
@@ -24,7 +25,7 @@ public Plugin myinfo =
 	name = "L4D2 AI Bridge",
 	author = "SocksTheWolf",
 	description = "gameplay",
-	version = "1.0.1",
+	version = "1.0.2",
 	url = "https://github.com/SocksTheWolf"
 };
 
@@ -43,6 +44,8 @@ static char g_zombieNames[9][] =
 };
 
 bool g_CanHandleCommands = true;
+Handle g_CarExplodeTimer = null;
+ConVar g_ExplodeTime = null;
 
 ////////////////////////////////////// INIT //////////////////////////////////////
 public void OnPluginStart()
@@ -71,6 +74,9 @@ public void OnPluginStart()
     // unincapacitate player
     RegAdminCmd("sm_bridge_uncap", BridgeUncapSurvivor, ADMFLAG_ROOT, "Un-incapacitates X number of survivors it finds");
 
+    // toggle explosive cars
+    RegAdminCmd("sm_bridge_cars_explode", BridgeEnableCarExplode, ADMFLAG_ROOT, "Toggles car destruction");
+
 	// Show names above attacked spawned zombies
     //HookEvent("player_hurt", Event_OnPlayerHurt);
 
@@ -84,6 +90,9 @@ public void OnPluginStart()
     HookEvent("map_transition", Event_OnRoundEnd, EventHookMode_PostNoCopy);
     HookEvent("mission_lost", Event_OnRoundEnd, EventHookMode_PostNoCopy);
     HookEvent("finale_vehicle_leaving", Event_OnRoundEnd, EventHookMode_PostNoCopy);
+
+    g_ExplodeTime = CreateConVar("l4d_bridge_car_explode_time", "75", "How long should the car explosion event last (in seconds)?", FCVAR_NOTIFY, true, 0.0, false);
+	AutoExecConfig(true, "l4dbridge");
 }
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
@@ -102,7 +111,7 @@ public Action Event_OnRoundStart(Event event, const char[] name, bool dontBroadc
     if (!IsSpecialMapValid())
     {
         g_specialTrackers = new KeyValues("specialInfectTracker");
-        PrintToServer("Craeted new Special Infected Tracker");
+        PrintToServer("Created new Special Infected Tracker");
     }
     g_CanHandleCommands = true;
     return Plugin_Continue;
@@ -487,4 +496,36 @@ Action BridgeUncapSurvivor(int client, int args)
 
     PrintToServer("%s uppies survivors", CHAT_TAG);
     return Plugin_Handled;
+}
+
+//////////////////////////////// CAR EXPLOSION ////////////////////////////////////
+Action BridgeEnableCarExplode(int client, int args)
+{
+    if (!g_CanHandleCommands) return Plugin_Handled;
+
+    if (g_CarExplodeTimer != null)
+    {
+        CloseHandle(g_CarExplodeTimer);
+        g_CarExplodeTimer = null;
+    }
+
+    // Print the donor
+    if (args > 0) {
+        char spawnerName[DONOR_NAME_LEN];
+        GetCmdArg(1, spawnerName, sizeof(spawnerName));
+        PrintSpawnMessage(spawnerName, "lightgreen", "explosive car event");
+    }
+
+    Bridge_EnableCarExplosion(true);
+    g_CarExplodeTimer = CreateTimer(g_ExplodeTime.FloatValue, StopExplosiveCarEvent);
+    PrintToServer("%s started explosive car event", CHAT_TAG);
+    return Plugin_Handled;
+}
+
+public Action StopExplosiveCarEvent(Handle timer)
+{
+  g_CarExplodeTimer = null;
+  Bridge_EnableCarExplosion(false);
+  PrintToServer("%s ended explosive car event", CHAT_TAG);
+  return Plugin_Handled;
 }

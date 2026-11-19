@@ -104,6 +104,8 @@ namespace L4D2Bridge.Models
           return new RespawnAllPlayers(SenderName);
         case L4D2Action.UppiesPlayers:
           return new GetUpPlayers(SenderName);
+        case L4D2Action.ExplosiveCars:
+          return new ExplosiveCars(SenderName);
         case L4D2Action.RandomSpecialInfected:
           if (WeightedSpecialInfected != null)
             return BuildCommand(WeightedSpecialInfected.Next().Value, SenderName);
