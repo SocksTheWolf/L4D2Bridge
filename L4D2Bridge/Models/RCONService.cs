@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CoreRCON;
 using L4D2Bridge.Types;
 using L4D2Bridge.Settings;
+using L4D2Bridge.Commands;
 
 namespace L4D2Bridge.Models
 {
@@ -159,8 +160,11 @@ namespace L4D2Bridge.Models
       {
         if (!isConnected)
         {
-          if (hasConnected)
+          if (hasConnected) {
             PushToConsole("RCON Disconnected");
+            hasConnected = false;
+          }
+            
           try
           {
             await Server.ConnectAsync();
