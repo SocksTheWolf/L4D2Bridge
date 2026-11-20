@@ -268,7 +268,10 @@ public partial class MainViewModel : ViewModelBase
     {
       args.Handled = true;
       HistoryIndex += (IsUp) ? 1 : -1;
-      HistoryIndex = int.Clamp(HistoryIndex, 0, HistoryItems.Count);
+      if (HistoryIndex < 0)
+        HistoryIndex = HistoryItems.Count - 1;
+      else if (HistoryIndex >= HistoryItems.Count)
+        HistoryIndex = 0;
 
       string historyValue = HistoryItems[HistoryIndex];
       if (ServerInput != null)
