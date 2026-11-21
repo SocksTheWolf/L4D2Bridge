@@ -18,16 +18,17 @@ namespace L4D2Bridge.Utils
       if (string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(valueOrCSV))
         return false;
 
+      string checkAgainst = valueOrCSV.ToLower();
       string checkLower = input.ToLower();
       // Check to see if this is a CSV list
       if (valueOrCSV.Contains(','))
       {
-        var list = valueOrCSV.Split(',').ToList();
-        return list.Any(item => checkLower.Contains(item.ToLower()));
+        var list = checkAgainst.Split(',').ToList();
+        return list.Any(item => checkLower.Contains(item.Trim()));
       }
       else
       {
-        return checkLower.Contains(valueOrCSV);
+        return checkLower.Contains(checkAgainst);
       }
     }
 
@@ -40,27 +41,36 @@ namespace L4D2Bridge.Utils
       return rngRoll <= chance;
     }
 
+    public static bool IsSubGift(SourceEvent sev)
+    {
+      return (sev.Type == SourceEventType.GiftSubscription ||
+        sev.Type == SourceEventType.MultiGiftSubscription);
+    }
+
     public static bool IsSub(SourceEvent sev)
     {
-      return (sev.Type == SourceEventType.Subscription ||
-        sev.Type == SourceEventType.Resubscription ||
-        sev.Type == SourceEventType.GiftSubscription ||
-        sev.Type == SourceEventType.MultiGiftSubscription);
+      return sev.Type == SourceEventType.Subscription ||
+        sev.Type == SourceEventType.Resubscription;
+    }
+
+    public static bool IsSubType(SourceEvent sev)
+    {
+      return (IsSub(sev) || IsSubGift(sev));
     }
 
     public static bool IsTier1(SourceEvent sev)
     {
-      return IsSub(sev) && (sev.SubType == "tier1" || sev.SubType == "prime");
+      return IsSubType(sev) && (sev.SubType == "tier1" || sev.SubType == "prime");
     }
 
     public static bool IsTier2(SourceEvent sev)
     {
-      return IsSub(sev) && sev.SubType == "tier2";
+      return IsSubType(sev) && sev.SubType == "tier2";
     }
 
     public static bool IsTier3(SourceEvent sev)
     {
-      return IsSub(sev) && sev.SubType == "tier3";
+      return IsSubType(sev) && sev.SubType == "tier3";
     }
 
     public static bool IsType(SourceEvent sev, string type) {

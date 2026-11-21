@@ -20,14 +20,6 @@ namespace L4D2Bridge.Models
     // Statics
     private static readonly string FileName = "config.json";
 
-    /*** Server Connection Information ***/
-    [JsonProperty(PropertyName = "server")]
-    public ServerSettings ServerSettings { get; set; } = new ServerSettings();
-
-    /*** Twitch Settings ***/
-    [JsonProperty(PropertyName = "twitch")]
-    public TwitchSettings TwitchSettings { get; set; } = new TwitchSettings();
-
     /*** Tiltify Settings ***/
     [JsonProperty(PropertyName = "tiltify")]
     public TiltifySettings TiltifySettings { get; set; } = new TiltifySettings();
@@ -61,6 +53,14 @@ namespace L4D2Bridge.Models
     /*** Debug ***/
     [JsonProperty(PropertyName = "Debug")]
     public DebugSettings DebugSettings { get; set; } = new DebugSettings();
+
+    /*** Server Connection Information ***/
+    [JsonProperty(PropertyName = "server")]
+    public ServerSettings ServerSettings { get; set; } = new ServerSettings();
+
+    /*** Twitch Settings ***/
+    [JsonProperty(PropertyName = "twitch")]
+    public TwitchSettings TwitchSettings { get; set; } = new TwitchSettings();
 
     /*** Utils ***/
     public bool IsUsingTwitch() => TwitchSettings != null && TwitchSettings.Enabled;

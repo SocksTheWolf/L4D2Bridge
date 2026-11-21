@@ -185,7 +185,7 @@ namespace L4D2Bridge.Models
               PushToConsole("RCON Connected");
             }
           }
-          catch
+          catch (Exception)
           {
             PushToConsole($"RCON still disconnected, retrying in {numRetries} seconds...");
           }

@@ -466,9 +466,10 @@ namespace L4D2Bridge.Models
                     userName = payloadData.UserLogin;
                     Invoke(new SourceEvent(SourceEventType.PointRedeem)
                     {
+                      RedeemTitle = payloadData.Reward.Title.ToLower(),
                       RedeemID = payloadData.Reward.Id,
                       Name = payloadData.UserLogin,
-                      Message = payloadData.Reward.Title
+                      Message = payloadData.UserInput
                     });
                   }
                 break;

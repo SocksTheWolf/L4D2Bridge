@@ -42,6 +42,7 @@ namespace L4D2Bridge.Types
     // Twitch Channel
     public string Channel = string.Empty;
     // Only valid if type is PointRedeem
+    public string RedeemTitle = string.Empty;
     public string RedeemID = string.Empty;
     // Sub Type
     public string SubType = string.Empty;
