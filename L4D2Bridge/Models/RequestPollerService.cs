@@ -46,8 +46,7 @@ namespace L4D2Bridge.Models
                 {
                   Amount = DonationAmount,
                   Currency = "USD",
-                  Name = donoInfo.name,
-                  Message = string.Empty
+                  Name = donoInfo.name
                 });
               }
               else
