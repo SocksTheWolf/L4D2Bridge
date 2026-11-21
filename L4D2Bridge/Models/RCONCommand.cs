@@ -89,7 +89,7 @@ namespace L4D2Bridge.Models
           return new SpawnMobCommand(Mobs.Small.GetSpawnAmount(ref rng), SenderName);
         case L4D2Action.SpawnMobLarge:
           return new SpawnMobCommand(Mobs.Large.GetSpawnAmount(ref rng), SenderName);
-        case L4D2Action.SpawnMob:
+        case L4D2Action.SpawnMobRand:
           return new SpawnMobCommand(Mobs.Rand.GetSpawnAmount(ref rng), SenderName);
         case L4D2Action.HealAllPlayersSmall:
           return new HealAllPlayers(10, SenderName);

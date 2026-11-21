@@ -283,9 +283,15 @@ namespace L4D2Bridge.Models
       });
     }
 
+    /*
+    Prime,
+    Tier1,
+    Tier2,
+    Tier3
+    */
     private async Task OnNewSubscription(object unused, OnNewSubscriberArgs args)
     {
-      string planName = args.Subscriber.MsgParamSubPlanName;
+      string planName = args.Subscriber.MsgParamSubPlan.ToString().ToLower();
       int numMonths = args.Subscriber.MsgParamCumulativeMonths;
 
       PrintMessage($"Channel subscription for {args.Channel} from {args.Subscriber.DisplayName} of {planName} for {numMonths}!");
@@ -294,13 +300,13 @@ namespace L4D2Bridge.Models
         Channel = args.Channel,
         Amount = numMonths,
         Name = args.Subscriber.Login,
-        Message = planName
+        SubType = planName
       });
     }
 
     private async Task OnResubscription(object unused, OnReSubscriberArgs args)
     {
-      string planName = args.ReSubscriber.MsgParamSubPlanName;
+      string planName = args.ReSubscriber.MsgParamSubPlan.ToString().ToLower();
       int numMonths = args.ReSubscriber.MsgParamCumulativeMonths;
 
       PrintMessage($"Channel resubscription for {args.Channel} from {args.ReSubscriber.DisplayName} of {planName} for {numMonths}!");
@@ -309,7 +315,7 @@ namespace L4D2Bridge.Models
         Channel = args.Channel,
         Amount = numMonths,
         Name = args.ReSubscriber.Login,
-        Message = planName
+        SubType = planName
       });
     }
 
@@ -321,7 +327,7 @@ namespace L4D2Bridge.Models
         Channel = args.Channel,
         Name = args.PrimePaidSubscriber.Login,
         Amount = 1,
-        Message = "prime"
+        SubType = "prime"
       });
     }
 
@@ -332,34 +338,38 @@ namespace L4D2Bridge.Models
       {
         Channel = args.Channel,
         Name = args.ContinuedGiftedSubscription.Login,
+        Amount = 1,
+        SubType = "tier1"
       });
     }
 
     private async Task OnGiftedSubscription(object unused, OnGiftedSubscriptionArgs args)
     {
       string recipient = args.GiftedSubscription.MsgParamRecipientUserName;
+      string planName = args.GiftedSubscription.MsgParamSubPlan.ToString().ToLower();
       int numMonths = args.GiftedSubscription.MsgParamMultiMonthGiftDuration;
 
-      PrintMessage($"Channel gift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} to {recipient} for {numMonths}!");
+      PrintMessage($"Channel {planName} gift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} to {recipient} for {numMonths}!");
       Invoke(new SourceEvent(SourceEventType.GiftSubscription)
       {
         Channel = args.Channel,
         Name = args.GiftedSubscription.Login,
         Amount = numMonths,
-        Message = recipient
+        SubType = planName
       });
     }
 
     private async Task OnMultiGiftSubscription(object unused, OnCommunitySubscriptionArgs args)
     {
       int numGifts = args.GiftedSubscription.MsgParamMassGiftCount;
-      PrintMessage($"Channel multigift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} of {numGifts}!");
+      string planName = args.GiftedSubscription.MsgParamSubPlan.ToString().ToLower();
+      PrintMessage($"Channel {planName} multigift subscription for {args.Channel} from {args.GiftedSubscription.DisplayName} of {numGifts}!");
       Invoke(new SourceEvent(SourceEventType.MultiGiftSubscription)
       {
         Channel = args.Channel,
         Name = args.GiftedSubscription.Login,
         Amount = numGifts,
-        Message = args.GiftedSubscription.MsgParamSubPlan.ToString()
+        SubType = planName
       });
     }
 

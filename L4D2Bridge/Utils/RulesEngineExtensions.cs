@@ -40,6 +40,29 @@ namespace L4D2Bridge.Utils
       return rngRoll <= chance;
     }
 
+    public static bool IsSub(SourceEvent sev)
+    {
+      return (sev.Type == SourceEventType.Subscription ||
+        sev.Type == SourceEventType.Resubscription ||
+        sev.Type == SourceEventType.GiftSubscription ||
+        sev.Type == SourceEventType.MultiGiftSubscription);
+    }
+
+    public static bool IsTier1(SourceEvent sev)
+    {
+      return IsSub(sev) && (sev.SubType == "tier1" || sev.SubType == "prime");
+    }
+
+    public static bool IsTier2(SourceEvent sev)
+    {
+      return IsSub(sev) && sev.SubType == "tier2";
+    }
+
+    public static bool IsTier3(SourceEvent sev)
+    {
+      return IsSub(sev) && sev.SubType == "tier3";
+    }
+
     public static bool IsType(SourceEvent sev, string type) {
       string searchingFor = type.ToLower();
       string eventType = Enum.GetName(typeof(SourceEventType), sev.Type) ?? "";

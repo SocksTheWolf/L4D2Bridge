@@ -60,7 +60,7 @@ Acceptable server actions are:
   SpawnSpitter,
   SpawnJockey,
   SpawnWitch,
-  SpawnMob,
+  SpawnMobRand,
   SpawnMobSmall,
   SpawnMobMedium,
   SpawnMobLarge,
@@ -111,7 +111,7 @@ Here is an example of some actions that are defined in a config file. Names such
 
 #### Mob Sizes
 
-These are the ranges for each type of mob spawn size in the server commands list. The `Rand` setting is when the mob size is not provided (using `SpawnMob`).
+These are the ranges for each type of mob spawn size in the server commands list. The `Rand` setting is when the mob size is not provided (using `SpawnMobRand`).
 
 #### Negative Weights
 

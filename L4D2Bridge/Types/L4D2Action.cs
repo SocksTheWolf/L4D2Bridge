@@ -20,7 +20,7 @@ namespace L4D2Bridge.Types
     [RuleAction(ReadableName = "Witch", NegativeEffect = true, SpawnsSpecialInfected = true)]
     SpawnWitch,
     [RuleAction(ReadableName = "Random Mob", NegativeEffect = true)]
-    SpawnMob,
+    SpawnMobRand,
     [RuleAction(ReadableName = "Small Mob", NegativeEffect = true)]
     SpawnMobSmall,
     [RuleAction(ReadableName = "Medium Mob", NegativeEffect = true)]

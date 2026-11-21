@@ -10,10 +10,11 @@ namespace L4D2Bridge.Types
     Subscription,
     [SEInfo(Alias = "resub")]
     Resubscription,
-    [SEInfo(Alias = "gift sub")]
+    [SEInfo(Alias = "gifts")]
     GiftSubscription,
-    [SEInfo(Alias = "gift subs")]
+    [SEInfo(Alias = "gifts")]
     MultiGiftSubscription,
+    [SEInfo(Alias = "raid")]
     Raid,
     [SEInfo(Alias = "chat")]
     ChatCommand,
@@ -42,6 +43,8 @@ namespace L4D2Bridge.Types
     public string Channel = string.Empty;
     // Only valid if type is PointRedeem
     public string RedeemID = string.Empty;
+    // Sub Type
+    public string SubType = string.Empty;
 
     public override string ToString()
     {
