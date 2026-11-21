@@ -22,6 +22,8 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 * `clear`/`cls` - clears the console log entirely
 * `pause`/`unpause`/`resume` - if the test service is running, will pause/unpause the test service from generating events
 * `cancel` - cancel all current command events
+* `reconnect rcon` - forces reconnection with rcon
+* `reconnect twitch` - reauthenticates with Twitch
 * `respawn` - respawns all players
 * `action <actionname> <donor>` - runs this action on the server
 * `commands` - prints the number of events in the queue
@@ -33,6 +35,7 @@ Anything typed in the text box will be sent directly to the server via RCON, wit
 * Twitch Chat
 * Twitch EventSub
 * Twitch Donations
+* HTTP polling
 
 ## Setup
 
@@ -53,29 +56,30 @@ of server commands that should be ran when rules with the given keyname matches.
 Acceptable server actions are:
 
 ```
-    SpawnTank,
-    SpawnSpitter,
-    SpawnJockey,
-    SpawnWitch,
-    SpawnMob,
-    SpawnMobSmall,
-    SpawnMobMedium,
-    SpawnMobLarge,
-    SpawnBoomer,
-    SpawnHunter,
-    SpawnCharger,
-    SpawnSmoker,
-    Lootbox,
-    SupplyCrate,
-    HealAllPlayersSmall,
-    HealAllPlayersLarge,
-    HealAllPlayersRand,
-    RespawnAllPlayers,
-    UppiesPlayers,
-    RandomPositive,
-    RandomNegative,
-    RandomSpecialInfected,
-    Random
+  SpawnTank,
+  SpawnSpitter,
+  SpawnJockey,
+  SpawnWitch,
+  SpawnMob,
+  SpawnMobSmall,
+  SpawnMobMedium,
+  SpawnMobLarge,
+  SpawnBoomer,
+  SpawnHunter,
+  SpawnCharger,
+  SpawnSmoker,
+  Lootbox,
+  SupplyCrate,
+  HealAllPlayersSmall,
+  HealAllPlayersLarge,
+  HealAllPlayersRand,
+  RespawnAllPlayers,
+  UppiesPlayers,
+  ExplosiveCars,
+  RandomPositive,
+  RandomNegative,
+  RandomSpecialInfected,
+  Random
 ```
 
 The `Random` server action does a coin flip and if heads, will run a `RandomPositive` action, if tails, a `RandomNegative` action will execute instead.
@@ -132,15 +136,15 @@ The following important notes are:
 Rules can check their input object types against these values to determine actions. These are the types that are supported:
 
 ```
-    Donation,
-    Subscription,
-    Resubscription,
-    GiftSubscription,
-    MultiGiftSubscription,
-    Raid,
-    ChatCommand,
-    Cheer,
-    PointRedeem
+  Donation,
+  Subscription,
+  Resubscription,
+  GiftSubscription,
+  MultiGiftSubscription,
+  Raid,
+  ChatCommand,
+  Cheer,
+  PointRedeem
 ```
 
 #### Source Event Data
@@ -155,7 +159,6 @@ All input objects are data objects that contain the following fields that can be
 * Currency - For donations (poller/twitch charity/tiltify)
 * RedeemID - For channel point redemptions
 
-
 #### Rules Extensions
 
 The rules can take advantage of some added extensions to the processor to do string based checks. A class named `REUtils` is provided to the RulesEngine to help you with string processing.
@@ -163,6 +166,7 @@ The rules can take advantage of some added extensions to the processor to do str
 * `REUtils.HasValue` - Returns a boolean if the given string has an actual value instead of null/whitespace
 * `REUtils.CheckContains` - Given the input and a string of a value or csv of values, will check if the input contains any of the values in the check. All values will be projected to case-insensitive checks.
 * `REUtils.PercentChance` - Given a whole number percentage chance, if the RNG flip is that percentage or lower, returns true
+* `REUtils.IsType` - Checks a source event's type against the enum name easily or an alias
 
 #### Example
 

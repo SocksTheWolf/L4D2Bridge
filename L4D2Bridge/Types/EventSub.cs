@@ -2,6 +2,8 @@
 
 namespace L4D2Bridge.Types
 {
+  // Data that comes from the EventSub channel to pass on to the main Twitch service
+  // handler
   public enum EventSubEventType
   {
     None,

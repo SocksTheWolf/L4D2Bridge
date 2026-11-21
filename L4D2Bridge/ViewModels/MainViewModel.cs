@@ -300,8 +300,19 @@ public partial class MainViewModel : ViewModelBase
         Server?.AddNewAction(L4D2Action.RespawnAllPlayers, "Admin");
       else if (loweredCommand == "commands")
         Server?.PrintNumCommands();
-      else if (loweredCommand == "reconnect")
+      else if (loweredCommand == "reconnect rcon")
         Server?.ResetRetries();
+      else if (loweredCommand == "reconnect twitch")
+      {
+        if (Twitch == null)
+          return;
+
+        Task.Run(async () => {
+          Console.AddMessage("Attempting to reconnect Twitch Auth", ConsoleSources.Main);
+          bool output = await Twitch.RefreshAuthToken();
+          Console.AddMessage($"Twitch Auth reconnect returned {output}", ConsoleSources.Main);
+        });
+      }
       else if (loweredCommand.StartsWith("action"))
       {
         string[] args = Command[7..].Split(' ');
@@ -319,7 +330,8 @@ public partial class MainViewModel : ViewModelBase
           "pause/unpause/resume - toggles the test engine",
           "cancel - cancels all currently queued commands",
           "respawn - respawns all players",
-          "reconnect - forces a rcon to connect now",
+          "reconnect rcon - forces a rcon to connect now",
+          "reconnect twitch - forces a reauth for twitch",
           "action <actionname> <donor> - runs this action on the server",
           "commands - prints the number of currently queued commands",
           "help - prints this message"

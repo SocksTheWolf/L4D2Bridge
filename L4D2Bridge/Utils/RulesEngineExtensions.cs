@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System;
+using L4D2Bridge.Types;
 
 namespace L4D2Bridge.Utils
 {
@@ -37,6 +38,19 @@ namespace L4D2Bridge.Utils
 
       int rngRoll = rng.Next(0, 101);
       return rngRoll <= chance;
+    }
+
+    public static bool IsType(SourceEvent sev, string type) {
+      string searchingFor = type.ToLower();
+      string eventType = Enum.GetName(typeof(SourceEventType), sev.Type) ?? "";
+      if (eventType != "" && searchingFor == eventType.ToLower())
+        return true;
+
+      eventType = sev.Type.GetEnumAttribute<SourceEventType, SEInfo>()?.Alias ?? "";
+      if (eventType != "" && searchingFor == eventType.ToLower())
+        return true;
+
+      return false;
     }
   }
 }

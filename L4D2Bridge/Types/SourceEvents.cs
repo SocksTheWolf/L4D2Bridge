@@ -6,14 +6,28 @@ namespace L4D2Bridge.Types
   {
     None,
     Donation,
+    [SEInfo(Alias = "sub")]
     Subscription,
+    [SEInfo(Alias = "resub")]
     Resubscription,
+    [SEInfo(Alias = "gift sub")]
     GiftSubscription,
+    [SEInfo(Alias = "gift subs")]
     MultiGiftSubscription,
     Raid,
+    [SEInfo(Alias = "command")]
     ChatCommand,
+    [SEInfo(Alias = "bits")]
     Cheer,
+    [SEInfo(Alias = "redeem")]
     PointRedeem
+  }
+
+  [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+  public class SEInfo : Attribute
+  {
+    // A simple name to be used to specify the key
+    public string Alias = string.Empty;
   }
 
   public class SourceEvent(SourceEventType type)

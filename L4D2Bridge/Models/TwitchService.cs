@@ -33,7 +33,7 @@ namespace L4D2Bridge.Models
     internal TwitchAuthData auth = new();
 
     // EventSub System
-    private readonly EventSubService wsEventSub;
+    private readonly EventSubService? wsEventSub;
 
     // EventSub Cancel Token
     private readonly CancellationTokenSource cancelToken = new();
@@ -115,7 +115,7 @@ namespace L4D2Bridge.Models
 
       if (client != null)
       {
-        var credentials = new ConnectionCredentials(settings.BotUserName, "oauth:" + auth.OAuthToken);
+        var credentials = new ConnectionCredentials(settings.BotUserName, $"oauth:{auth.OAuthToken}");
         client.Initialize(credentials);
 
         if (await client.ConnectAsync())
@@ -148,9 +148,6 @@ namespace L4D2Bridge.Models
 
     public async Task<bool> RefreshAuthToken()
     {
-      // TODO: Fully make this recoverable when an auth token expires instead of
-      // requiring full application restart. It's partially there, but nothing
-      // calls on this.
       PrintMessage("Fetching Twitch Tokens...");
       var response = await httpClient.PostAsync("https://make.twitchauth.work/get", null);
       if (response.IsSuccessStatusCode)
@@ -163,12 +160,19 @@ namespace L4D2Bridge.Models
           api.Settings.ClientId = auth.ClientID;
           api.Settings.AccessToken = auth.OAuthToken;
 
-          wsEventSub.RunConfiguration(auth);
-          if (settings.Events.UsesEventSub() && wsEventSub.isConnected)
+          wsEventSub?.RunConfiguration(auth);
+          if (settings.Events.UsesEventSub() && wsEventSub?.isConnected == true)
           {
-            PrintMessage("Reconnecting EventSub...");
-            await wsEventSub.StopAsync(cancelToken.Token);
-            await wsEventSub.StartAsync(cancelToken.Token);
+            try
+            {
+              PrintMessage("Reconnecting EventSub...");
+              await wsEventSub.StopAsync(cancelToken.Token);
+              await wsEventSub.StartAsync(cancelToken.Token);
+            }
+            catch (Exception ex)
+            {
+              PrintMessage($"Failed to reconnect EventSub {ex}");
+            }
           }
           return true;
         }
@@ -301,7 +305,7 @@ namespace L4D2Bridge.Models
     private async Task OnPrimePaidSubscription(object unused, OnPrimePaidSubscriberArgs args)
     {
       PrintMessage($"Channel prime subscription for {args.Channel} from {args.PrimePaidSubscriber.DisplayName}!");
-      Invoke(new SourceEvent(SourceEventType.Resubscription)
+      Invoke(new SourceEvent(SourceEventType.Subscription)
       {
         Channel = args.Channel,
         Name = args.PrimePaidSubscriber.Login,
@@ -360,7 +364,8 @@ namespace L4D2Bridge.Models
       };
 
       using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.CharityPollingInterval));
-      await wsEventSub.StartAsync(cancelToken.Token);
+      if (wsEventSub != null)
+        await wsEventSub.StartAsync(cancelToken.Token);
       while (ShouldRun)
       {
         // Run Charity Stuff
@@ -408,7 +413,7 @@ namespace L4D2Bridge.Models
 
         }
 
-        if (settings.Events.UsesEventSub())
+        if (settings.Events.UsesEventSub() && wsEventSub != null)
         {
           string userName;
           if (!wsEventSub.eventQueue.IsEmpty)
@@ -454,7 +459,8 @@ namespace L4D2Bridge.Models
         }
         await timer.WaitForNextTickAsync(default);
       }
-      await wsEventSub.StopAsync(cancelToken.Token);
+      if (wsEventSub != null)
+        await wsEventSub.StopAsync(cancelToken.Token);
     }
 
     /*** Sending messages to a channel ***/
