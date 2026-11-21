@@ -15,7 +15,7 @@ namespace L4D2Bridge.Types
     [SEInfo(Alias = "gift subs")]
     MultiGiftSubscription,
     Raid,
-    [SEInfo(Alias = "command")]
+    [SEInfo(Alias = "chat")]
     ChatCommand,
     [SEInfo(Alias = "bits")]
     Cheer,

@@ -61,11 +61,10 @@ namespace L4D2Bridge.Models
         client.OnJoinedChannel += OnChannelJoined;
         client.OnLeftChannel += OnChannelLeft;
 
-        if (settings.Events.OnCommand)
-          client.OnChatCommandReceived += OnCommandReceived;
-
-        if (settings.Events.OnRaid)
-          client.OnRaidNotification += OnChannelRaided;
+        // These should always be listened to, they can be turned off
+        // by settings dynamically later
+        client.OnChatCommandReceived += OnCommandReceived;
+        client.OnRaidNotification += OnChannelRaided;
 
         if (settings.Events.OnSubscription)
           client.OnNewSubscriber += OnNewSubscription;
@@ -243,11 +242,20 @@ namespace L4D2Bridge.Models
     {
       string loweredCommand = args.Command.Name.ToLower();
       string user = args.ChatMessage.Username.ToLower();
-
-      if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1 || rng.Next(1, 101) > settings.ChatCommandPercentChance)
+      string channel = args.ChatMessage.Channel;
+      if (!settings.Events.OnCommand || settings.ChatCommandPercentChance < 1)
         return;
 
-      string channel = args.ChatMessage.Channel;
+      if (rng.Next(1, 101) > settings.ChatCommandPercentChance)
+      {
+        if (settings.RespondToCommandInvokes)
+          await SendMessageToChannel(channel, $"Sorry @{args.ChatMessage.Username} but you didn't win the command gamba");
+        return;
+      }
+
+      if (settings.RespondToCommandInvokes)
+        await SendMessageToChannel(channel, $"@{args.ChatMessage.Username}'s command has been accepted!");
+
       PrintMessage($"Command Sent from {channel}: {loweredCommand} by {user}");
       Invoke(new SourceEvent(SourceEventType.ChatCommand)
       {
@@ -259,6 +267,9 @@ namespace L4D2Bridge.Models
 
     private async Task OnChannelRaided(object unused, OnRaidNotificationArgs args)
     {
+      if (!settings.Events.OnRaid)
+        return;
+
       string fromUser = args.RaidNotification.MsgParamLogin;
       if (!int.TryParse(args.RaidNotification.MsgParamViewerCount, out int viewerCount))
         viewerCount = 1;

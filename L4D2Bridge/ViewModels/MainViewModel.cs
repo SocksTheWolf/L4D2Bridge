@@ -199,7 +199,7 @@ public partial class MainViewModel : ViewModelBase
 
     // Dump them also to twitch chat
     if (Config.IsUsingTwitch() && Config.TwitchSettings.PostEventActionsToChat && Source != ConsoleSources.Test)
-      Twitch?.SendMessageToAllChannels(ActionTaken);
+      Twitch?.SendMessageToAllChannels($"L4D2 Action: {ActionTaken}");
   }
 
   // Flags our UI if the status of the server is paused

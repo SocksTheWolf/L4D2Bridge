@@ -31,6 +31,7 @@ namespace L4D2Bridge.Settings
     public string TwitchAuthKey { get; set; } = string.Empty;
     // If the resulting actions from twitch events should be redirected to chat as well.
     public bool PostEventActionsToChat { get; set; } = false;
+    public bool RespondToCommandInvokes { get; set; } = false;
     // Whether to message when Tiltify events should message into all connected chats
     public bool PostMessageOnTiltifyDonations { get; set; } = false;
     public int ChatCommandPercentChance { get; set; } = 50;
